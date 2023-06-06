@@ -135,6 +135,12 @@
   <data name="Alarm" xml:space="preserve">
     <value>报警</value>
   </data>
+  <data name="AlarmLevel" xml:space="preserve">
+    <value>报警级别</value>
+  </data>
+  <data name="AlarmValue" xml:space="preserve">
+    <value>报警值</value>
+  </data>
   <data name="AllGroup" xml:space="preserve">
     <value>所有组</value>
   </data>
@@ -143,6 +149,15 @@
   </data>
   <data name="Append" xml:space="preserve">
     <value>追加</value>
+  </data>
+  <data name="AppendContent1" xml:space="preserve">
+    <value>附加内容1</value>
+  </data>
+  <data name="AppendContent2" xml:space="preserve">
+    <value>附加内容2</value>
+  </data>
+  <data name="AppendContent3" xml:space="preserve">
+    <value>附加内容3</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>坏</value>
@@ -174,6 +189,9 @@
   <data name="CPU" xml:space="preserve">
     <value>CPU</value>
   </data>
+  <data name="CreateTime" xml:space="preserve">
+    <value>产生时间</value>
+  </data>
   <data name="Custom" xml:space="preserve">
     <value>自定义</value>
   </data>
@@ -203,6 +221,15 @@
   </data>
   <data name="Default" xml:space="preserve">
     <value>缺省</value>
+  </data>
+  <data name="DeleteNote" xml:space="preserve">
+    <value>删除备注</value>
+  </data>
+  <data name="DeleteTime" xml:space="preserve">
+    <value>删除时间</value>
+  </data>
+  <data name="DeleteUser" xml:space="preserve">
+    <value>删除人</value>
   </data>
   <data name="Desc" xml:space="preserve">
     <value>描述</value>
@@ -239,6 +266,9 @@
   </data>
   <data name="Export" xml:space="preserve">
     <value>Export</value>
+  </data>
+  <data name="ExtendField1" xml:space="preserve">
+    <value>扩展属性1</value>
   </data>
   <data name="FindAvaiableId" xml:space="preserve">
     <value>Reset id</value>
@@ -290,6 +320,9 @@
   </data>
   <data name="IDResetWarnning" xml:space="preserve">
     <value>Warning: The ID is used as the record identifier of historical records. Resetting the ID may cause confusion of historical data.</value>
+  </data>
+  <data name="IgnorClosedQuality" xml:space="preserve">
+    <value>忽略系统退出对拟合的影响</value>
   </data>
   <data name="Import" xml:space="preserve">
     <value>Import</value>
@@ -358,6 +391,9 @@
   <data name="Memory" xml:space="preserve">
     <value>内存</value>
   </data>
+  <data name="MessageBody" xml:space="preserve">
+    <value>消息内容</value>
+  </data>
   <data name="MinValue" xml:space="preserve">
     <value>最小值</value>
   </data>
@@ -418,6 +454,9 @@
   <data name="Precision" xml:space="preserve">
     <value>小数位</value>
   </data>
+  <data name="Process" xml:space="preserve">
+    <value>进程</value>
+  </data>
   <data name="ProcessCount" xml:space="preserve">
     <value>处理器个数</value>
   </data>
@@ -475,6 +514,12 @@
   <data name="ReRun" xml:space="preserve">
     <value>热重启</value>
   </data>
+  <data name="RestoreTime" xml:space="preserve">
+    <value>恢复时间</value>
+  </data>
+  <data name="RestoreValue" xml:space="preserve">
+    <value>恢复值</value>
+  </data>
   <data name="SampleDuration" xml:space="preserve">
     <value>取样时间间隔 </value>
   </data>
@@ -505,6 +550,9 @@
   </data>
   <data name="Send" xml:space="preserve">
     <value>发送</value>
+  </data>
+  <data name="Server" xml:space="preserve">
+    <value>服务器</value>
   </data>
   <data name="ServerBackupDataPath" xml:space="preserve">
     <value>History backup path</value>
@@ -538,6 +586,9 @@
   </data>
   <data name="SlopeCompress" xml:space="preserve">
     <value>斜率</value>
+  </data>
+  <data name="SourceTag" xml:space="preserve">
+    <value>报警变量</value>
   </data>
   <data name="Start" xml:space="preserve">
     <value>启动</value>
@@ -575,6 +626,9 @@
   <data name="TagGroup" xml:space="preserve">
     <value>变量组</value>
   </data>
+  <data name="ThreadCount" xml:space="preserve">
+    <value>线程数</value>
+  </data>
   <data name="Time" xml:space="preserve">
     <value>时间</value>
   </data>
@@ -584,11 +638,17 @@
   <data name="Title" xml:space="preserve">
     <value>Mars 数据库运行管理</value>
   </data>
+  <data name="TotalCPU" xml:space="preserve">
+    <value>累计运行时间</value>
+  </data>
   <data name="TotalDisk" xml:space="preserve">
     <value>磁盘总量</value>
   </data>
   <data name="Type" xml:space="preserve">
     <value>类型</value>
+  </data>
+  <data name="Unit" xml:space="preserve">
+    <value>单位</value>
   </data>
   <data name="UpdateTagFail" xml:space="preserve">
     <value>Update tag {0} failed!</value>
@@ -616,6 +676,9 @@
   </data>
   <data name="WebApi" xml:space="preserve">
     <value>Web Api</value>
+  </data>
+  <data name="WorksetMemory" xml:space="preserve">
+    <value>工作集内存</value>
   </data>
   <data name="Write" xml:space="preserve">
     <value>写</value>

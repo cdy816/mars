@@ -5,12 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DBGrpcApiDemo"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="1185">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="64"/>
+            <RowDefinition Height="128"/>
         </Grid.RowDefinitions>
         <Label Content="Server:" HorizontalAlignment="Left" Margin="11,0,0,0" VerticalAlignment="Center"/>
         <TextBox x:Name="ServerIp"  HorizontalAlignment="Left" Margin="67,0,0,0" Text="{Binding Ip,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" TextWrapping="Wrap" VerticalAlignment="Center" Width="196"/>
@@ -36,7 +36,7 @@
         <TextBox HorizontalAlignment="Left" Margin="70,9,0,0" Grid.Row="2" Text="{Binding Id,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Top" Width="257"/>
         <TextBox HorizontalAlignment="Left" Margin="429,8,0,0" Grid.Row="2" Text="{Binding Value,Mode=TwoWay}" TextWrapping="Wrap" VerticalAlignment="Top" Width="100"/>
         <Button Content="变量下发" HorizontalAlignment="Left" Margin="561,8,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding SetTagValueCommand}"/>
-        <Label Content="变量值:" HorizontalAlignment="Center" Margin="0,5,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <Label Content="变量值:" Margin="375,5,0,0" Grid.Row="2" VerticalAlignment="Top" HorizontalAlignment="Left" Width="49"/>
         <Label Content="开始时间:" HorizontalAlignment="Left" Margin="4,33,0,0" Grid.Row="2" VerticalAlignment="Top"/>
         <DatePicker SelectedDate="{Binding StartTime,Mode=TwoWay}" HorizontalAlignment="Left" Margin="70,35,0,0" Grid.Row="2" VerticalAlignment="Top" Width="132"/>
         <Button x:Name="hisqB" Content="读取历史" HorizontalAlignment="Left" Margin="561,37,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding QueryHisDataCommand}"/>
@@ -44,6 +44,19 @@
         <DatePicker SelectedDate="{Binding EndTime,Mode=TwoWay}" HorizontalAlignment="Left" Margin="277,35,0,0" Grid.Row="2" VerticalAlignment="Top" Width="132"/>
         <CheckBox Content="统计值" HorizontalAlignment="Left" Margin="459,40,0,0" Grid.Row="2" VerticalAlignment="Top" IsChecked="{Binding IsReadStatistics,Mode=TwoWay}"/>
         <Button Content="变量读取" HorizontalAlignment="Left" Margin="658,8,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding QueryRealCommand}"/>
+
+        <Button Content="下发状态值" HorizontalAlignment="Left" Margin="793,10,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding SetTagStateCommand}"/>
+        <Button Content="下发扩展属性" HorizontalAlignment="Left" Margin="889,10,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding SetTagExtendField2Command}"/>
+        <Button Content="读取状态值" HorizontalAlignment="Left" Margin="793,36,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding GetTagStateCommand}"/>
+        <Button Content="读取扩展属性" HorizontalAlignment="Left" Margin="889,36,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding GetTagExtendField2Command}"/>
+        <Button x:Name="hisqB_Copy" Content="读取历史2" HorizontalAlignment="Left" Margin="658,37,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding QueryHisData2Command}"/>
+        <Button Content="最大值" HorizontalAlignment="Left" Margin="1005,10,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding QueryMaxValueCommand}"/>
+        <Button Content="平局值" HorizontalAlignment="Left" Margin="1005,38,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding QueryAvgValueCommand}"/>
+        <Button Content="大于某个值" HorizontalAlignment="Left" Margin="1099,9,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding QueryGreatValueCommand}"/>
+        <Button Content="保持时间" HorizontalAlignment="Left" Margin="1099,37,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding CalKeepTimeCommand}"/>
+        <Label Content="Sql 语句:" HorizontalAlignment="Left" Margin="4,71,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <TextBox x:Name="sqlexp" HorizontalAlignment="Left" Margin="84,75,0,0" Grid.Row="2" TextWrapping="Wrap" Text="{Binding SqlExp, Mode=TwoWay}" VerticalAlignment="Top" Width="674" Height="43"/>
+        <Button x:Name="sqlb" Content="查询" HorizontalAlignment="Left" Margin="795,76,0,0" Grid.Row="2" VerticalAlignment="Top" Height="30" Width="80" Command="{Binding SqlQueryCommand}"/>
 
     </Grid>
 </Window>

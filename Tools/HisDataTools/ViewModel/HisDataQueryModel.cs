@@ -19,6 +19,7 @@ using System.Windows.Input;
 using System.Linq;
 using Cdy.Tag;
 using System.Text.RegularExpressions;
+using Microsoft.Win32;
 
 namespace HisDataTools.ViewModel
 {
@@ -72,6 +73,9 @@ namespace HisDataTools.ViewModel
 
         private int mTagValueQueryModel;
 
+        private bool mIgnorClosedQuality = false;
+
+        private bool mExportQuality=false;
         //private bool mIsFilterBusy = false;
 
         #endregion ...Variables...
@@ -96,6 +100,26 @@ namespace HisDataTools.ViewModel
         /// <summary>
             /// 
             /// </summary>
+        public bool ExportQuality
+        {
+            get
+            {
+                return mExportQuality;
+            }
+            set
+            {
+                if (mExportQuality != value)
+                {
+                    mExportQuality = value;
+                    OnPropertyChanged("ExportQuality");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public string OpMessage
         {
             get
@@ -245,6 +269,30 @@ namespace HisDataTools.ViewModel
                     mEndTimeHour = value;
                     OnPropertyChanged("EndTimeHour");
                 }
+            }
+        }
+
+        private ICommand mExportCommand;
+        public ICommand ExportCommand
+        {
+            get
+            {
+                if (mExportCommand == null)
+                {
+                    mExportCommand = new RelayCommand(() => {
+                    
+                        SaveFileDialog ofd = new SaveFileDialog();
+                        ofd.Filter = "csv|*.csv";
+                        if(ofd.ShowDialog().Value)
+                        {
+                            DateTime stime = StartTime.AddHours(StartTimeHour);
+                            DateTime etime = EndTime.AddHours(EndTimeHour);
+                            QueryExportHisData(mSelectTag, stime, etime, ofd.FileName);
+                            MessageBox.Show("导出完成!");
+                        }
+                    });
+                }
+                return mExportCommand;
             }
         }
 
@@ -443,6 +491,26 @@ namespace HisDataTools.ViewModel
         /// <summary>
             /// 
             /// </summary>
+        public bool IgnorClosedQuality
+        {
+            get
+            {
+                return mIgnorClosedQuality;
+            }
+            set
+            {
+                if (mIgnorClosedQuality != value)
+                {
+                    mIgnorClosedQuality = value;
+                    OnPropertyChanged("IgnorClosedQuality");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsOriginalValue
         {
             get
@@ -620,6 +688,90 @@ namespace HisDataTools.ViewModel
         /// <param name="tag"></param>
         /// <param name="startTime"></param>
         /// <param name="endTime"></param>
+        private void QueryExportHisData(string tag, DateTime startTime, DateTime endTime,string sfile)
+        {
+            mIsBusy = true;
+
+            if (!mTags.ContainsKey(mSelectTag)) return;
+
+            int id = mTags[mSelectTag].Item1;
+            DateTime sTime = StartTime.AddHours(StartTimeHour);
+            DateTime eTime = EndTime.AddHours(EndTimeHour);
+
+            int tcount = (int)(eTime - sTime).TotalSeconds;
+
+            switch (mTags[mSelectTag].Item2)
+            {
+                case (byte)Cdy.Tag.TagType.Bool:
+                    ProcessDataExport<bool>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.Byte:
+                    ProcessDataExport<byte>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.DateTime:
+                    ProcessDataExport<DateTime>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.Double:
+                    ProcessDataExport<double>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.Float:
+                    ProcessDataExport<float>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.Int:
+                    ProcessDataExport<int>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.Long:
+                    ProcessDataExport<long>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.Short:
+                    ProcessDataExport<short>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.String:
+                    ProcessDataExport<string>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.UInt:
+                    ProcessDataExport<uint>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.ULong:
+                    ProcessDataExport<ulong>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.UShort:
+                    ProcessDataExport<ushort>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.IntPoint:
+                    ProcessDataExport<IntPointData>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.UIntPoint:
+                    ProcessDataExport<UIntPointData>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.IntPoint3:
+                    ProcessDataExport<IntPoint3Data>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.UIntPoint3:
+                    ProcessDataExport<UIntPoint3Data>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.LongPoint:
+                    ProcessDataExport<LongPointData>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.ULongPoint:
+                    ProcessDataExport<ULongPointTag>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.LongPoint3:
+                    ProcessDataExport<LongPoint3Data>(id, sTime, eTime, sfile);
+                    break;
+                case (byte)Cdy.Tag.TagType.ULongPoint3:
+                    ProcessDataExport<ULongPoint3Data>(id, sTime, eTime, sfile);
+                    break;
+            }
+            mIsBusy = false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
         private void QueryHisData(string tag,DateTime startTime,DateTime endTime)
         {
             mIsBusy = true;
@@ -775,13 +927,17 @@ namespace HisDataTools.ViewModel
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            var result = HisDataManager.Manager.GetQueryService(mDatabase).ReadValue<T>(id,times,(Cdy.Tag.QueryValueMatchType)TagValueQueryModel);
+            HisQueryResult<T> result;
 
+            if (mIgnorClosedQuality)
+            {
+                result = HisDataManager.Manager.GetQueryService(mDatabase).ReadValueIgnorClosedQuality<T>(id, times, (Cdy.Tag.QueryValueMatchType)TagValueQueryModel);
+            }
+            else
+            {
+                result = HisDataManager.Manager.GetQueryService(mDatabase).ReadValue<T>(id, times, (Cdy.Tag.QueryValueMatchType)TagValueQueryModel);
+            }
             sw.Stop();
-
-           
-
-        
 
             CurveEntitySource entity = new CurveEntitySource();
             entity.Text = this.SelectTag;
@@ -882,6 +1038,38 @@ namespace HisDataTools.ViewModel
             catch
             {
                 return 0;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="sTime"></param>
+        /// <param name="eTime"></param>
+        private void ProcessDataExport<T>(int id, DateTime sTime, DateTime eTime,string sfile)
+        {
+            var result = HisDataManager.Manager.GetQueryService(mDatabase).ReadAllValue<T>(id, sTime, eTime);
+            using (var vss = new System.IO.StreamWriter(sfile))
+            {
+                int i = 0;
+                foreach (var value in result.ListAvaiableValues())
+                {
+                    DateTime time = value.Time;
+                    byte qu = value.Quality;
+                    if (qu == 64) continue;
+                    
+                    if(mExportQuality)
+                    {
+                        vss.WriteLine(time.ToString("yyyy-MM-dd HH:mm:ss.fff") + "," + value.Value+ "," + qu);
+                    }
+                    else
+                    {
+                        vss.WriteLine(time.ToString("yyyy-MM-dd HH:mm:ss.fff") + "," + value.Value);
+                    }
+                    i++;
+                }
             }
         }
 

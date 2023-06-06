@@ -9,6 +9,9 @@ service HislData {
   // 读取指定间隔的时间点的值
   rpc GetHisValue (HisDataRequest) returns (HisDataCollectionReplay);
 
+  // 读取指定间隔的时间点的值
+  rpc GetHisValueIgnorSystemExit (HisDataRequest) returns (HisDataCollectionReplay);
+
   //读取所有值
   rpc GetAllHisValue (AllHisDataRequest) returns (HisDataCollectionReplay);
 
@@ -35,6 +38,9 @@ service HislData {
 
   //查找在某个时间段内数值型变量的最小值
   rpc FindNumberTagMinValue (FindTagValueRequest) returns (FindTagValueDoubleDateTimeReplay);
+
+  //通过SQL 查询数据
+  rpc QueryDataBySql(QueryBySqlRequest) returns (QueryBySqlReplay);
 }
 
 message HisDataRequest{
@@ -140,4 +146,26 @@ message FindTagValueDoubleReplay
 {
 	bool Result=1;
 	double Values=2;
+}
+
+message QueryBySqlRequest{
+	string Token=1;
+	string Sql=2;
+}
+
+message QueryBySqlReplay
+{
+	bool Result=1;
+	int32 ValueType=2;
+	StringTable Value=3;
+}
+
+message StringTable
+{
+	repeated StringTableItem Rows=1;
+}
+
+message StringTableItem
+{
+	repeated string Columns=1;
 }

@@ -23,13 +23,38 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        bool CheckTime(long id, DateTime time);
+        bool CheckTime(long id, DateTime time,out bool isgreat);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void LockMemoryFile();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        void UnLockMemoryFile();
+        /// <summary>
+        /// 内存历史时间范围
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        Tuple<DateTime, DateTime> GetMemoryTimer(long id);
         /// <summary>
         /// 
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         DateTime GetStartMemoryTime(long id);
+
+        /// <summary>
+        /// 内存区的第一个值
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        object GetStartValue<T>(long id, out DateTime time, out byte quality);
 
         /// <summary>
         /// 
@@ -39,7 +64,7 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        void ReadValue<T>(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result,QueryContext context,out DateTime timelimit);
+        void ReadValue<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result,QueryContext context,out DateTime timelimit);
 
         /// <summary>
         /// 

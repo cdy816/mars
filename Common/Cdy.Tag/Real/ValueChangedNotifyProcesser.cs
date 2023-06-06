@@ -295,8 +295,10 @@ namespace Cdy.Tag
             {
                 if (this.NotifyType == RealDataNotifyType.All || this.NotifyType == RealDataNotifyType.Block)
                 {
+                    var vid = (id + 1) / BlockSize;
                     //lock (mBlockChangeds)
-                        mBlockChangeds[(id+1) / BlockSize].IsDirty = true;
+                    if(mBlockChangeds.ContainsKey(vid))
+                        mBlockChangeds[vid].IsDirty = true;
                 }
 
                 if ((this.NotifyType == RealDataNotifyType.All || this.NotifyType == RealDataNotifyType.Tag)&& mRegistorTagIds.Count>0)

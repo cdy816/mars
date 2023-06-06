@@ -21,7 +21,10 @@ namespace DBInStudio.Desktop.ViewModel
     {
 
         #region ... Variables  ...
-
+        /// <summary>
+        /// 
+        /// </summary>
+        private bool mIsSetTagId = true;
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -39,6 +42,45 @@ namespace DBInStudio.Desktop.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool IsSetTagId
+        {
+            get
+            {
+                return mIsSetTagId;
+            }
+            set
+            {
+                if (mIsSetTagId != value)
+                {
+                    mIsSetTagId = value;
+                    OnPropertyChanged("IsSetTagId");
+                    OnPropertyChanged("IsResetTagId");
+                }
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool IsResetTagId
+        {
+            get
+            {
+                return !mIsSetTagId;
+            }
+            set
+            {
+                IsSetTagId = !value;
+                OnPropertyChanged("IsResetTagId");
+            }
+        }
+
+
+
         /// <summary>
         /// 
         /// </summary>

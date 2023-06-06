@@ -15,6 +15,7 @@ using System.Text;
 using System.Linq;
 using Cdy.Tag;
 using System.Data.Common;
+using Google.Protobuf.WellKnownTypes;
 
 namespace DBDevelopClientApi
 {
@@ -345,7 +346,7 @@ namespace DBDevelopClientApi
         }
 
         /// <summary>
-        /// 
+        /// 新建数据库
         /// </summary>
         /// <param name="name"></param>
         /// <param name="desc"></param>
@@ -357,6 +358,27 @@ namespace DBDevelopClientApi
                 if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
                 {
                     return mCurrentClient.NewDatabase(new DBDevelopService.NewDatabaseRequest() { Database = name, LoginId = mLoginId, Desc = string.IsNullOrEmpty(desc) ? "" : desc }).Result;
+                }
+            }
+            catch
+            {
+                Logout();
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 删除数据库
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool RemoveDatabase(string name)
+        {
+            try
+            {
+                if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+                {
+                    return mCurrentClient.RemoveDatabase(new DBDevelopService.NewDatabaseRequest() { Database = name, LoginId = mLoginId }).Result;
                 }
             }
             catch
@@ -803,6 +825,33 @@ namespace DBDevelopClientApi
         /// 
         /// </summary>
         /// <param name="database"></param>
+        /// <param name="permission"></param>
+        /// <returns></returns>
+        public bool ReNameDatabasePermission(string database, string newName,string oldName)
+        {
+            try
+            {
+                if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+                {
+                    var req = new DBDevelopService.ReNameDatabasePermissionRequest();
+                    req.Database = database;
+                    req.LoginId = mLoginId;
+                    req.NewName = newName;
+                    req.OldName = oldName;
+                    return mCurrentClient.ReNameDatabasePermission(req).Result;
+                }
+            }
+            catch
+            {
+                Logout();
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
         /// <param name="name"></param>
         /// <param name="parentName"></param>
         public bool AddDatabaseUserGroup(string database, string name, string parentName)
@@ -895,6 +944,30 @@ namespace DBDevelopClientApi
         /// 
         /// </summary>
         /// <param name="database"></param>
+        /// <param name="oldname"></param>
+        /// <param name="newname"></param>
+        /// <returns></returns>
+        public bool ReNameDatabaseUser(string database,string oldname,string newname)
+        {
+            try
+            {
+                if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+                {
+                    var req = new DBDevelopService.RenameGroupRequest() { Database = database, LoginId = mLoginId, OldFullName=oldname, NewName=newname };
+                    return mCurrentClient.RenameDatabaseUser(req).Result;
+                }
+            }
+            catch
+            {
+                Logout();
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
         /// <param name="user"></param>
         /// <param name="password"></param>
         /// <returns></returns>
@@ -966,29 +1039,6 @@ namespace DBDevelopClientApi
                         Dictionary<int, Cdy.Tag.Tagbase> mRealTag = new Dictionary<int, Cdy.Tag.Tagbase>();
                         foreach (var vv in result.RealTag)
                         {
-                            //var tag = GetTag((int)vv.TagType);
-                            //tag.Id = (int)vv.Id;
-                            //tag.LinkAddress = vv.LinkAddress;
-                            //tag.Name = vv.Name;
-                            //tag.Desc = vv.Desc;
-                            //tag.Group = vv.Group;
-                            //tag.ReadWriteType = (Cdy.Tag.ReadWriteMode)vv.ReadWriteMode;
-                            //tag.Conveter = !string.IsNullOrEmpty(vv.Convert) ? vv.Convert.DeSeriseToValueConvert() : null;
-                            //if (tag is Cdy.Tag.NumberTagBase)
-                            //{
-                            //    (tag as Cdy.Tag.NumberTagBase).MaxValue = vv.MaxValue;
-                            //    (tag as Cdy.Tag.NumberTagBase).MinValue = vv.MinValue;
-                            //}
-
-                            //if (tag is Cdy.Tag.FloatingTagBase)
-                            //{
-                            //    (tag as Cdy.Tag.FloatingTagBase).Precision = (byte)vv.Precision;
-                            //}
-                            //if (tag is ComplexTag)
-                            //{
-                            //    (tag as ComplexTag).LinkComplexClass = vv.LinkComplexClass;
-                            //}
-                            //mRealTag.Add(tag.Id, tag);
                             var tag = TagMessageToTag(vv);
                             mRealTag.Add(tag.Id, tag);
                         }
@@ -1062,31 +1112,6 @@ namespace DBDevelopClientApi
                         Dictionary<int, Cdy.Tag.Tagbase> mRealTag = new Dictionary<int, Cdy.Tag.Tagbase>();
                         foreach (var vv in result.RealTag)
                         {
-                            //var tag = GetTag((int)vv.TagType);
-                            //tag.Id = (int)vv.Id;
-                            //tag.LinkAddress = vv.LinkAddress;
-                            //tag.Name = vv.Name;
-                            //tag.Desc = vv.Desc;
-                            //tag.Group = vv.Group;
-                            //tag.ReadWriteType = (Cdy.Tag.ReadWriteMode)vv.ReadWriteMode;
-                            //tag.Conveter = !string.IsNullOrEmpty(vv.Convert) ? vv.Convert.DeSeriseToValueConvert() : null;
-                            //if (tag is Cdy.Tag.NumberTagBase)
-                            //{
-                            //    (tag as Cdy.Tag.NumberTagBase).MaxValue = vv.MaxValue;
-                            //    (tag as Cdy.Tag.NumberTagBase).MinValue = vv.MinValue;
-                            //}
-
-                            //if (tag is Cdy.Tag.FloatingTagBase)
-                            //{
-                            //    (tag as Cdy.Tag.FloatingTagBase).Precision = (byte)vv.Precision;
-                            //}
-
-                            //if(tag is ComplexTag)
-                            //{
-                            //    (tag as ComplexTag).LinkComplexClass = vv.LinkComplexClass;
-                            //}
-
-                            //mRealTag.Add(tag.Id, tag);
                             var tag = TagMessageToTag(vv);
                             mRealTag.Add(tag.Id, tag);
                         }
@@ -1248,107 +1273,7 @@ namespace DBDevelopClientApi
             return re;
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="database"></param>
-        ///// <param name="group"></param>
-        ///// <param name="totalCount"></param>
-        ///// <param name="index"></param>
-        ///// <returns></returns>
-        //public Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> QueryTagByGroupFlat(string database, string group, int index, out int totalCount, out int tagCount, Dictionary<string, string> mFilters = null)
-        //{
-        //    Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> re = new Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>>();
-        //    try
-        //    {
-        //        if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
-        //        {
-        //            int idx = index;
-        //            var req = new DBDevelopService.GetTagByGroupRequest() { Database = database, LoginId = mLoginId, Group = group, Index = idx };
-        //            if (mFilters != null)
-        //            {
-        //                foreach (var vv in mFilters)
-        //                {
-        //                    req.Filters.Add(new DBDevelopService.FilterMessageItem() { Key = vv.Key, Value = vv.Value });
-        //                }
-        //            }
-
-        //            var result = mCurrentClient.GetTagByGroup(req);
-        //            tagCount = result.TagCount;
-
-        //            totalCount = result.Count;
-
-        //            if (result.Result)
-        //            {
-        //                Dictionary<int, Cdy.Tag.Tagbase> mRealTag = new Dictionary<int, Cdy.Tag.Tagbase>();
-        //                foreach (var vv in result.RealTag)
-        //                {
-        //                    var tag = TagMessageToTag(vv);
-        //                    mRealTag.Add(tag.Id, tag);
-        //                    FillRealTag(tag, mRealTag);
-        //                }
-
-        //                Dictionary<int, Cdy.Tag.HisTag> mHisTag = new Dictionary<int, Cdy.Tag.HisTag>();
-        //                foreach (var vv in result.HisTag)
-        //                {
-        //                    var tag = new Cdy.Tag.HisTag { Id = (int)vv.Id, TagType = (Cdy.Tag.TagType)vv.TagType, Type = (Cdy.Tag.RecordType)vv.Type, CompressType = (int)vv.CompressType };
-        //                    tag.Circle = (int)vv.Circle;
-        //                    tag.MaxValueCountPerSecond = (short)vv.MaxValueCountPerSecond;
-        //                    if (vv.Parameter.Count > 0)
-        //                    {
-        //                        tag.Parameters = new Dictionary<string, double>();
-        //                        foreach (var vvv in vv.Parameter)
-        //                        {
-        //                            tag.Parameters.Add(vvv.Name, vvv.Value);
-        //                        }
-
-        //                    }
-        //                    mHisTag.Add(tag.Id, tag);
-        //                }
-
-        //                foreach (var vv in mRealTag)
-        //                {
-        //                    if (mHisTag.ContainsKey(vv.Key))
-        //                    {
-        //                        re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], mHisTag[vv.Key]));
-        //                    }
-        //                    else
-        //                    {
-        //                        re.Add(vv.Key, new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(mRealTag[vv.Key], null));
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        else
-        //        {
-        //            totalCount = -1;
-        //            tagCount = 0;
-        //        }
-        //    }
-        //    catch
-        //    {
-        //        totalCount = 0;
-        //        tagCount = 0;
-        //        Logout();
-        //    }
-
-        //    return re;
-        //}
-
-        //private void FillRealTag(Tagbase tag, Dictionary<int, Cdy.Tag.Tagbase> result)
-        //{
-        //    if(tag is ComplexTag)
-        //    {
-        //        foreach(var vv in (tag as ComplexTag).Tags)
-        //        {
-        //            result.Add(vv.Key, vv.Value);
-        //            if(vv.Value is ComplexTag)
-        //            {
-        //                FillRealTag(vv.Value as ComplexTag, result);
-        //            }
-        //        }
-        //    }
-        //}
+        
 
         /// <summary>
         /// 
@@ -1386,29 +1311,6 @@ namespace DBDevelopClientApi
                         Dictionary<int, Cdy.Tag.Tagbase> mRealTag = new Dictionary<int, Cdy.Tag.Tagbase>();
                         foreach (var vv in result.RealTag)
                         {
-                            //var tag = GetTag((int)vv.TagType);
-                            //tag.Id = (int)vv.Id;
-                            //tag.LinkAddress = vv.LinkAddress;
-                            //tag.Name = vv.Name;
-                            //tag.Desc = vv.Desc;
-                            //tag.Group = vv.Group;
-                            //tag.ReadWriteType = (Cdy.Tag.ReadWriteMode)vv.ReadWriteMode;
-                            //tag.Conveter = !string.IsNullOrEmpty(vv.Convert) ? vv.Convert.DeSeriseToValueConvert() : null;
-                            //if (tag is Cdy.Tag.NumberTagBase)
-                            //{
-                            //    (tag as Cdy.Tag.NumberTagBase).MaxValue = vv.MaxValue;
-                            //    (tag as Cdy.Tag.NumberTagBase).MinValue = vv.MinValue;
-                            //}
-
-                            //if (tag is Cdy.Tag.FloatingTagBase)
-                            //{
-                            //    (tag as Cdy.Tag.FloatingTagBase).Precision = (byte)vv.Precision;
-                            //}
-                            //if (tag is ComplexTag)
-                            //{
-                            //    (tag as ComplexTag).LinkComplexClass = vv.LinkComplexClass;
-                            //}
-                            //tag.Parent = vv.Parent;
                             var tag = TagMessageToTag(vv);
                             mRealTag.Add(tag.Id, tag);
                         }
@@ -1465,6 +1367,10 @@ namespace DBDevelopClientApi
             tag.Group = vv.Group;
             tag.ReadWriteType = (Cdy.Tag.ReadWriteMode)vv.ReadWriteMode;
             tag.Conveter = !string.IsNullOrEmpty(vv.Convert) ? vv.Convert.DeSeriseToValueConvert() : null;
+            tag.Unit = vv.Unit;
+            tag.ExtendField1 = vv.ExtendField1;
+            tag.Area=vv.Area;
+
             if (tag is Cdy.Tag.NumberTagBase)
             {
                 (tag as Cdy.Tag.NumberTagBase).MaxValue = vv.MaxValue;
@@ -1518,30 +1424,6 @@ namespace DBDevelopClientApi
                         Dictionary<int, Cdy.Tag.Tagbase> mRealTag = new Dictionary<int, Cdy.Tag.Tagbase>();
                         foreach (var vv in result.RealTag)
                         {
-                            //var tag = GetTag((int)vv.TagType);
-                            //tag.Id = (int)vv.Id;
-                            //tag.LinkAddress = vv.LinkAddress;
-                            //tag.Name = vv.Name;
-                            //tag.Desc = vv.Desc;
-                            //tag.Group = vv.Group;
-                            //tag.ReadWriteType = (Cdy.Tag.ReadWriteMode)vv.ReadWriteMode;
-                            //tag.Conveter = !string.IsNullOrEmpty(vv.Convert) ? vv.Convert.DeSeriseToValueConvert() : null;
-                            //if (tag is Cdy.Tag.NumberTagBase)
-                            //{
-                            //    (tag as Cdy.Tag.NumberTagBase).MaxValue = vv.MaxValue;
-                            //    (tag as Cdy.Tag.NumberTagBase).MinValue = vv.MinValue;
-                            //}
-
-                            //if (tag is Cdy.Tag.FloatingTagBase)
-                            //{
-                            //    (tag as Cdy.Tag.FloatingTagBase).Precision = (byte)vv.Precision;
-                            //}
-                            //if (tag is ComplexTag)
-                            //{
-                            //    (tag as ComplexTag).LinkComplexClass = vv.LinkComplexClass;
-                            //}
-                            //tag.Parent = vv.Parent;
-                            //mRealTag.Add(tag.Id, tag);
                             var tag = TagMessageToTag(vv);
                             mRealTag.Add(tag.Id, tag);
                         }
@@ -1629,30 +1511,7 @@ namespace DBDevelopClientApi
                         Dictionary<int, Cdy.Tag.Tagbase> mRealTag = new Dictionary<int, Cdy.Tag.Tagbase>();
                         foreach (var vv in result.RealTag)
                         {
-                            //var tag = GetTag((int)vv.TagType);
-                            //tag.Id = (int)vv.Id;
-                            //tag.LinkAddress = vv.LinkAddress;
-                            //tag.Name = vv.Name;
-                            //tag.Desc = vv.Desc;
-                            //tag.Group = vv.Group;
-                            //tag.ReadWriteType = (Cdy.Tag.ReadWriteMode)vv.ReadWriteMode;
-                            //tag.Conveter = !string.IsNullOrEmpty(vv.Convert) ? vv.Convert.DeSeriseToValueConvert() : null;
-                            //if (tag is Cdy.Tag.NumberTagBase)
-                            //{
-                            //    (tag as Cdy.Tag.NumberTagBase).MaxValue = vv.MaxValue;
-                            //    (tag as Cdy.Tag.NumberTagBase).MinValue = vv.MinValue;
-                            //}
-
-                            //if (tag is Cdy.Tag.FloatingTagBase)
-                            //{
-                            //    (tag as Cdy.Tag.FloatingTagBase).Precision = (byte)vv.Precision;
-                            //}
-                            //if (tag is ComplexTag)
-                            //{
-                            //    (tag as ComplexTag).LinkComplexClass = vv.LinkComplexClass;
-                            //}
-                            //tag.Parent = vv.Parent;
-                            //mRealTag.Add(tag.Id, tag);
+                            
                             var tag = TagMessageToTag(vv);
                             mRealTag.Add(tag.Id, tag);
                         }
@@ -2332,6 +2191,9 @@ namespace DBDevelopClientApi
             re.Desc = tag.Desc;
             re.Convert = tag.Conveter != null ? tag.Conveter.SeriseToString() : string.Empty;
             re.ReadWriteMode = (int)tag.ReadWriteType;
+            re.ExtendField1 = tag.ExtendField1;
+            re.Unit = tag.Unit;
+            re.Area = tag.Area;
             if(tag is NumberTagBase)
             {
                 re.MaxValue = (tag as NumberTagBase).MaxValue;
@@ -2842,6 +2704,29 @@ namespace DBDevelopClientApi
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="tagids"></param>
+        /// <returns></returns>
+        public bool SetTagIds(string database, int id, int value)
+        {
+            try
+            {
+                if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+                {
+                    var qq = new DBDevelopService.SetTagIdRequest() { Database = database, LoginId = mLoginId, Value = value,TagID=id };
+                    var res = mCurrentClient.SetTagId(qq);
+                    return res.Result;
+                }
+            }
+            catch
+            {
+                Logout();
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void Logout()
         {
             lock(mLockObj)
@@ -2853,6 +2738,34 @@ namespace DBDevelopClientApi
                 }
             }
             
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="spider"></param>
+        /// <param name="ant"></param>
+        /// <returns></returns>
+        public bool GetExtendFunctions(out bool spider,out bool ant)
+        {
+            try
+            {
+                if (mCurrentClient != null && !string.IsNullOrEmpty(mLoginId))
+                {
+                    var qq = new DBDevelopService.GetRequest() {LoginId = mLoginId};
+                    var res = mCurrentClient.ExtendFunction(qq);
+                    spider = res.Spider;
+                    ant = res.Ant;
+                    return res.Result;
+                }
+            }
+            catch
+            {
+                Logout();
+            }
+            spider= false;
+            ant=false;
+            return false;
         }
 
         #endregion ...Methods...

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+	<PropertyGroup>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+		<Version>$(PackageVersion)</Version>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Authors></Authors>
+		<IsPackable>true</IsPackable>
+		<Description>
+		</Description>
+		<AssemblyName>Blazor.ECharts</AssemblyName>
+		<RootNamespace>Blazor.ECharts</RootNamespace>
+		<RepositoryType>github</RepositoryType>
+		<PackageTags>Blazor,.net core,ECharts</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<SupportedPlatform Include="browser" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.16" />
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Components\" />
+	</ItemGroup>
+
+</Project>

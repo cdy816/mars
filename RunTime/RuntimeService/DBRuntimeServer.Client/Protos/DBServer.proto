@@ -22,6 +22,8 @@ service DBServer {
 	rpc HotStartDatabse(DatabaseCommonRequest) returns (StartDatabseResponse);
 
 	rpc StopDatabse(DatabaseCommonRequest) returns (StartDatabseResponse);
+
+	rpc HasAlarm(DatabaseCommonRequest) returns (HasAlarmResponse);
 }
 
 message CommonRequest
@@ -83,5 +85,12 @@ message DiskInfo
 	string Total=2;
 	string Used=3;
 	string UsedFor=5;
+}
+
+message HasAlarmResponse
+{
+	bool Result=1;
+	bool Grpc=2;
+	int32 Port=3;
 }
 

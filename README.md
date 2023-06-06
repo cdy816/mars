@@ -12,6 +12,7 @@
 [![fork](https://gitee.com/chongdaoyang/mars/badge/fork.svg?theme=white)](https://gitee.com/chongdaoyang/mars/members)
 -->
 <!-- PROJECT LOGO -->
+<div align=center><img src="https://gitee.com/chongdaoyang/mars/raw/master/Doc/Images/mrdbr.png"></div>
 <br />
 <p align="center">
 
@@ -20,26 +21,14 @@
   <p align="center">
     高性能、跨平台实时库!        
     <br />
-    <br />
-    <a href="https://github.com/cdy816/mars/tree/master/Doc">帮助文档</a>
-    ·
-    <a href="https://github.com/cdy816/mars/issues">Bug 提交</a>
-    ·
-    <a href="https://github.com/cdy816/mars/issues">功能申请</a>
   </p>
 </p>
 
 # mars/火星实时物联数据库
 
- 在一个物联网、大数据的时代，需要完成对海量的、各种传感器数据的采集、存储。传感器数据的特点是：时序的、海量的。目前主要有关系型数据库、时序库、实时库三种类型数据库可用于对数据记录存储。区别于结构化的数据，这类数据具有时间的特性.
-   
-   如果使用关系型数据库，则需要自己设计数据库表的结构使其能够高效的存储数据，由于海量数据的存在，对数据的压缩显得尤为重要，而这些是传统的关系型数据库所不具备的，需要自己实现。
-   
-   时序数据库设计的初衷，就是为了弥补关系型数据库在存储时序性数据方面的缺点，但是它自身的定位还是在一种存储软件上；而现实中的应用除了需要将数据存储下来之外还有传感器的实时值服务、传感器的采集等工作是其不曾涉及的；同样这些需要使用者自己开发功能，而对于一个有着几十万、上百万、千万级别的系统来说，设计一套传感器实时数据的采集、实时数据的管理、服务等功能，同样需要较高的要求；这一点在传统工业领域使用的实时库，能够较好的弥补时序数据的不足。
-   
-   而工业系统中使用的实时库，在灵活性、新式接口、分布式的支持等方面略显不足。该项目就是想兼顾各自的优缺点，开发出一款适应这个时代的工业互联网实时数据库（**实时物联数据库**）。该项目的目标：在单台服务器上达到**300~500万**个传感器数据按照秒级变化的数据的历史存储，分布式版本可以达到**上千万、亿级别**。
-   
-  
+ Mars 数据库是一个集数据**采集**、**存储**、**分析**为一体的实时数据库。通过简单的可视化的配置，即可实现将工业现场的各种传感器接入、并进行记录或者进行数据逻辑处理、以及提供其他程序使用。
+ Mars 数据库具有较高的性能，单机支持120万个传感器信号接入；Mars 2.0 分布式版本通过多机联网组成的集群，可以实现上千万的信号的接入。
+ 
 
 ## 功能
 
@@ -51,39 +40,35 @@
   
   数据库运行时不支持直接添加、删除、修改变量，但支持数据库的热启动（即在不退出重启的情况下，可以动态加载生效数据库库开发时新增、修改的变量，不支持删除的变量动态生效）。
   
-  历史数据存储支持**无压缩**、**无损压缩**、**死区压缩**、**斜率死区压缩（旋转门算法）** 4种压缩方式，同时支持**数据补录**功能（配合设备驱动实现当网络中断、又恢复后历史数据补录的功能）。
+  历史数据存储支持**无损压缩**、**死区压缩**、**斜率死区压缩（旋转门算法）** 3种压缩方式，同时支持**数据补录**功能（配合设备驱动实现当网络中断、又恢复后历史数据补录的功能）。
   
   历史数据支持定时导出功能，由于采用独立的文件存储设计，历史数据的导入，只要将相应的文件拷贝到历史存储目录即可。
   
   数据库支持双机冗余热备功能，历史数据路径存储到第三方的物理磁盘上，实时数据支持实时数据同步。
 
+## 应用方案
+Mars数据库可以在不同的场景下使用，作为纯后端库的实时库模式、作为SCADA系统一部分的变量库模式，基于物联网的应用模式等。如下图：
+![Mars物联网应用](Doc/Images/Mars物联网应用.png)
+![Mars实时库模式](Doc/Images/Mars实时库模式.png)
+![Mars变量库应用](Doc/Images/Mars变量库应用.png)
+
 ## 接口
 1. 基于消费端的上接口。基于**Web API**、**Grpc**、**OPC-UA**、**私有协议高速接口**等。
-2. 基于数据采集端的下接口 [Spider ](https://github.com/cdy816/Spider) ([Gitee地址](https://gitee.com/chongdaoyang/Spider))
+2. 基于数据采集端的下接口 [Spider ](https://gitee.com/chongdaoyang/Spider)、第三方采集程序直接访问接口(DirectAccess)(Grpc,MQTT)
+
+## 关联项目
+1. 数据采集平台 [Spider ](https://gitee.com/chongdaoyang/Spider)
+2. 数据报警分析平台 [Ant ](https://gitee.com/chongdaoyang/Ant)
 
 ## 运行环境
-系统采用.net 5 平台开发,依赖于.net 5 的**跨平台**性，可部署在window、Linux等操作系统中,也可以部署在Docker中。 
+系统采用.net 6 平台开发,依赖于.net 6 的**跨平台**性，可部署在window、Linux等操作系统中,也可以部署在Docker中。 
 
 ## 开始使用
 
 ### 安装
 
- 1. 安装.net 运行环境 [参考微软官方文档](https://dotnet.microsoft.com/download/dotnet/5.0)
+ 1. 安装.net 运行环境 [参考微软官方文档](https://dotnet.microsoft.com/download/dotnet/6.0)
  2. 数据库安装。下载Mars 发部版本，将软件包解压到特定目录。
-
-### 手动构建
-
- 1. 安装 [VS 2019 开发环境](https://visualstudio.microsoft.com/zh-hans/vs/)
- 2. Clone [Mars 工程](https://github.com/cdy816/mars)
-
-
-### 使用流程
-
- 1. 使用DbInStudio 进行开发配置
- 2. 使用DbInRun 运行配置结果
- 3. 运行 XXXAPI 对外提供不同类型的服务
- 4. 通过 InSpiderDevelopWindow 进行数据采集驱动配置
- 5. 运行 InSpiderRun.exe 进行传感器设备采集
 
 
 ## 帮助文档、接口开发文档
@@ -91,26 +76,32 @@
 2. [Mar数据库应用结构](https://my.oschina.net/u/3520380/blog/4288058)
 
 ## 版本
-[0.5 版本](https://github.com/cdy816/mars/releases/tag/V0.5)
+[0.9 版本](https://gitee.com/chongdaoyang/mars/releases/V0.9)
 
 ## 路线图
 项目分成2个阶段：单机、分布式。
 
-1. 2021年完成第一阶段，同时性能尽量达到单机300万点左右。
-2. 2022年2月份开始分布式版本的开发，预计2025年10月份能够推出分布式版本的2.0。分布式版本通过计算机集群、多级协作的方式，来实现更大规模、变化更加快速的传感器数据的接入。
+1. 2023年10月份开始分布式版本的开发，预计2026年10月份能够推出分布式版本的2.0。分布式版本通过计算机集群、多级协作的方式，来实现更大规模、变化更加快速的传感器数据的接入。
 
 ## 沟通交流
 
-1. QQ 群:950906131
-2. Email:cdy816@hotmail.com
+1. 技术 QQ 群:950906131
+2. 开发者贡献群:601418190
+3. Email:cdy816@hotmail.com
+
+## 友情链接
+
+[IOT 采集平台](https://gitee.com/pnoker/iot-dc3)
 
 ## 合作伙伴
 
 非常欢迎你的加入！提一个 [Issue](https://github.com/cdy816/mars/issues)  或者提交一个 Pull Request。
 
-感谢以下人员的参与：
+感谢以下人员、公司的参与：
 
+  **宁波德沛数据**
   **lin**
+  **湖南大驰科技**  
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->

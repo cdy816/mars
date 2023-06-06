@@ -110,9 +110,9 @@ namespace RuntimeServiceImp
                 NetworkSendBytes = speed.Send;
                 NetworkReceiveBytes = speed.Received;
             }
-            catch(Exception ex)
+            catch(Exception)
             {
-                Console.WriteLine(ex.Message);
+                //Console.WriteLine(ex.Message);
             }
             //Console.WriteLine("Send:{0} Kb:Receive{1} Kb",NetworkSendBytes,NetworkReceiveBytes);
         }
@@ -132,37 +132,10 @@ namespace RuntimeServiceImp
                     }
                 }
             }
-            catch(Exception ex)
+            catch(Exception)
             {
-                Console.WriteLine(ex.Message);
+                //Console.WriteLine($"{ex.Message} {ex.StackTrace}");
             }
-        }
-
-        private static async Task<double> GetCpuUsageForProcess()
-
-        {
-
-            
-
-
-            var startTime = DateTime.UtcNow;
-
-            var startCpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
-
-            await Task.Delay(500);
-
-            var endTime = DateTime.UtcNow;
-
-            var endCpuUsage = Process.GetCurrentProcess().TotalProcessorTime;
-
-            var cpuUsedMs = (endCpuUsage - startCpuUsage).TotalMilliseconds;
-
-            var totalMsPassed = (endTime - startTime).TotalMilliseconds;
-
-            var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
-
-            return cpuUsageTotal * 100;
-
         }
 
         /// <summary>
@@ -177,11 +150,21 @@ namespace RuntimeServiceImp
             }
             else
             {
-                var dinfo = new DynamicInfo();
-                var mm = dinfo.Memory;
-                FreeMemory = mm.Free;
-                this.TotalMemory = mm.Total;
-                this.CPU = 100- dinfo.GetCpuState().Idolt;
+                try
+                {
+                    var dinfo = new DynamicInfo();
+                    this.CPU = 100 - dinfo.GetCpuState().Idolt;
+                    if (dinfo.Memory != null)
+                    {
+                        var mm = dinfo.Memory;
+                        this.TotalMemory = mm.Total;
+                        FreeMemory = mm.Free;
+                    }
+                }
+                catch
+                {
+
+                }
             }
         }
 
@@ -283,14 +266,6 @@ namespace RuntimeServiceImp
             //Console.WriteLine("TotalMemory:{0} Gb Free:{1} Gb {2} {3}", TotalMemory, FreeMemory,(TotalMemory -FreeMemory)%TotalMemory, UsedPercent);
         }
     }
-
-    //public class DiskInfoItem
-    //{
-    //    public string  Lable { get; set; }
-    //    public double Total { get; set; }
-    //    public double Free { get; set; }
-    //}
-
 
 }
 

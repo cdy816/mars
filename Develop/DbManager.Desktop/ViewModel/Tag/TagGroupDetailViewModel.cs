@@ -79,6 +79,11 @@ namespace DBInStudio.Desktop.ViewModel
 
         private bool mCompressFilterEnable;
 
+        private bool mFilterAreaEnable;
+
+        private string mFilterArea =string.Empty;
+             
+
         private int mFilterCompressType;
 
         private bool mDriverFilterEnable;
@@ -265,6 +270,52 @@ namespace DBInStudio.Desktop.ViewModel
                 }
             }
         }
+
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool FilterAreaEnable
+        {
+            get
+            {
+                return mFilterAreaEnable;
+            }
+            set
+            {
+                if (mFilterAreaEnable != value)
+                {
+                    mFilterAreaEnable = value;
+                    
+                    OnPropertyChanged("FilterAreaEnable");
+                    if (!value || !string.IsNullOrEmpty(mFilterArea))
+                    {
+                        NewQueryTags();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public string FilterArea
+        {
+            get
+            {
+                return mFilterArea;
+            }
+            set
+            {
+                if (mFilterArea != value)
+                {
+                    mFilterArea = value;
+                    NewQueryTags();
+                    OnPropertyChanged("FilterArea");
+                }
+            }
+        }
+
 
 
         /// <summary>
@@ -709,7 +760,21 @@ namespace DBInStudio.Desktop.ViewModel
                         IdResetViewModel model = new IdResetViewModel();
                         if(model.ShowDialog().Value)
                         {
-                            DoResetTagId(model.StartId);
+                            if (model.IsSetTagId)
+                            {
+                                if(!DoSetTagId(model.StartId))
+                                {
+                                    MessageBox.Show(Res.Get("SetFailed"));
+                                }
+                                else if(CurrentSelectTag!=null)
+                                {
+                                    CurrentSelectTag.Id = model.StartId;
+                                }
+                            }
+                            else
+                            {
+                                DoResetTagId(model.StartId);
+                            }
                         }
                     });
                 }
@@ -850,6 +915,15 @@ namespace DBInStudio.Desktop.ViewModel
 
         #region ... Methods    ...
 
+        private bool DoSetTagId(int value)
+        {
+            if (CurrentSelectTag != null)
+            {
+                return DevelopServiceHelper.Helper.SetTagIds(GroupModel.Database, CurrentSelectTag.Id, value);
+            }
+            return true;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -913,6 +987,11 @@ namespace DBInStudio.Desktop.ViewModel
             if(this.ReadWriteModeFilterEnable)
             {
                 mFilters.Add("readwritetype", FilterReadWriteMode.ToString());
+            }
+
+            if(this.FilterAreaEnable)
+            {
+                mFilters.Add("area", FilterArea);
             }
 
             if (this.RecordFilterEnable)
@@ -1375,6 +1454,10 @@ namespace DBInStudio.Desktop.ViewModel
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         private bool CanPasteTagProperty()
         {
             if (mPropertyCopy == null || SelectedCells.Count == 0 || mPropertyCopy.Item2==0) return false;

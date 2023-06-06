@@ -62,6 +62,32 @@ namespace DBDevelopService.Controllers
         public int KeepNoZipFileDays { get; set; }
     }
 
+    public class WebApiProxyApiUpdateRequest : WebApiDatabaseRequest
+    {
+        public bool EnableWebApi { get; set; }
+
+        public bool EnableGrpcApi { get; set; }
+
+        public bool EnableHighApi { get; set; }
+
+
+        public bool EnableOpcServer { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ProxyApiResponse : ResultResponse
+    {
+        public bool EnableWebApi { get; set; }
+
+        public bool EnableGrpcApi { get; set; }
+
+        public bool EnableHighApi { get; set; }
+
+        public bool EnableOpcServer { get; set; }
+    }
+
 
     public class WebApiUpdateRealDataServerPortRequest : WebApiDatabaseRequest
     {
@@ -137,7 +163,7 @@ namespace DBDevelopService.Controllers
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<string,string> Filters { get; set; }
+        public Dictionary<string, string> Filters { get; set; }
 
         /// <summary>
         /// 
@@ -205,6 +231,23 @@ namespace DBDevelopService.Controllers
         /// 
         /// </summary>
         public string OldParentName { get; set; }
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class WebApiUpdateDriverSettingRequest : WebApiDatabaseRequest
+    {
+        public Dictionary<string, string> Settings { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class WebApiGetDriverSettingResponse : ResultResponse
+    {
+        public Dictionary<string, string> Settings { get; set; }=new Dictionary<string, string>();
     }
 
 

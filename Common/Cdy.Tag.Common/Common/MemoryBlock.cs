@@ -816,14 +816,14 @@ namespace Cdy.Tag
                 else
                 {
                     long ltmp = len - ll;
-                    int bcount = ll / BufferItemSize;
+                    int bcount = (int)(ltmp / BufferItemSize);
                     int i = 0;
                     for (i = 0; i < bcount; i++)
                     {
                         id++;
                         Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
                     }
-                    int otmp = ll % BufferItemSize;
+                    int otmp = (int)(ltmp % BufferItemSize);
                     if (otmp > 0)
                     {
                         id++;
@@ -866,14 +866,14 @@ namespace Cdy.Tag
                 else
                 {
                     long ltmp = len - ll;
-                    int bcount = ll / BufferItemSize;
+                    int bcount = (int)(ltmp / BufferItemSize);
                     int i = 0;
                     for (i = 0; i < bcount; i++)
                     {
                         id++;
                         Buffer.BlockCopy(values, valueoffset + ll + i * BufferItemSize, mBuffers[id], 0, BufferItemSize);
                     }
-                    int otmp = ll % BufferItemSize;
+                    int otmp = (int)(ltmp % BufferItemSize);
                     if (otmp > 0)
                     {
                         id++;

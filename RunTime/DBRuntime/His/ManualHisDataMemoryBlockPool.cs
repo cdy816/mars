@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace DBRuntime.His
 {
@@ -28,6 +29,8 @@ namespace DBRuntime.His
         /// </summary>
         private Dictionary<int, Queue<ManualHisDataMemoryBlock>> mFreePools = new Dictionary<int, Queue<ManualHisDataMemoryBlock>>();
 
+        private int mCachCount = 0;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -40,6 +43,13 @@ namespace DBRuntime.His
 
         #region ... Properties ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public int MaxCachCount { get; set; } = 0;
+
+       
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -48,23 +58,35 @@ namespace DBRuntime.His
         /// 
         /// </summary>
         /// <param name="size"></param>
+        /// <returns></returns>
+        private int RoundSize(int size)
+        {
+            return (size / 2048 + 1) * 2048;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="size"></param>
         public void PreAlloc(int size)
         {
+           int psize = RoundSize(size);
             lock (mFreePools)
             {
-                if (mFreePools.ContainsKey(size))
+                if (mFreePools.ContainsKey(psize))
                 {
-                    var pp = mFreePools[size];
-                    var bnb = NewBlock(size);
+                    var pp = mFreePools[psize];
+                    var bnb = NewBlock(psize);
                     pp.Enqueue(bnb);
                 }
                 else
                 {
-                    var bnb = NewBlock(size);
+                    var bnb = NewBlock(psize);
                     Queue<ManualHisDataMemoryBlock> dd = new Queue<ManualHisDataMemoryBlock>();
                     dd.Enqueue(bnb);
-                    mFreePools.Add(size,dd);
+                    mFreePools.Add(psize, dd);
                 }
+                Interlocked.Increment(ref mCachCount);
             }
         }
 
@@ -75,20 +97,24 @@ namespace DBRuntime.His
         /// <returns></returns>
         public ManualHisDataMemoryBlock Get(int size)
         {
-            if (mFreePools.ContainsKey(size))
+            int psize = RoundSize(size);
+            if (mFreePools.ContainsKey(psize))
             {
                 lock (mFreePools)
                 {
-                    var pp = mFreePools[size];
+                    var pp = mFreePools[psize];
                     if (pp.Count > 0)
                     {
                         var bnb = pp.Dequeue();
+                        Interlocked.Decrement(ref mCachCount);
+                        bnb.UsedSize= size;
                         return bnb;
                     }
                     else
                     {
                         //Cdy.Tag.LoggerService.Service.Debug("ManualHisMemoryBlockPool", "New datablock 1 size:" + size);
-                        var bnb = NewBlock(size);
+                        var bnb = NewBlock(psize);
+                        bnb.UsedSize = size;
                         return bnb;
                     }
                 }
@@ -98,16 +124,17 @@ namespace DBRuntime.His
                 lock (mFreePools)
                 {
                     //Cdy.Tag.LoggerService.Service.Debug("ManualHisMemoryBlockPool", "New datablock 2 size:" + size);
-                    var bnb = NewBlock(size);
-                    if (mFreePools.ContainsKey(size))
+                    var bnb = NewBlock(psize);
+                    if (mFreePools.ContainsKey(psize))
                     {
                         return bnb;
                     }
                     else
                     {
                         Queue<ManualHisDataMemoryBlock> dd = new Queue<ManualHisDataMemoryBlock>();
-                        mFreePools.Add(size, dd);
+                        mFreePools.Add(psize, dd);
                     }
+                    bnb.UsedSize = size;
                     return bnb;
                 }
             }
@@ -140,7 +167,24 @@ namespace DBRuntime.His
                 block.Clear();
                 lock (mFreePools)
                 {
-                    vv.Enqueue(block);
+                    if (mCachCount >= MaxCachCount)
+                    {
+                        if(vv.Count>0)
+                        {
+                            var dis = vv.Dequeue();
+                            dis.Dispose();
+                            vv.Enqueue(block);
+                        }
+                        else
+                        {
+                            block.Dispose();
+                        }
+                    }
+                    else
+                    {
+                        vv.Enqueue(block);
+                        Interlocked.Increment(ref mCachCount);
+                    }
                 }
             }
             else

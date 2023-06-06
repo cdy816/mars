@@ -1229,6 +1229,192 @@ namespace DirectAccessDriver.ClientApi
         }
 
         /// <summary>
+        /// 添加值、质量、时间
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <param name="re"></param>
+        public RealDataBuffer AppendTagValueAndQualityWithTimer(int id,TagType type, object value, DateTime time, byte quality)
+        {
+            CheckAndResize(mPosition + 32);
+            this.Write(id);
+            this.Write((byte)type);
+            this.Write(time.Ticks);
+            switch (type)
+            {
+                case TagType.Bool:
+                    this.Write(Convert.ToByte(value));
+                    break;
+                case TagType.Byte:
+                    this.Write(Convert.ToByte(value));
+                    break;
+                case TagType.Short:
+                    this.Write(Convert.ToInt16(value));
+                    break;
+                case TagType.UShort:
+                    this.Write(Convert.ToUInt16(value));
+                    break;
+                case TagType.Int:
+                    this.Write(Convert.ToInt32(value));
+                    break;
+                case TagType.UInt:
+                    this.Write(Convert.ToInt32(value));
+                    break;
+                case TagType.Long:
+                case TagType.ULong:
+                    this.Write(Convert.ToInt64(value));
+                    break;
+                case TagType.Float:
+                    this.Write(Convert.ToSingle(value));
+                    break;
+                case TagType.Double:
+                    this.Write(Convert.ToDouble(value));
+                    break;
+                case TagType.String:
+                    string sval = value.ToString();
+                    //re.WriteInt(sval.Length);
+                    this.Write(sval, Encoding.Unicode);
+                    break;
+                case TagType.DateTime:
+                    this.Write(((DateTime)value).ToBinary());
+                    break;
+                case TagType.IntPoint:
+                    this.Write(((IntPointData)value).X);
+                    this.Write(((IntPointData)value).Y);
+                    break;
+                case TagType.UIntPoint:
+                    this.Write((int)((UIntPointData)value).X);
+                    this.Write((int)((UIntPointData)value).Y);
+                    break;
+                case TagType.IntPoint3:
+                    this.Write(((IntPoint3Data)value).X);
+                    this.Write(((IntPoint3Data)value).Y);
+                    this.Write(((IntPoint3Data)value).Z);
+                    break;
+                case TagType.UIntPoint3:
+                    this.Write((int)((UIntPoint3Data)value).X);
+                    this.Write((int)((UIntPoint3Data)value).Y);
+                    this.Write((int)((UIntPoint3Data)value).Z);
+                    break;
+                case TagType.LongPoint:
+                    this.Write(((LongPointData)value).X);
+                    this.Write(((LongPointData)value).Y);
+                    break;
+                case TagType.ULongPoint:
+                    this.Write((long)((ULongPointData)value).X);
+                    this.Write((long)((ULongPointData)value).Y);
+                    break;
+                case TagType.LongPoint3:
+                    this.Write(((LongPoint3Data)value).X);
+                    this.Write(((LongPoint3Data)value).Y);
+                    this.Write(((LongPoint3Data)value).Z);
+                    break;
+                case TagType.ULongPoint3:
+                    this.Write((long)((ULongPoint3Data)value).X);
+                    this.Write((long)((ULongPoint3Data)value).Y);
+                    this.Write((long)((ULongPoint3Data)value).Z);
+                    break;
+            }
+            this.WriteByte(quality);
+            this.ValueCount++;
+            return this;
+        }
+
+
+        /// <summary>
+        /// 添加值、质量
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="value"></param>
+        /// <param name="quality"></param>
+        /// <param name="re"></param>
+        public RealDataBuffer AppendTagValueAndQuality(int id, TagType type, object value, byte quality)
+        {
+            CheckAndResize(mPosition + 32);
+            this.Write(id);
+            this.Write((byte)type);
+            switch (type)
+            {
+                case TagType.Bool:
+                    this.Write(Convert.ToByte(value));
+                    break;
+                case TagType.Byte:
+                    this.Write(Convert.ToByte(value));
+                    break;
+                case TagType.Short:
+                    this.Write(Convert.ToInt16(value));
+                    break;
+                case TagType.UShort:
+                    this.Write(Convert.ToUInt16(value));
+                    break;
+                case TagType.Int:
+                    this.Write(Convert.ToInt32(value));
+                    break;
+                case TagType.UInt:
+                    this.Write(Convert.ToInt32(value));
+                    break;
+                case TagType.Long:
+                case TagType.ULong:
+                    this.Write(Convert.ToInt64(value));
+                    break;
+                case TagType.Float:
+                    this.Write(Convert.ToSingle(value));
+                    break;
+                case TagType.Double:
+                    this.Write(Convert.ToDouble(value));
+                    break;
+                case TagType.String:
+                    string sval = value.ToString();
+                    //re.WriteInt(sval.Length);
+                    this.Write(sval, Encoding.Unicode);
+                    break;
+                case TagType.DateTime:
+                    this.Write(((DateTime)value).ToBinary());
+                    break;
+                case TagType.IntPoint:
+                    this.Write(((IntPointData)value).X);
+                    this.Write(((IntPointData)value).Y);
+                    break;
+                case TagType.UIntPoint:
+                    this.Write((int)((UIntPointData)value).X);
+                    this.Write((int)((UIntPointData)value).Y);
+                    break;
+                case TagType.IntPoint3:
+                    this.Write(((IntPoint3Data)value).X);
+                    this.Write(((IntPoint3Data)value).Y);
+                    this.Write(((IntPoint3Data)value).Z);
+                    break;
+                case TagType.UIntPoint3:
+                    this.Write((int)((UIntPoint3Data)value).X);
+                    this.Write((int)((UIntPoint3Data)value).Y);
+                    this.Write((int)((UIntPoint3Data)value).Z);
+                    break;
+                case TagType.LongPoint:
+                    this.Write(((LongPointData)value).X);
+                    this.Write(((LongPointData)value).Y);
+                    break;
+                case TagType.ULongPoint:
+                    this.Write((long)((ULongPointData)value).X);
+                    this.Write((long)((ULongPointData)value).Y);
+                    break;
+                case TagType.LongPoint3:
+                    this.Write(((LongPoint3Data)value).X);
+                    this.Write(((LongPoint3Data)value).Y);
+                    this.Write(((LongPoint3Data)value).Z);
+                    break;
+                case TagType.ULongPoint3:
+                    this.Write((long)((ULongPoint3Data)value).X);
+                    this.Write((long)((ULongPoint3Data)value).Y);
+                    this.Write((long)((ULongPoint3Data)value).Z);
+                    break;
+            }
+            this.WriteByte(quality);
+            this.ValueCount++;
+            return this;
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="id"></param>

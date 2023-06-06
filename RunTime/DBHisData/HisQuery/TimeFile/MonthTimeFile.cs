@@ -8,6 +8,8 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace Cdy.Tag
@@ -23,6 +25,10 @@ namespace Cdy.Tag
         private SortedDictionary<DateTime, DayFileItem> mFileMaps = new SortedDictionary<DateTime, DayFileItem>();
 
         private DateTime mMaxTime = DateTime.MinValue;
+
+        private DateTime mMinScanTime = DateTime.MaxValue;
+
+        private DateTime mMaxScanTime = DateTime.MinValue;
 
         #endregion ...Variables...
 
@@ -40,6 +46,7 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public YearTimeFile Parent { get; set; }
+
 
         #endregion ...Properties...
 
@@ -106,7 +113,7 @@ namespace Cdy.Tag
             {
                 if (!mFileMaps.ContainsKey(startTime))
                 {
-                    var vdd = new DayFileItem() { Duration = duration, Time = startTime };
+                    var vdd = new DayFileItem() { Duration = duration, Time = startTime,EndTime=startTime+duration };
                     if (file is HisDataFileInfo4)
                     {
                         vdd.File1 = file;
@@ -122,11 +129,25 @@ namespace Cdy.Tag
                     {
                         mMaxTime = startTime;
                     }
+
+                    var vdata = startTime.Date;
+
+                    if(vdata < mMinScanTime)
+                    {
+                        mMinScanTime = vdata;
+                    }
+
+                    if(vdata > mMaxScanTime)
+                    {
+                        mMaxScanTime = vdata;
+                    }
+
                 }
                 else
                 {
                     var vv = mFileMaps[startTime];
                     vv.Duration = duration;
+                    vv.EndTime = vv.Time+ duration;
                     if (file is HisDataFileInfo4)
                     {
                         vv.File1 = file;
@@ -141,6 +162,18 @@ namespace Cdy.Tag
                     {
                         mMaxTime = startTime;
                     }
+
+                    var vdata = startTime.Date;
+
+                    if (vdata < mMinScanTime)
+                    {
+                        mMinScanTime = vdata;
+                    }
+
+                    if (vdata > mMaxScanTime)
+                    {
+                        mMaxScanTime = vdata;
+                    }
                 }
             }
         }
@@ -152,20 +185,202 @@ namespace Cdy.Tag
         /// <returns></returns>
         public IDataFile GetDataFile(DateTime dateTime)
         {
+            IDataFile re = null;
             lock (this)
             {
+               
                 foreach (var vv in mFileMaps)
                 {
-                    if (vv.Key <= dateTime)
+                    //if (vv.Key <= dateTime && dateTime < (vv.Key + vv.Value.Duration))
+                    if (vv.Key <= dateTime && dateTime < vv.Value.EndTime)
                     {
-                        if (vv.Value.File1 != null && dateTime < (vv.Key + vv.Value.Duration))
-                            return vv.Value.File1;
-                        else if (vv.Value.File2 != null && dateTime < (vv.Key + vv.Value.Duration))
-                            return vv.Value.File2;
+                        re = vv.Value.File1 != null ? vv.Value.File1 : (vv.Value.File2);
+                    }
+                }
+                //如果临时加载一个文件，则再重新判断一遍
+                if (re == null && CheckAndLoad(dateTime))
+                {
+                    foreach (var vv in mFileMaps)
+                    {
+                        //if (vv.Key <= dateTime && dateTime < (vv.Key + vv.Value.Duration))
+                        if (vv.Key <= dateTime && dateTime < vv.Value.EndTime)
+                        {
+                            return vv.Value.File1 != null ? vv.Value.File1 : (vv.Value.File2);
+                        }
                     }
                 }
             }
-            return null;
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public void FillDataFile(RecordList<DateTime> dateTimes, SortedDictionary<DateTime, IDataFile> dic, List<DateTime> logFileTimes)
+        {
+            IDataFile re = null;
+            lock (this)
+            {
+                DateTime dat=DateTime.MinValue;
+                //加载还未扫描加载的内容
+                foreach(var vv in dateTimes.Select(e=>e.Date))
+                {
+                    if(dat!=vv)
+                    {
+                        CheckAndLoad(vv);
+                        dat = vv;
+                    }
+                }
+
+                var vfdate = mFileMaps.First().Key;
+                foreach(var vv in dateTimes)
+                {
+                    var val = dateTimes.PeekGet();
+                    if(val<vfdate)
+                    {
+                        logFileTimes.Add(val);
+                        dateTimes.Next();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                ////bool needbreak = false;
+                foreach (var vv in mFileMaps)
+                {
+                    while (dateTimes.CanGet())
+                    {
+                        var val = dateTimes.PeekGet();
+                        if(val<vv.Value.Time)
+                        {
+                            logFileTimes.Add(val);
+                            dateTimes.Next();
+                        }
+                        else if (vv.Value.Time <= val && val < vv.Value.EndTime)
+                        {
+                            re = vv.Value.File1 != null ? vv.Value.File1 : (vv.Value.File2);
+                            dic.Add(val, re);
+                            dateTimes.Next();
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    if (!dateTimes.CanGet())
+                    {
+                        return;
+                    }
+                    //if (needbreak) break;
+                }
+
+                while (dateTimes.CanGet())
+                {
+                    var vtime = dateTimes.PeekGet();
+                    if (vtime.Month == TimeKey)
+                    {
+                        logFileTimes.Add(vtime);
+                        dateTimes.Next();
+                    }
+                }
+
+                ////延迟加载处理,
+                //while(dateTimes.CanGet())
+                //{
+                //    var vtime = dateTimes.PeekGet();
+                //    if(vtime.Month== TimeKey)
+                //    {
+                //        if (CheckAndLoad(vtime))
+                //        {
+                //            FillDataFile(dateTimes, dic, logFileTimes);
+                //        }
+                //        else
+                //        {
+                //            logFileTimes.Add(vtime);
+                //            dateTimes.Next();
+                //        }
+                //    }
+                //    else
+                //    {
+                //        break;
+                //    }
+                //}
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public void FillDataFile(RecordList<DateTime> dateTimes, SortedDictionary<DateTime, IDataFile> dic, ArrayList<DateTime> logFileTimes)
+        {
+            IDataFile re = null;
+            lock (this)
+            {
+                var vfdate = mFileMaps.First().Key;
+                foreach (var vv in dateTimes)
+                {
+                    var val = dateTimes.PeekGet();
+                    if (val < vfdate)
+                    {
+                        logFileTimes.Add(val);
+                        dateTimes.Next();
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                foreach (var vv in mFileMaps)
+                {
+                    while (dateTimes.CanGet())
+                    {
+                        var val = dateTimes.PeekGet();
+                        if (vv.Value.Time <= val && val < vv.Value.EndTime)
+                        {
+                            re = vv.Value.File1 != null ? vv.Value.File1 : (vv.Value.File2);
+                            dic.Add(val, re);
+                            dateTimes.Next();
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    if (!dateTimes.CanGet())
+                    {
+                        return;
+                    }
+                }
+
+                //延迟加载处理,
+                while (dateTimes.CanGet())
+                {
+                    var vtime = dateTimes.PeekGet();
+                    if (vtime.Month == TimeKey)
+                    {
+                        if (CheckAndLoad(vtime))
+                        {
+                            FillDataFile(dateTimes, dic, logFileTimes);
+                        }
+                        else
+                        {
+                            logFileTimes.Add(vtime);
+                            dateTimes.Next();
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -180,6 +395,17 @@ namespace Cdy.Tag
             {
                 List<IDataFile> infos = new List<IDataFile>();
 
+                //延迟加载历史数据
+                if(startTime.Date<mMinScanTime || startTime.Date> mMaxScanTime || endTime.Date<mMinScanTime || endTime.Date> mMaxScanTime)
+                {
+                    DateTime st = startTime.Date;
+                    while(st<= endTime)
+                    {
+                        CheckAndLoad(st);
+                        st = st.AddDays(1);
+                    }
+                }
+
                 DateTime stime = startTime;
                 foreach (var vv in mFileMaps)
                 {
@@ -191,6 +417,139 @@ namespace Cdy.Tag
                 return infos;
             }
         }
+
+        private List<DateTime> mCachedTimes = new List<DateTime>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void ClearCachedTimes()
+        {
+            mCachedTimes.Clear();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        private bool CheckAndLoad(DateTime time)
+        {
+            if(mCachedTimes.Contains(time.Date))
+            {
+                return false;
+            }
+
+            string spath = System.IO.Path.Combine(this.Parent.DataPath, time.Year.ToString(), time.Month.ToString(),time.Day.ToString());
+            if (System.IO.Directory.Exists(spath))
+            {
+                ScanFile(spath);
+            }
+            mCachedTimes.Add(time.Date);
+
+            if (!string.IsNullOrEmpty(this.Parent.BackPath))
+            {
+                spath = System.IO.Path.Combine(this.Parent.BackPath, time.Year.ToString(), time.Month.ToString(), time.Day.ToString());
+                if (System.IO.Directory.Exists(spath))
+                {
+                    ScanFile(spath);
+                }
+            }
+
+            if(time<mMinScanTime)
+            {
+                mMinScanTime = time;
+            }
+            if(time> mMaxScanTime)
+            {
+                mMaxScanTime = time;
+            }
+
+            return true;
+        }
+
+
+        private void ScanFile(string path)
+        {
+            System.IO.DirectoryInfo sdd = new System.IO.DirectoryInfo(path);
+            if(sdd.Exists)
+            {
+                foreach(var vv in sdd.EnumerateFiles())
+                {
+                    if (vv.Extension == DataFileManager.DataFileExtends || vv.Extension == DataFileManager.HisDataFileExtends || vv.Extension == DataFileManager.ZipHisDataFileExtends || vv.Extension == DataFileManager.DataFile2Extends || vv.Extension == DataFileManager.ZipDataFile2Extends)
+                    {
+                        ParseFileName(vv);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fileName"></param>
+        private void ParseFileName(System.IO.FileInfo file)
+        {
+
+            DateTime startTime = ParseFileToTime(file.Name, out int id, out int hhspan);
+
+            if (file.Extension == DataFileManager.DataFileExtends)
+            {
+                Parent.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new DataFileInfo4() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = Parent.Database + id });
+            }
+            else if (file.Extension == DataFileManager.HisDataFileExtends || file.Extension == DataFileManager.ZipHisDataFileExtends)
+            {
+                Parent.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new HisDataFileInfo4() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = Parent.Database + id, IsZipFile = (file.Extension == DataFileManager.ZipHisDataFileExtends) });
+            }
+            else if (file.Extension == DataFileManager.DataFile2Extends || file.Extension == DataFileManager.ZipDataFile2Extends)
+            {
+                Parent.AddFile(startTime, new TimeSpan(hhspan, 0, 0), new DataFileInfo6() { Duration = new TimeSpan(hhspan, 0, 0), StartTime = startTime, FileName = file.FullName, FId = Parent.Database + id, IsZipFile = (file.Extension == DataFileManager.ZipDataFile2Extends) });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="id"></param>
+        /// <param name="hhspan"></param>
+        /// <returns></returns>
+        private DateTime ParseFileToTime(string file, out int id, out int hhspan)
+        {
+            string sname = System.IO.Path.GetFileNameWithoutExtension(file);
+            string stime = sname.Substring(sname.Length - 12, 12);
+            int yy = 0, mm = 0, dd = 0;
+
+            id = -1;
+            hhspan = 0;
+            int.TryParse(sname.Substring(sname.Length - 15, 3), out id);
+
+            if (id == -1)
+                return DateTime.MinValue;
+
+            if (!int.TryParse(stime.Substring(0, 4), out yy))
+            {
+                return DateTime.MinValue;
+            }
+
+            if (!int.TryParse(stime.Substring(4, 2), out mm))
+            {
+                return DateTime.MinValue;
+            }
+
+            if (!int.TryParse(stime.Substring(6, 2), out dd))
+            {
+                return DateTime.MinValue;
+            }
+            hhspan = int.Parse(stime.Substring(8, 2));
+
+            int hhind = int.Parse(stime.Substring(10, 2));
+
+            int hh = hhspan * hhind;
+
+            return new DateTime(yy, mm, dd, hh, 0, 0);
+        }
+
 
         /// <summary>
         /// 
@@ -225,6 +584,11 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public TimeSpan Duration { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime EndTime { get; set; }
         /// <summary>
         /// 
         /// </summary>

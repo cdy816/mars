@@ -1,6 +1,10 @@
 ﻿using Cdy.Tag;
+using Cdy.Tag.Common;
+using DirectAccessDriver.ClientApi;
+using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -83,7 +87,8 @@ namespace DirectAccessDriverApiDemo
         {
             try
             {
-                var vtags = mProxy.QueryAllTagIdAndNames();
+                string database = mProxy.GetDatabseName();
+                var vtags = mProxy.QueryAllTagIdAndNames(50000);
                 mTagids.Clear();
                 mTagTypes.Clear();
                 mTagNames.Clear();
@@ -98,12 +103,12 @@ namespace DirectAccessDriverApiDemo
                     }
                 }
 
-                var rds = mProxy.GetDriverRecordTypeTagIds();
+                var rds = mProxy.GetDriverRecordTypeTagIds(50000);
 
                 if(mTagids.Count>0)
                 {
                     htagname.ItemsSource = mTagids.Keys;
-                    itmsg.Text = $"变量个数:{mTagids.Count} 变量ID  Min:{mTagids.Values.Min()}   Max:{mTagids.Values.Max()}  驱动记录类型的变量个数:{rds.Count}";
+                    itmsg.Text = $"数据库{database}  变量个数:{mTagids.Count} 变量ID  Min:{mTagids.Values.Min()}   Max:{mTagids.Values.Max()}  驱动记录类型的变量个数:{rds.Count}";
                 }
                
             }
@@ -376,6 +381,327 @@ namespace DirectAccessDriverApiDemo
                 
                 });
 
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void StartWrite_Click(object sender, RoutedEventArgs e)
+        {
+            ProcessTagHisValueSet2();
+        }
+
+        private void ProcessTagHisValueSet()
+        {
+            int sid = int.Parse(fromId.Text);
+            int eid = int.Parse(toId.Text);
+            int circle = int.Parse(writeCircle.Text);
+            DirectAccessDriver.ClientApi.RealDataBuffer hbuffer = new DirectAccessDriver.ClientApi.RealDataBuffer(eid * 32);
+            Task.Run(() => {
+
+                int valvount = 0;
+                while (true)
+                {
+                    mProxy.CheckAndRemoveTimeoutData();
+
+                    Stopwatch sw = new Stopwatch();
+                    sw.Start();
+
+                    hbuffer.Clear();
+                    DateTime date = DateTime.UtcNow;
+                    int cc = 0;
+                    double dval = Math.Sin(valvount / 180.0 * Math.PI);
+                    for (int i = sid; i <= eid; i++)
+                    {
+                        //hbuffer.AppendTagValueAndQuality(i, TagType.Double, dval, 0);
+                        hbuffer.AppendTagValueAndQualityWithTimer(i, TagType.Double, dval, date, 0);
+                        cc++;
+                    }
+                    long ltmp = sw.ElapsedMilliseconds;
+
+                    mProxy.SetTagRealAndHisValueWithTimerAsync(hbuffer, (result) => {
+                        sw.Stop();
+                        if (result)
+                        {
+                            string slog = $"{valvount} {date} 写入值:{dval} 数据准备耗时:{ltmp}ms  写入耗时:{sw.ElapsedMilliseconds - ltmp} ms " + "\r\n";
+                            this.Dispatcher.Invoke(new Action(() =>
+                            {
+                                if (valvount % 100 == 0)
+                                {
+                                    log.SelectAll();
+                                    log.Selection.Text = "\r\n";
+                                }
+                                log.AppendText(slog);
+                                log.ScrollToEnd();
+
+                            }));
+                        }
+                        else
+                        {
+                            string slog = $"写入超时 " + "\r\n";
+                            this.Dispatcher.Invoke(new Action(() =>
+                            {
+                                log.AppendText(slog);
+                                log.ScrollToEnd();
+                            }));
+                        }
+                    }, 5000);
+                    valvount++;
+                    Thread.Sleep(circle * 1000);
+                }
+            });
+        }
+
+        private void ProcessTagHisValueSet2()
+        {
+            int sid = int.Parse(fromId.Text);
+            int eid = int.Parse(toId.Text);
+            int circle = int.Parse(writeCircle.Text);
+            List<RealTagValueWithTimer> hbuffer = new List<RealTagValueWithTimer>(eid * 32);
+            Task.Run(() => {
+
+                int valvount = 0;
+                while (true)
+                {
+                    mProxy.CheckAndRemoveTimeoutData();
+
+                    Stopwatch sw = new Stopwatch();
+                    sw.Start();
+
+                    hbuffer.Clear();
+                    DateTime date = DateTime.UtcNow;
+                    int cc = 0;
+                    double dval = Math.Sin(valvount / 180.0 * Math.PI);
+                    for (int i = sid; i <= eid; i++)
+                    {
+                        hbuffer.Add(new RealTagValueWithTimer() { Id = i,ValueType = (byte)TagType.Double , Quality = 0, Time = date, Value = dval });
+                        //hbuffer.AppendTagValueAndQuality(i, TagType.Double, dval, 0);
+                        //hbuffer.AppendTagValueAndQualityWithTimer(i, TagType.Double, dval, date, 0);
+                        cc++;
+                    }
+                    long ltmp = sw.ElapsedMilliseconds;
+
+                    mProxy.SetTagRealAndHisValueWithTimerAsync(hbuffer, (result) => {
+                        sw.Stop();
+                        if (result)
+                        {
+                            string slog = $"{valvount} {date} 写入值:{dval} 数据准备耗时:{ltmp}ms  写入耗时:{sw.ElapsedMilliseconds - ltmp} ms " + "\r\n";
+                            this.Dispatcher.Invoke(new Action(() =>
+                            {
+                                if (valvount % 100 == 0)
+                                {
+                                    log.SelectAll();
+                                    log.Selection.Text = "\r\n";
+                                }
+                                log.AppendText(slog);
+                                log.ScrollToEnd();
+
+                            }));
+                        }
+                        else
+                        {
+                            string slog = $"写入超时 " + "\r\n";
+                            this.Dispatcher.Invoke(new Action(() =>
+                            {
+                                log.AppendText(slog);
+                                log.ScrollToEnd();
+                            }));
+                        }
+                    }, 5000);
+                    valvount++;
+                    Thread.Sleep(circle * 1000);
+                }
+            });
+        }
+
+        private void gettagvalue_Click(object sender, RoutedEventArgs e)
+        {
+            int id = mTagids[rtname.Text];
+            double dval = double.Parse(rtval.Text);
+            var vdatas = mProxy.GetRealData(new List<int>() { id });
+            if(vdatas != null && vdatas.Count>0)
+            {
+                MessageBox.Show(vdatas.First().Value.Value.ToString());
+            }
+        }
+
+        private void hgetval_Click(object sender, RoutedEventArgs e)
+        {
+            DateTime stime = DateTime.Parse(htimestart.Text).ToUniversalTime();
+            DateTime etime = DateTime.Parse(htimeend.Text).ToUniversalTime();
+
+            int spen = int.Parse(htimspan.Text);
+            List<DateTime> values = new List<DateTime>();
+            DateTime dt = stime;
+            while (dt <= etime)
+            {
+                values.Add(dt);
+                dt = dt.AddSeconds(spen);
+            }
+            int sname = mTagids[htagname.Text];
+            var vals = mProxy.QueryHisValueAtTimes<double>(sname, values, QueryValueMatchType.Previous);
+            if (vals != null)
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (var vv in vals.ListAvaiableValues())
+                {
+                    sb.AppendLine(vv.Time + " " + vv.Value + " " + vv.Quality);
+                }
+                Trace.WriteLine(sb.ToString());
+            }
+        }
+
+        private void hgetallval_Click(object sender, RoutedEventArgs e)
+        {
+            DateTime stime = DateTime.Parse(htimestart.Text).ToUniversalTime();
+            DateTime etime = DateTime.Parse(htimeend.Text).ToUniversalTime();
+
+            int sname = mTagids[htagname.Text];
+            var vals =  mProxy.QueryAllHisValue<double>(sname, stime, etime);
+            if (vals != null)
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (var vv in vals.ListAvaiableValues())
+                {
+                    sb.AppendLine(vv.Time + " " + vv.Value + " " + vv.Quality);
+                }
+                Trace.WriteLine(sb.ToString());
+            }
+        }
+
+        private void hgetval2_Click(object sender, RoutedEventArgs e)
+        {
+            DateTime stime = DateTime.Parse(htimestart.Text).ToUniversalTime();
+            DateTime etime = DateTime.Parse(htimeend.Text).ToUniversalTime();
+
+            int spen = int.Parse(htimspan.Text);
+            int sname = mTagids[htagname.Text];
+            var vals = mProxy.QueryHisValueForTimeSpan<double>(sname, stime,etime,new TimeSpan(0,0, spen), QueryValueMatchType.Previous);
+            if (vals != null)
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (var vv in vals.ListAvaiableValues())
+                {
+                    sb.AppendLine(vv.Time + " " + vv.Value + " " + vv.Quality);
+                }
+                Trace.WriteLine(sb.ToString());
+            }
+        }
+
+        private void StartWriteSync_Click(object sender, RoutedEventArgs e)
+        {
+            int sid = int.Parse(fromId.Text);
+            int eid = int.Parse(toId.Text);
+            int circle = int.Parse(writeCircle.Text);
+            List<RealTagValueWithTimer> hbuffer = new List<RealTagValueWithTimer>(eid * 32);
+            Task.Run(() => {
+
+                int valvount = 0;
+                while (true)
+                {
+                    mProxy.CheckAndRemoveTimeoutData();
+
+                    Stopwatch sw = new Stopwatch();
+                    sw.Start();
+
+                    hbuffer.Clear();
+                    DateTime date = DateTime.UtcNow;
+                    int cc = 0;
+                    double dval = Math.Sin(valvount / 180.0 * Math.PI);
+                    for (int i = sid; i <= eid; i++)
+                    {
+                        hbuffer.Add(new RealTagValueWithTimer() { Id = i, ValueType = (byte)TagType.Double, Quality = 0, Time = date, Value = dval });
+                        cc++;
+                    }
+                    long ltmp = sw.ElapsedMilliseconds;
+
+                    var result = mProxy.SetTagRealAndHisValueWithTimer(hbuffer);
+
+                    sw.Stop();
+                    if (result)
+                    {
+                        string slog = $"{valvount} {date} 写入值:{dval} 数据准备耗时:{ltmp}ms  写入耗时:{sw.ElapsedMilliseconds - ltmp} ms " + "\r\n";
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            if (valvount % 100 == 0)
+                            {
+                                log.SelectAll();
+                                log.Selection.Text = "\r\n";
+                            }
+                            log.AppendText(slog);
+                            log.ScrollToEnd();
+
+                        }));
+                    }
+                    else
+                    {
+                        string slog = $"写入超时 " + "\r\n";
+                        this.Dispatcher.Invoke(new Action(() =>
+                        {
+                            log.AppendText(slog);
+                            log.ScrollToEnd();
+                        }));
+                    }
+                    valvount++;
+                    Thread.Sleep(circle * 1000);
+                }
+            });
+        }
+
+        private void tbutton_Click(object sender, RoutedEventArgs e)
+        {
+            int ifv = int.Parse(tf.Text);
+            int itv = int .Parse(tt.Text);
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    List<RealTagValue> values = new List<RealTagValue>();
+                    for (int i = ifv; i < itv; i++)
+                    {
+                        double dval = Random.Shared.NextDouble();
+                        values.Add(new RealTagValue() { Id = i, Value = dval, ValueType = (byte)TagType.Double, Quality = 0 });
+                    }
+                    mProxy.SetAreaTagHisValue(DateTime.UtcNow, values);
+                    Thread.Sleep(1000);
+                }
+            });
+        }
+
+        private void sqlQuery_Click(object sender, RoutedEventArgs e)
+        {
+            var vals = mProxy.QueryHisValueBySql(sqlexp.Text);
+            if (vals is HisQueryTableResult)
+            {
+                foreach (var vv in (vals as HisQueryTableResult).ReadRows())
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.Append(vv.Item1.ToString());
+                    foreach (var vv2 in vv.Item2)
+                    {
+                        sb.Append($",{vv2}");
+                    }
+                    Debug.WriteLine(sb.ToString());
+                }
+            }
+            else if(vals is List<double>)
+            {
+                foreach(var vv in vals as List<double>)
+                {
+                    Debug.Write(vv+",");
+                }
+                Debug.WriteLine("");
+               
+            }
+            else if(vals is Dictionary<int, TagRealValue>)
+            {
+                foreach (var vv in vals as Dictionary<int, TagRealValue>)
+                {
+                    Debug.WriteLine(vv.Value.Value + ",");
+                }
             }
         }
     }

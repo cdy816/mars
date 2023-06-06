@@ -1,0 +1,47 @@
+﻿@using System.Text;
+@inject NavigationManager Navigation
+@inject IJSRuntime JS;
+@inject MarsProxy mProxy;
+
+<div class="navbar navbar-dark navbar-expand-lg bg-body-tertiary" style="background-image:linear-gradient(to bottom, rgba(27,110,194, 0.5), rgba(27,110,194, 0.6))">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src="./css/Image/mrdb.png" alt="logo" height="32" class="d-inline-block" style="font-size:larger" />
+            Mars 数据库运行监视平台
+        </a>
+        @if (EnableEdit)
+        {
+            <span class="navbar-text">
+                @mProxy.CurrentUser
+        </span>
+        }
+    </div>
+    
+</div>
+<div class="progress" role="progressbar" aria-label="Basic example" aria-valuenow="@(mProgressValue)" aria-valuemin="0" aria-valuemax="100" style="height:1px;margin-top:-1px">
+    <div class="progress-bar" style="width: @(mProgressValue)%"></div>
+</div>
+
+
+@code {
+    [Parameter]
+    public bool EnableEdit { get; set; } = false;
+
+    private int mProgressValue = 0;
+
+
+    #region Import
+
+    private bool mIsImportShow = false;
+    private int mImportModel = 0;
+
+    private void SetImportModel(int val)
+    {
+        mImportModel = val;
+    }
+
+
+   
+
+    #endregion
+}

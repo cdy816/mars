@@ -2,6 +2,7 @@
 using Grpc.Net.Client;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Xml.Linq;
@@ -138,10 +139,11 @@ namespace DBGrpcApi
             {
                 try
                 {
-                    var re = mSecurityClient.Login(new LoginRequest() { Name = username, Password = password });
+                    var re = mSecurityClient.Login(new LoginRequest() { Name = username, Password = password,ApplicationCode=Cdy.Tag.Common.Common.Md5Helper.CalSha1() });
                     TimeOut = re.Timeout;
                     LoginTime = DateTime.FromBinary(re.Time).ToLocalTime();
                     mLoginId = re.Token;
+                    return true;
                 }
                 catch
                 {
@@ -174,13 +176,13 @@ namespace DBGrpcApi
         /// 定时心跳，维持登录
         /// </summary>
         /// <returns></returns>
-        public bool Hart()
+        public bool Heart()
         {
             try
             {
                 if(mSecurityClient!=null && !string.IsNullOrEmpty(mLoginId))
                 {
-                    return mSecurityClient.Hart(new HartRequest() { Token = mLoginId,Time = DateTime.UtcNow.Ticks }).Result;
+                    return mSecurityClient.Heart(new HeartRequest() { Token = mLoginId,Time = DateTime.UtcNow.Ticks }).Result;
                 }
             }
             catch
@@ -348,6 +350,82 @@ namespace DBGrpcApi
                             {
                                 re.Add(sname, ConvertToValue(val.Value, val.ValueType));
                             }
+                        }
+                    }
+                }
+                return re;
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 读取变量的状态
+        /// </summary>
+        /// <param name="tags">变量名称集合</param>
+        /// <returns></returns>
+        public Dictionary<string, short> ReadTagState(List<string> tags)
+        {
+            try
+            {
+                Dictionary<string, short> re = new Dictionary<string, short>();
+                var gtags = GetGroupTags(tags);
+                foreach (var vv in gtags)
+                {
+                    var vvv = new GetTagStateRequest() { Group = vv.Key, Token = mLoginId };
+                    vvv.TagNames.AddRange(vv.Value);
+                    var res = mRealDataClient.GetTagState(vvv);
+                    if (res.Result)
+                    {
+                        foreach (var val in res.Values)
+                        {
+                            string sname = val.TagName;
+                            if (!string.IsNullOrEmpty(vv.Key)&&sname.IndexOf(".")<0)
+                            {
+                                sname = vv.Key + "." + sname;
+                            }
+                            re.Add(sname, (short)val.Value);
+                        }
+                    }
+                }
+                return re;
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 读取变量的扩展属性2
+        /// </summary>
+        /// <param name="tags">变量名称集合</param>
+        /// <returns></returns>
+        public Dictionary<string, long> ReadTagExtendField2(List<string> tags)
+        {
+            try
+            {
+                Dictionary<string, long> re = new Dictionary<string, long>();
+                var gtags = GetGroupTags(tags);
+                foreach (var vv in gtags)
+                {
+                    var vvv = new GetTagStateRequest() { Group = vv.Key, Token = mLoginId };
+                    vvv.TagNames.AddRange(vv.Value);
+                    var res = mRealDataClient.GetTagExtendField2(vvv);
+                    if (res.Result)
+                    {
+                        foreach (var val in res.Values)
+                        {
+                            string sname = val.TagName;
+                            if (!string.IsNullOrEmpty(vv.Key) && sname.IndexOf(".") < 0)
+                            {
+                                sname = vv.Key + "." + sname;
+                            }
+                            re.Add(sname, val.Value);
                         }
                     }
                 }
@@ -597,6 +675,92 @@ namespace DBGrpcApi
             return null;
         }
 
+        /// <summary>
+        /// 读取历史记录,忽略系统退出对数据拟合的影响
+        /// </summary>
+        /// <param name="tags">变量名称集合</param>
+        /// <param name="starttime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
+        /// <param name="duration">时间间隔</param>
+        /// <param name="type">值拟合类型<see cref="QueryValueMatchType"/></param>
+        /// <returns></returns>
+        public Dictionary<string, HisDataValueCollection> ReadHisValueByIgnorSystemExit(List<string> tags, DateTime starttime, DateTime endTime, TimeSpan duration, Cdy.Tag.QueryValueMatchType type)
+        {
+            if (mHisDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                Dictionary<string, HisDataValueCollection> re = new Dictionary<string, HisDataValueCollection>();
+                var req = new HisDataRequest() { StartTime = starttime.ToBinary(), EndTime = endTime.ToBinary(), Duration = (int)duration.TotalMilliseconds, QueryType = (int)type, Token = mLoginId };
+                req.Tags.AddRange(tags);
+                var res = mHisDataClient.GetHisValueIgnorSystemExit(req);
+                if (res.Result)
+                {
+                    foreach (var vv in res.Values)
+                    {
+                        HisDataValueCollection hvd = new HisDataValueCollection() { ValueType = vv.ValueType };
+                        foreach (var vvv in vv.Values)
+                        {
+                            hvd.Add(new HisDataValuePoint() { Time = DateTime.FromBinary(vvv.Time), Value = ConvertToValue(vvv.Value, vv.ValueType) });
+                        }
+                        re.Add(vv.Tag, hvd);
+                    }
+                }
+                return re;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 根据SQL语句查询变量的值
+        /// </summary>
+        /// <param name="sql">Sql 语句</param>
+        /// <returns>历史数据表List<List<string>>、统计结果string[]、实时数据值List<RealTagValueWithTimer2> </returns>
+        public object ReadValueBySql(string sql)
+        {
+            if (mHisDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                var res = mHisDataClient.QueryDataBySql(new QueryBySqlRequest() { Sql = sql, Token = mLoginId });
+                if(res!=null)
+                {
+                    if(res.ValueType==0)
+                    {
+                        //表格形式,第一行数据表格头
+                        List<List<string>> vals = new List<List<string>>();
+                        foreach(var vv in res.Value.Rows)
+                        {
+                            vals.Add(vv.Columns.ToList());
+                        }
+                        return vals;
+                    }
+                    else if(res.ValueType==1)
+                    {
+                        //列表形式
+                        if(res.Value.Rows.Count>0)
+                        {
+                            return res.Value.Rows[0].Columns.ToArray();
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                    else if(res.ValueType==2)
+                    {
+                        //实时数据
+                        List<RealTagValueWithTimer2> vals = new List<RealTagValueWithTimer2>();
+                        foreach (var vv in res.Value.Rows)
+                        {
+                            RealTagValueWithTimer2 vvv = new RealTagValueWithTimer2() { TagName = vv.Columns[0] };
+                            vvv.Value = vv.Columns[1];
+                            vvv.Quality = byte.Parse(vv.Columns[2]);
+                            vvv.Time = DateTime.Parse(vv.Columns[3]);
+                            vals.Add(vvv);
+                        }
+                        return vals;
+                    }
+                }
+            }
+            return null;
+        }
 
         /// <summary>
         /// 读取记录的所有值
@@ -700,6 +864,43 @@ namespace DBGrpcApi
         }
 
         /// <summary>
+        /// 设置变量的状态
+        /// </summary>
+        /// <param name="value">变量名称和值的集合</param>
+        /// <returns></returns>
+        public bool SetTagState(Dictionary<string, short> values)
+        {
+            if (mRealDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                SetTagStateRequest svr = new SetTagStateRequest() { Token = mLoginId };
+                foreach (var vv in values)
+                    svr.Values.Add(new IntValueItem() { TagName = vv.Key, Value = vv.Value });
+                var res = mRealDataClient.SetTagState(svr);
+                return res.Result;
+            }
+            return false;
+        }
+
+
+        /// <summary>
+        /// 设置变量的扩展属性2
+        /// </summary>
+        /// <param name="value">变量名称和值的集合</param>
+        /// <returns></returns>
+        public bool SetTagExtendField2(Dictionary<string, long> values)
+        {
+            if (mRealDataClient != null && !string.IsNullOrEmpty(mLoginId))
+            {
+                SetTagExtendField2Request svr = new SetTagExtendField2Request() { Token = mLoginId };
+                foreach (var vv in values)
+                    svr.Values.Add(new Int64ValueItem() { TagName = vv.Key, Value = vv.Value });
+                var res = mRealDataClient.SetTagExtendField2(svr);
+                return res.Result;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// 查找某个值对应的时间
         /// </summary>
         /// <param name="tag">变量名称</param>
@@ -737,7 +938,7 @@ namespace DBGrpcApi
         /// <param name="type">数值型变量值比较方式<see cref="NumberStatisticsType"/></param>
         /// <param name="value">值</param>
         /// <param name="interval">偏差,默认:0</param>
-        /// <returns></returns>
+        /// <returns>累计时间(单位：秒)</returns>
         public double? CalTagValueKeepTime(string tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval)
         {
             if (mRealDataClient != null && !string.IsNullOrEmpty(mLoginId))

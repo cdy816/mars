@@ -25,6 +25,8 @@ namespace Cdy.Tag
 
         private string mDataPath;
 
+        private string mBasePath = "";
+
         public static PathHelper helper = new PathHelper();
 
         private string mDatabaseName;
@@ -43,7 +45,9 @@ namespace Cdy.Tag
         public PathHelper()
         {
             mAppPath = System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location);
-            mDataPath = System.IO.Path.Combine(mAppPath,"Data");
+            mBasePath = mAppPath;
+            LoadBasePathConfig();
+            mDataPath = System.IO.Path.Combine(mBasePath, "Data");
         }
 
         #endregion ...Constructor...
@@ -76,6 +80,24 @@ namespace Cdy.Tag
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void LoadBasePathConfig()
+        {
+            string sfile = System.IO.Path.Combine(mAppPath, "BasePath.cfg");
+            {
+               if(System.IO.File.Exists(sfile))
+                {
+                    string txt= System.IO.File.ReadAllText(sfile,Encoding.UTF8);
+                    if(!string.IsNullOrWhiteSpace(txt) && System.IO.Directory.Exists(txt))
+                    {
+                        mBasePath = txt;
+                    }
+                }
+            }
+        }
 
         ///// <summary>
         ///// 

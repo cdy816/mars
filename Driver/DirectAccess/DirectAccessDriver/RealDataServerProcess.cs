@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Cdy.Tag;
@@ -56,7 +57,7 @@ namespace DirectAccessDriver
 
         //private bool mIsBusy = false;
 
-        private string mName;
+        protected string mName;
 
         #endregion ...Variables...
 
@@ -128,7 +129,7 @@ namespace DirectAccessDriver
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected  override void ProcessSingleData(string client, ByteBuffer data)
+        public override void ProcessSingleData(string client, ByteBuffer data)
         {
             if(data==null || data.RefCount==0)
             {
@@ -185,14 +186,32 @@ namespace DirectAccessDriver
                             case APIConst.SetTagValueAndQualityFun:
                                 ProcessSetRealDataAndQuality(client, data);
                                 break;
+                            case APIConst.SetTagValueAndQualityFunAsync:
+                                ProcessSetRealDataAndQualityAsync(client, data);
+                                break;
                             case APIConst.SetTagValueTimeAndQualityFun:
                                 ProcessSetRealDataValueTimeAndQuality(client,data);
+                                break;
+                            case APIConst.SetTagValueTimeAndQualityFunAsync:
+                                ProcessSetRealDataValueTimeAndQualityAsync(client, data);
+                                break;
+                            case APIConst.SetTagRealAndHisValueWithTagNameFun:
+                                ProcessSetRealAndHistDataWithTagNames(client, data);
+                                break;
+                            case APIConst.SetTagRealAndHisValueTimerWithTagNameFun:
+                                ProcessSetRealAndHistDataTimerWithTagNames(client, data);
                                 break;
                             case APIConst.SetTagRealAndHisValueFun:
                                 ProcessSetRealAndHistData(client, data);
                                 break;
+                            case APIConst.SetTagRealAndHisValueFunAsync:
+                                ProcessSetRealAndHistDataAsync(client, data);
+                                break;
                             case APIConst.SetTagRealAndHisValueWithTimeFun:
                                 ProcessSetRealAndHistDataWithTimer(client, data);
+                                break;
+                            case APIConst.SetTagRealAndHisValueWithTimeFunAsync:
+                                ProcessSetRealAndHistDataWithTimerAsync(client, data);
                                 break;
                             case APIConst.RegistorTag:
                                 ProcessValueChangeNotify(client, data);
@@ -202,6 +221,10 @@ namespace DirectAccessDriver
                                 break;
                             case APIConst.ClearRegistorTag:
                                 ProcessResetValueChangedNotify(client, data);
+                                break;
+                            case APIConst.ReadTagRealValue:
+                                int cid = data.ReadInt();
+                                ProcessReadRealDataValueValue(client, data,cid);
                                 break;
                         }
                     }
@@ -225,9 +248,8 @@ namespace DirectAccessDriver
         /// <param name="block"></param>
         private void ProcessSetRealDataAndQualityWithTagNames(string clientid, ByteBuffer block)
         {
-            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
-            var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
+            //var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
             int count = block.ReadInt();
             byte qua;
             lock (Driver.DriverdRecordTags)
@@ -422,8 +444,8 @@ namespace DirectAccessDriver
                     }
                 }
             }
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             service?.SubmiteNotifyChanged();
-
         }
 
         /// <summary>
@@ -435,7 +457,7 @@ namespace DirectAccessDriver
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
             var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
-            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+
 
             int count = block.ReadInt();
             string id = "";
@@ -764,8 +786,9 @@ namespace DirectAccessDriver
                 }
 
             }
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             service?.SubmiteNotifyChanged();
-
+            hisservice?.SubmitCach();
         }
 
 
@@ -778,7 +801,7 @@ namespace DirectAccessDriver
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
             var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
-            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+          
 
             int count = block.ReadInt();
             string id = "";
@@ -789,10 +812,11 @@ namespace DirectAccessDriver
                 id = block.ReadString();
                 typ = block.ReadByte();
                 DateTime dt = DateTime.FromBinary(block.ReadLong());
+              
                 switch (typ)
                 {
                     case (byte)TagType.Bool:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id)&&dt> service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = block.ReadByte()>0;
                             qua = block.ReadByte();
@@ -807,7 +831,7 @@ namespace DirectAccessDriver
                         }
                         break;
                     case (byte)TagType.Byte:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = block.ReadByte();
                             qua = block.ReadByte();
@@ -822,7 +846,7 @@ namespace DirectAccessDriver
                         }
                         break;
                     case (byte)TagType.Short:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = block.ReadShort();
                             qua = block.ReadByte();
@@ -838,7 +862,7 @@ namespace DirectAccessDriver
                         //value = block.ReadShort();
                         break;
                     case (byte)TagType.UShort:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = (ushort)block.ReadShort();
                             qua = block.ReadByte();
@@ -853,7 +877,7 @@ namespace DirectAccessDriver
                         //value = (ushort)block.ReadShort();
                         break;
                     case (byte)TagType.Int:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = block.ReadInt();
                             qua = block.ReadByte();
@@ -868,7 +892,7 @@ namespace DirectAccessDriver
                         //value = block.ReadInt();
                         break;
                     case (byte)TagType.UInt:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = (uint)block.ReadInt();
                             qua = block.ReadByte();
@@ -883,7 +907,7 @@ namespace DirectAccessDriver
                         //value = (uint)block.ReadInt();
                         break;
                     case (byte)TagType.Long:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = block.ReadLong();
                             qua = block.ReadByte();
@@ -898,7 +922,7 @@ namespace DirectAccessDriver
                         //value = block.ReadLong();
                         break;
                     case (byte)TagType.ULong:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = (ulong)block.ReadLong();
                             qua = block.ReadByte();
@@ -913,7 +937,7 @@ namespace DirectAccessDriver
                         //value = (ulong)block.ReadLong();
                         break;
                     case (byte)TagType.Float:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = block.ReadFloat();
                             qua = block.ReadByte();
@@ -928,7 +952,7 @@ namespace DirectAccessDriver
                         // value = block.ReadFloat();
                         break;
                     case (byte)TagType.Double:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = block.ReadDouble();
                             qua = block.ReadByte();
@@ -943,7 +967,7 @@ namespace DirectAccessDriver
                         // block.ReadDouble();
                         break;
                     case (byte)TagType.String:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bs = block.ReadString();
                             qua = block.ReadByte();
@@ -958,7 +982,7 @@ namespace DirectAccessDriver
                         //value = block.ReadString();
                         break;
                     case (byte)TagType.DateTime:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = DateTime.FromBinary(block.ReadLong());
                             qua = block.ReadByte();
@@ -973,7 +997,7 @@ namespace DirectAccessDriver
                         //value = DateTime.FromBinary(block.ReadLong());
                         break;
                     case (byte)TagType.IntPoint:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = new IntPointData(block.ReadInt(), block.ReadInt());
                             qua = block.ReadByte();
@@ -989,7 +1013,7 @@ namespace DirectAccessDriver
                         //value = new IntPointData(block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.UIntPoint:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = new UIntPointData(block.ReadInt(), block.ReadInt());
                             qua = block.ReadByte();
@@ -1005,7 +1029,7 @@ namespace DirectAccessDriver
                         //value = new UIntPointData(block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.IntPoint3:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                             qua = block.ReadByte();
@@ -1022,7 +1046,7 @@ namespace DirectAccessDriver
                         //value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.UIntPoint3:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                             qua = block.ReadByte();
@@ -1039,7 +1063,7 @@ namespace DirectAccessDriver
                         //value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.LongPoint:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = new LongPointData(block.ReadLong(), block.ReadLong());
                             qua = block.ReadByte();
@@ -1055,7 +1079,7 @@ namespace DirectAccessDriver
                         //value = new LongPointData(block.ReadLong(), block.ReadLong());
                         break;
                     case (byte)TagType.ULongPoint:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = new ULongPointData(block.ReadLong(), block.ReadLong());
                             qua = block.ReadByte();
@@ -1071,7 +1095,7 @@ namespace DirectAccessDriver
                         //value = new ULongPointData(block.ReadLong(), block.ReadLong());
                         break;
                     case (byte)TagType.LongPoint3:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                             qua = block.ReadByte();
@@ -1088,7 +1112,7 @@ namespace DirectAccessDriver
                         //value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;
                     case (byte)TagType.ULongPoint3:
-                        if (Driver.AllowTagNames.ContainsKey(id))
+                        if (Driver.AllowTagNames.ContainsKey(id) && dt > service.GetTagUpdateTime(Driver.AllowTagNames[id]))
                         {
                             var bval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                             qua = block.ReadByte();
@@ -1107,8 +1131,11 @@ namespace DirectAccessDriver
                 }
 
             }
+
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             service?.SubmiteNotifyChanged();
 
+            hisservice.SubmitCach();
         }
 
 
@@ -1122,8 +1149,6 @@ namespace DirectAccessDriver
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
             var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
-            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
-
             int count = block.ReadInt();
             int id = 0;
             byte typ;
@@ -1451,8 +1476,774 @@ namespace DirectAccessDriver
                 }
 
             }
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             service?.SubmiteNotifyChanged();
+            hisservice.SubmitCach();
+        }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientid"></param>
+        /// <param name="block"></param>
+        private void ProcessSetRealAndHistDataAsync(string clientid, ByteBuffer block)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
+            var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
+    
+            long callid = block.ReadLong();
+            int count = block.ReadInt();
+            int id = 0;
+            byte typ;
+            byte qua = 0;
+            for (int i = 0; i < count; i++)
+            {
+                id = block.ReadInt();
+                typ = block.ReadByte();
+
+                switch (typ)
+                {
+                    case (byte)TagType.Bool:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadByte();
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+
+                            hisservice.SetTagHisValue<bool>(id, bval > 0, qua);
+                        }
+                        else
+                        {
+                            block.ReadByte();
+                            qua = block.ReadByte();
+                        }
+                        break;
+                    case (byte)TagType.Byte:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadByte();
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+
+                            hisservice.SetTagHisValue<byte>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadByte();
+                            qua = block.ReadByte();
+                        }
+                        break;
+                    case (byte)TagType.Short:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadShort();
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+
+                            hisservice.SetTagHisValue<short>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadShort();
+                            qua = block.ReadByte();
+                        }
+                        //value = block.ReadShort();
+                        break;
+                    case (byte)TagType.UShort:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = (ushort)block.ReadShort();
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<ushort>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadShort();
+                            qua = block.ReadByte();
+                        }
+                        //value = (ushort)block.ReadShort();
+                        break;
+                    case (byte)TagType.Int:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadInt();
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<int>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = block.ReadInt();
+                        break;
+                    case (byte)TagType.UInt:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = (uint)block.ReadInt();
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<uint>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = (uint)block.ReadInt();
+                        break;
+                    case (byte)TagType.Long:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadLong();
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<long>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = block.ReadLong();
+                        break;
+                    case (byte)TagType.ULong:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = (ulong)block.ReadLong();
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<ulong>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = (ulong)block.ReadLong();
+                        break;
+                    case (byte)TagType.Float:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadFloat();
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<float>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadFloat();
+                            qua = block.ReadByte();
+                        }
+                        // value = block.ReadFloat();
+                        break;
+                    case (byte)TagType.Double:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = block.ReadDouble();
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<double>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadDouble();
+                            qua = block.ReadByte();
+                        }
+                        // block.ReadDouble();
+                        break;
+                    case (byte)TagType.String:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bs = block.ReadString();
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, bs, qua);
+                            hisservice.SetTagHisValue<string>(id, bs, qua);
+                        }
+                        else
+                        {
+                            block.ReadString();
+                            qua = block.ReadByte();
+                        }
+                        //value = block.ReadString();
+                        break;
+                    case (byte)TagType.DateTime:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = DateTime.FromBinary(block.ReadLong());
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<DateTime>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = DateTime.FromBinary(block.ReadLong());
+                        break;
+                    case (byte)TagType.IntPoint:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = new IntPointData(block.ReadInt(), block.ReadInt());
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<IntPointData>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = new IntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = new UIntPointData(block.ReadInt(), block.ReadInt());
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<UIntPointData>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<IntPoint3Data>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<UIntPoint3Data>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.LongPoint:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = new LongPointData(block.ReadLong(), block.ReadLong());
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<LongPointData>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = new LongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = new ULongPointData(block.ReadLong(), block.ReadLong());
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<ULongPointData>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<LongPoint3Data>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        if (Driver.AllowTagIds.Contains(id))
+                        {
+                            var bval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                            qua = block.ReadByte();
+                            service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<ULongPoint3Data>(id, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                }
+
+            }
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.AysncValueBack, callid,(byte)1));
+            service?.SubmiteNotifyChanged();
+            hisservice.SubmitCach();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientid"></param>
+        /// <param name="block"></param>
+        private void ProcessSetRealAndHistDataWithTimerAsync(string clientid, ByteBuffer block)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
+            var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
+      
+            long callid = block.ReadLong();
+            int count = block.ReadInt();
+            int id = 0;
+            byte typ;
+            byte qua = 0;
+            for (int i = 0; i < count; i++)
+            {
+                id = block.ReadInt();
+                typ = block.ReadByte();
+                DateTime dt = DateTime.FromBinary(block.ReadLong());
+                var vtime = service.GetTagUpdateTime(id);
+                switch (typ)
+                {
+                    case (byte)TagType.Bool:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = block.ReadByte() > 0;
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                            {
+                                service.SetTagValue<bool>(id, ref bval, dt, qua);
+                            }
+                            else
+                            {
+                                service.SetTagValue(id, ref bval, qua);
+                            }
+                            hisservice.SetTagHisValue<bool>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadByte();
+                            qua = block.ReadByte();
+                        }
+                        break;
+                    case (byte)TagType.Byte:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = block.ReadByte();
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                            {
+                                service.SetTagValue<byte>(id, ref bval, dt, qua);
+                            }
+                            else
+                            {
+                                service.SetTagValue(id, ref bval, qua);
+                            }
+                            hisservice.SetTagHisValue<byte>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadByte();
+                            qua = block.ReadByte();
+                        }
+                        break;
+                    case (byte)TagType.Short:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = block.ReadShort();
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<short>(id, ref bval, dt, qua);
+                            else
+                            {
+                                service.SetTagValue(id, ref bval, qua);
+                            }
+                            hisservice.SetTagHisValue<short>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadShort();
+                            qua = block.ReadByte();
+                        }
+                        //value = block.ReadShort();
+                        break;
+                    case (byte)TagType.UShort:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = (ushort)block.ReadShort();
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<ushort>(id, ref bval, dt, qua);
+                            else
+                            {
+                                service.SetTagValue(id, ref bval, qua);
+                            }
+                            hisservice.SetTagHisValue<ushort>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadShort();
+                            qua = block.ReadByte();
+                        }
+                        //value = (ushort)block.ReadShort();
+                        break;
+                    case (byte)TagType.Int:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = block.ReadInt();
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<int>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+
+                            hisservice.SetTagHisValue<int>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = block.ReadInt();
+                        break;
+                    case (byte)TagType.UInt:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = (uint)block.ReadInt();
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<uint>(id, ref bval, dt, qua);
+                            else
+                            {
+                                service.SetTagValue(id, ref bval, qua);
+                            }
+                            hisservice.SetTagHisValue<uint>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = (uint)block.ReadInt();
+                        break;
+                    case (byte)TagType.Long:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = block.ReadLong();
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<long>(id, ref bval, dt, qua);
+                            else
+                            {
+                                service.SetTagValue(id, ref bval, qua);
+                            }
+                            hisservice.SetTagHisValue<long>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = block.ReadLong();
+                        break;
+                    case (byte)TagType.ULong:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = (ulong)block.ReadLong();
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<ulong>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<ulong>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = (ulong)block.ReadLong();
+                        break;
+                    case (byte)TagType.Float:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = block.ReadFloat();
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<float>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+
+                            hisservice.SetTagHisValue<float>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadFloat();
+                            qua = block.ReadByte();
+                        }
+                        // value = block.ReadFloat();
+                        break;
+                    case (byte)TagType.Double:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = block.ReadDouble();
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<double>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+
+                            hisservice.SetTagHisValue<double>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadDouble();
+                            qua = block.ReadByte();
+                        }
+                        // block.ReadDouble();
+                        break;
+                    case (byte)TagType.String:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bs = block.ReadString();
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<string>(id, ref bs, dt, qua);
+                            else
+                                service.SetTagValue(id, bs, qua);
+                            hisservice.SetTagHisValue<string>(id, dt, bs, qua);
+                        }
+                        else
+                        {
+                            block.ReadString();
+                            qua = block.ReadByte();
+                        }
+                        //value = block.ReadString();
+                        break;
+                    case (byte)TagType.DateTime:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = DateTime.FromBinary(block.ReadLong());
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<DateTime>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<DateTime>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = DateTime.FromBinary(block.ReadLong());
+                        break;
+                    case (byte)TagType.IntPoint:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = new IntPointData(block.ReadInt(), block.ReadInt());
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<IntPointData>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<IntPointData>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = new IntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = new UIntPointData(block.ReadInt(), block.ReadInt());
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<UIntPointData>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<UIntPointData>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<IntPoint3Data>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+
+                            hisservice.SetTagHisValue<IntPoint3Data>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<UIntPoint3Data>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+
+                            hisservice.SetTagHisValue<UIntPoint3Data>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadInt();
+                            block.ReadInt();
+                            block.ReadInt();
+                            qua = block.ReadByte();
+                        }
+                        //value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        break;
+                    case (byte)TagType.LongPoint:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = new LongPointData(block.ReadLong(), block.ReadLong());
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<LongPointData>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+
+                            hisservice.SetTagHisValue<LongPointData>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = new LongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = new ULongPointData(block.ReadLong(), block.ReadLong());
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<ULongPointData>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<ULongPointData>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<LongPoint3Data>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<LongPoint3Data>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                        {
+                            var bval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                            qua = block.ReadByte();
+                            if (Driver.DriverdRecordTags.Contains(id))
+                                service.SetTagValue<ULongPoint3Data>(id, ref bval, dt, qua);
+                            else
+                                service.SetTagValue(id, ref bval, qua);
+                            hisservice.SetTagHisValue<ULongPoint3Data>(id, dt, bval, qua);
+                        }
+                        else
+                        {
+                            block.ReadLong();
+                            block.ReadLong();
+                            block.ReadLong();
+                            qua = block.ReadByte();
+                        }
+                        //value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        break;
+                }
+            }
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.AysncValueBack, callid,(byte)1));
+            service?.SubmiteNotifyChanged();
+            hisservice.SubmitCach();
         }
 
         /// <summary>
@@ -1464,7 +2255,6 @@ namespace DirectAccessDriver
         {
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
             var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
-            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
 
             int count = block.ReadInt();
             int id = 0;
@@ -1475,14 +2265,15 @@ namespace DirectAccessDriver
                 id = block.ReadInt();
                 typ = block.ReadByte();
                 DateTime dt = DateTime.FromBinary(block.ReadLong());
+                var vtime = service.GetTagUpdateTime(id);
                 switch (typ)
                 {
                     case (byte)TagType.Bool:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = block.ReadByte()>0;
                             qua = block.ReadByte();
-                            if (Driver.DriverdRecordTags.Contains(id))
+                            if (Driver.DriverdRecordTags.Contains(id) )
                             {
                                 service.SetTagValue<bool>(id, ref bval, dt, qua);
                             }
@@ -1499,7 +2290,7 @@ namespace DirectAccessDriver
                         }
                         break;
                     case (byte)TagType.Byte:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = block.ReadByte();
                             qua = block.ReadByte();
@@ -1520,7 +2311,7 @@ namespace DirectAccessDriver
                         }
                         break;
                     case (byte)TagType.Short:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = block.ReadShort();
                             qua = block.ReadByte();
@@ -1540,7 +2331,7 @@ namespace DirectAccessDriver
                         //value = block.ReadShort();
                         break;
                     case (byte)TagType.UShort:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = (ushort)block.ReadShort();
                             qua = block.ReadByte();
@@ -1560,7 +2351,7 @@ namespace DirectAccessDriver
                         //value = (ushort)block.ReadShort();
                         break;
                     case (byte)TagType.Int:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = block.ReadInt();
                             qua = block.ReadByte();
@@ -1579,7 +2370,7 @@ namespace DirectAccessDriver
                         //value = block.ReadInt();
                         break;
                     case (byte)TagType.UInt:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = (uint)block.ReadInt();
                             qua = block.ReadByte();
@@ -1599,7 +2390,7 @@ namespace DirectAccessDriver
                         //value = (uint)block.ReadInt();
                         break;
                     case (byte)TagType.Long:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = block.ReadLong();
                             qua = block.ReadByte();
@@ -1619,7 +2410,7 @@ namespace DirectAccessDriver
                         //value = block.ReadLong();
                         break;
                     case (byte)TagType.ULong:
-                        if (Driver.AllowTagIds.Contains(id) )
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = (ulong)block.ReadLong();
                             qua = block.ReadByte();
@@ -1637,7 +2428,7 @@ namespace DirectAccessDriver
                         //value = (ulong)block.ReadLong();
                         break;
                     case (byte)TagType.Float:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = block.ReadFloat();
                             qua = block.ReadByte();
@@ -1656,7 +2447,7 @@ namespace DirectAccessDriver
                         // value = block.ReadFloat();
                         break;
                     case (byte)TagType.Double:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = block.ReadDouble();
                             qua = block.ReadByte();
@@ -1675,7 +2466,7 @@ namespace DirectAccessDriver
                         // block.ReadDouble();
                         break;
                     case (byte)TagType.String:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bs = block.ReadString();
                             qua = block.ReadByte();
@@ -1693,7 +2484,7 @@ namespace DirectAccessDriver
                         //value = block.ReadString();
                         break;
                     case (byte)TagType.DateTime:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = DateTime.FromBinary(block.ReadLong());
                             qua = block.ReadByte();
@@ -1711,7 +2502,7 @@ namespace DirectAccessDriver
                         //value = DateTime.FromBinary(block.ReadLong());
                         break;
                     case (byte)TagType.IntPoint:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = new IntPointData(block.ReadInt(), block.ReadInt());
                             qua = block.ReadByte();
@@ -1730,7 +2521,7 @@ namespace DirectAccessDriver
                         //value = new IntPointData(block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.UIntPoint:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = new UIntPointData(block.ReadInt(), block.ReadInt());
                             qua = block.ReadByte();
@@ -1749,7 +2540,7 @@ namespace DirectAccessDriver
                         //value = new UIntPointData(block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.IntPoint3:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                             qua = block.ReadByte();
@@ -1770,7 +2561,7 @@ namespace DirectAccessDriver
                         //value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.UIntPoint3:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                             qua = block.ReadByte();
@@ -1791,7 +2582,7 @@ namespace DirectAccessDriver
                         //value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                         break;
                     case (byte)TagType.LongPoint:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = new LongPointData(block.ReadLong(), block.ReadLong());
                             qua = block.ReadByte();
@@ -1811,7 +2602,7 @@ namespace DirectAccessDriver
                         //value = new LongPointData(block.ReadLong(), block.ReadLong());
                         break;
                     case (byte)TagType.ULongPoint:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = new ULongPointData(block.ReadLong(), block.ReadLong());
                             qua = block.ReadByte();
@@ -1830,7 +2621,7 @@ namespace DirectAccessDriver
                         //value = new ULongPointData(block.ReadLong(), block.ReadLong());
                         break;
                     case (byte)TagType.LongPoint3:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                             qua = block.ReadByte();
@@ -1850,7 +2641,7 @@ namespace DirectAccessDriver
                         //value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;
                     case (byte)TagType.ULongPoint3:
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                         {
                             var bval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                             qua = block.ReadByte();
@@ -1870,10 +2661,10 @@ namespace DirectAccessDriver
                         //value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         break;
                 }
-
             }
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             service?.SubmiteNotifyChanged();
-
+            hisservice.SubmitCach();
         }
 
         /// <summary>
@@ -1883,7 +2674,6 @@ namespace DirectAccessDriver
         /// <param name="block"></param>
         private void ProcessSetRealDataAndQuality(string clientid, ByteBuffer block)
         {
-            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
             //var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
             int count = block.ReadInt();
@@ -2027,13 +2817,170 @@ namespace DirectAccessDriver
                         break;
                 }
             }
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             service?.SubmiteNotifyChanged();
             
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientid"></param>
+        /// <param name="block"></param>
+        private void ProcessSetRealDataAndQualityAsync(string clientid, ByteBuffer block)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
+            //var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
+            long vid = block.ReadLong();
+            int count = block.ReadInt();
+            byte qua;
+            for (int i = 0; i < count; i++)
+            {
+                var id = block.ReadInt();
+                byte typ = block.ReadByte();
+                switch (typ)
+                {
+                    case (byte)TagType.Bool:
+                        var bvalue = block.ReadByte();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref bvalue, qua);
+                        break;
+                    case (byte)TagType.Byte:
+                        var bbvalue = block.ReadByte();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref bbvalue, qua);
+                        break;
+                    case (byte)TagType.Short:
+                        var svalue = block.ReadShort();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref svalue, qua);
+                        break;
+                    case (byte)TagType.UShort:
+                        var uvalue = (ushort)block.ReadShort();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref uvalue, qua);
+
+                        break;
+                    case (byte)TagType.Int:
+                        var ivalue = block.ReadInt();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref ivalue, qua);
+
+                        break;
+                    case (byte)TagType.UInt:
+                        var uivalue = (uint)block.ReadInt();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref uivalue, qua);
+
+                        break;
+                    case (byte)TagType.Long:
+                        var lvalue = block.ReadLong();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref lvalue, qua);
+
+                        break;
+                    case (byte)TagType.ULong:
+                        var ulvalue = (ulong)block.ReadLong();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref ulvalue, qua);
+
+                        break;
+                    case (byte)TagType.Float:
+                        var fvalue = block.ReadFloat();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref fvalue, qua);
+                        break;
+                    case (byte)TagType.Double:
+                        var dvalue = block.ReadDouble();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref dvalue, qua);
+
+                        break;
+                    case (byte)TagType.String:
+                        var ssvalue = block.ReadString();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ssvalue, qua);
+                        break;
+                    case (byte)TagType.DateTime:
+                        var tick = block.ReadLong();
+                        var ddvalue = new DateTime(tick);
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref ddvalue, qua);
+
+                        break;
+                    case (byte)TagType.IntPoint:
+                        var ipvalue = new IntPointData(block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref ipvalue, qua);
+
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        var uipvalue = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref uipvalue, qua);
+
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        var ip3value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref ip3value, qua);
+
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        var uip3value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref uip3value, qua);
+                        break;
+                    case (byte)TagType.LongPoint:
+                        var lpvalue = new LongPointData(block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref lpvalue, qua);
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        var upvalue = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref upvalue, qua);
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        var lp3value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref lp3value, qua);
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        var up3value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id))
+                            service.SetTagValue(id, ref up3value, qua);
+                        break;
+                }
+            }
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.AysncValueBack,vid, (byte)1));
+            service?.SubmiteNotifyChanged();
+
+        }
+
         private void ProcessSetRealDataValueTimeAndQuality(string clientid, ByteBuffer block)
         {
-            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
+            
             var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
             //var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
             int count = block.ReadInt();
@@ -2043,145 +2990,539 @@ namespace DirectAccessDriver
                 var id = block.ReadInt();
                 byte typ = block.ReadByte();
                 DateTime dt = DateTime.FromBinary(block.ReadLong());
+
+                var vtime = service.GetTagUpdateTime(id);
                 switch (typ)
                 {
                     case (byte)TagType.Bool:
                         var bvalue = block.ReadByte()>0?true:false;
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt>vtime)
                             service.SetTagValue<bool>(id, ref bvalue,dt, qua);
                         break;
                     case (byte)TagType.Byte:
                         var bbvalue = block.ReadByte();
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<byte>(id, ref bbvalue,dt, qua);
                         break;
                     case (byte)TagType.Short:
                         var svalue = block.ReadShort();
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<short>(id, ref svalue,dt, qua);
                         break;
                     case (byte)TagType.UShort:
                         var uvalue = (ushort)block.ReadShort();
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<ushort>(id, ref uvalue,dt, qua);
 
                         break;
                     case (byte)TagType.Int:
                         var ivalue = block.ReadInt();
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<int>(id, ref ivalue,dt, qua);
 
                         break;
                     case (byte)TagType.UInt:
                         var uivalue = (uint)block.ReadInt();
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<uint>(id, ref uivalue,dt, qua);
 
                         break;
                     case (byte)TagType.Long:
                         var lvalue = block.ReadLong();
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<long>(id, ref lvalue,dt, qua);
 
                         break;
                     case (byte)TagType.ULong:
                         var ulvalue = (ulong)block.ReadLong();
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<ulong>(id, ref ulvalue,dt, qua);
 
                         break;
                     case (byte)TagType.Float:
                         var fvalue = block.ReadFloat();
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<float>(id, ref fvalue,dt, qua);
                         break;
                     case (byte)TagType.Double:
                         var dvalue = block.ReadDouble();
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<double>(id, ref dvalue,dt, qua);
 
                         break;
                     case (byte)TagType.String:
                         var ssvalue = block.ReadString();
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<string>(id,ref ssvalue,dt, qua);
                         break;
                     case (byte)TagType.DateTime:
                         var tick = block.ReadLong();
                         var ddvalue = new DateTime(tick);
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<DateTime>(id, ref ddvalue,dt, qua);
 
                         break;
                     case (byte)TagType.IntPoint:
                         var ipvalue = new IntPointData(block.ReadInt(), block.ReadInt());
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<IntPointData>(id, ref ipvalue,dt, qua);
 
                         break;
                     case (byte)TagType.UIntPoint:
                         var uipvalue = new UIntPointData(block.ReadInt(), block.ReadInt());
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<UIntPointData>(id, ref uipvalue,dt, qua);
 
                         break;
                     case (byte)TagType.IntPoint3:
                         var ip3value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<IntPoint3Data>(id, ref ip3value,dt, qua);
 
                         break;
                     case (byte)TagType.UIntPoint3:
                         var uip3value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<UIntPoint3Data>(id, ref uip3value,dt, qua);
                         break;
                     case (byte)TagType.LongPoint:
                         var lpvalue = new LongPointData(block.ReadLong(), block.ReadLong());
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<LongPointData>(id, ref lpvalue,dt, qua);
                         break;
                     case (byte)TagType.ULongPoint:
                         var upvalue = new ULongPointData(block.ReadLong(), block.ReadLong());
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<ULongPointData>(id, ref upvalue,dt, qua);
                         break;
                     case (byte)TagType.LongPoint3:
                         var lp3value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<LongPoint3Data>(id, ref lp3value,dt, qua);
                         break;
                     case (byte)TagType.ULongPoint3:
                         var up3value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                         qua = block.ReadByte();
-                        if (Driver.AllowTagIds.Contains(id))
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
                             service.SetTagValue<ULongPoint3Data>(id, ref up3value,dt, qua);
                         break;
                 }
             }
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.RealValueFun, (byte)1));
             service?.SubmiteNotifyChanged();
 
         }
 
+        private void ProcessSetRealDataValueTimeAndQualityAsync(string clientid, ByteBuffer block)
+        {
+
+            var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
+            var vid = block.ReadLong();
+            //var hisservice = ServiceLocator.Locator.Resolve<ITagHisValueProduct>();
+            int count = block.ReadInt();
+            byte qua;
+            for (int i = 0; i < count; i++)
+            {
+                var id = block.ReadInt();
+                byte typ = block.ReadByte();
+                DateTime dt = DateTime.FromBinary(block.ReadLong());
+
+                var vtime = service.GetTagUpdateTime(id);
+                switch (typ)
+                {
+                    case (byte)TagType.Bool:
+                        var bvalue = block.ReadByte() > 0 ? true : false;
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<bool>(id, ref bvalue, dt, qua);
+                        break;
+                    case (byte)TagType.Byte:
+                        var bbvalue = block.ReadByte();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<byte>(id, ref bbvalue, dt, qua);
+                        break;
+                    case (byte)TagType.Short:
+                        var svalue = block.ReadShort();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<short>(id, ref svalue, dt, qua);
+                        break;
+                    case (byte)TagType.UShort:
+                        var uvalue = (ushort)block.ReadShort();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<ushort>(id, ref uvalue, dt, qua);
+
+                        break;
+                    case (byte)TagType.Int:
+                        var ivalue = block.ReadInt();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<int>(id, ref ivalue, dt, qua);
+
+                        break;
+                    case (byte)TagType.UInt:
+                        var uivalue = (uint)block.ReadInt();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<uint>(id, ref uivalue, dt, qua);
+
+                        break;
+                    case (byte)TagType.Long:
+                        var lvalue = block.ReadLong();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<long>(id, ref lvalue, dt, qua);
+
+                        break;
+                    case (byte)TagType.ULong:
+                        var ulvalue = (ulong)block.ReadLong();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<ulong>(id, ref ulvalue, dt, qua);
+
+                        break;
+                    case (byte)TagType.Float:
+                        var fvalue = block.ReadFloat();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<float>(id, ref fvalue, dt, qua);
+                        break;
+                    case (byte)TagType.Double:
+                        var dvalue = block.ReadDouble();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<double>(id, ref dvalue, dt, qua);
+
+                        break;
+                    case (byte)TagType.String:
+                        var ssvalue = block.ReadString();
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<string>(id, ref ssvalue, dt, qua);
+                        break;
+                    case (byte)TagType.DateTime:
+                        var tick = block.ReadLong();
+                        var ddvalue = new DateTime(tick);
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<DateTime>(id, ref ddvalue, dt, qua);
+
+                        break;
+                    case (byte)TagType.IntPoint:
+                        var ipvalue = new IntPointData(block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<IntPointData>(id, ref ipvalue, dt, qua);
+
+                        break;
+                    case (byte)TagType.UIntPoint:
+                        var uipvalue = new UIntPointData(block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<UIntPointData>(id, ref uipvalue, dt, qua);
+
+                        break;
+                    case (byte)TagType.IntPoint3:
+                        var ip3value = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<IntPoint3Data>(id, ref ip3value, dt, qua);
+
+                        break;
+                    case (byte)TagType.UIntPoint3:
+                        var uip3value = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<UIntPoint3Data>(id, ref uip3value, dt, qua);
+                        break;
+                    case (byte)TagType.LongPoint:
+                        var lpvalue = new LongPointData(block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<LongPointData>(id, ref lpvalue, dt, qua);
+                        break;
+                    case (byte)TagType.ULongPoint:
+                        var upvalue = new ULongPointData(block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<ULongPointData>(id, ref upvalue, dt, qua);
+                        break;
+                    case (byte)TagType.LongPoint3:
+                        var lp3value = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<LongPoint3Data>(id, ref lp3value, dt, qua);
+                        break;
+                    case (byte)TagType.ULongPoint3:
+                        var up3value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                        qua = block.ReadByte();
+                        if (Driver.AllowTagIds.Contains(id) && dt > vtime)
+                            service.SetTagValue<ULongPoint3Data>(id, ref up3value, dt, qua);
+                        break;
+                }
+            }
+            Parent?.AsyncCallback(clientid, ToByteBuffer(APIConst.AysncValueBack,vid, (byte)1));
+            service?.SubmiteNotifyChanged();
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="block"></param>
+        /// <param name="cid"></param>
+        private void ProcessReadRealDataValueValue(string clientId,ByteBuffer block,int cid)
+        {
+            int count = block.ReadInt();
+            int[] cc = ArrayPool<int>.Shared.Rent(count);
+            for (int i = 0; i < count; i++)
+            {
+                cc[i] = block.ReadInt();
+            }
+            var re = Parent.Allocate(APIConst.ReadTagRealValue, count * 34 + 4);
+            re.Write(cid);
+            ProcessRealData(cc, count, re);
+            Parent.AsyncCallback(clientId, re);
+            ArrayPool<int>.Shared.Return(cc);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cc"></param>
+        /// <param name="re"></param>
+        private void ProcessRealData(int[] cc, int len, ByteBuffer re)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+            re.Write(len);
+            DateTime tmp = DateTime.UtcNow;
+            //foreach (var vv in cc)
+            for (int i = 0; i < len; i++)
+            {
+                var vv = cc[i];
+
+                re.Write(vv);
+
+                byte qu, type;
+                DateTime time;
+                object value;
+
+                if (service.IsComplexTag(vv))
+                {
+                    List<RealTagValueWithTimer> vals = new List<RealTagValueWithTimer>();
+                    re.WriteByte((byte)TagType.Complex);
+
+                    service.GetComplexTagValue(vv, vals);
+
+                    re.Write(vals.Count);
+                    foreach(var vtmp in vals)
+                    {
+                        re.Write(vtmp.Id);
+                        re.Write((byte)vtmp.ValueType);
+                        switch ((byte)vtmp.ValueType)
+                        {
+                            case (byte)TagType.Bool:
+                                re.Write(Convert.ToByte(vtmp.Value));
+                                break;
+                            case (byte)TagType.Byte:
+                                re.Write(Convert.ToByte(vtmp.Value));
+                                break;
+                            case (byte)TagType.Short:
+                                re.Write(Convert.ToInt16(vtmp.Value));
+                                break;
+                            case (byte)TagType.UShort:
+                                re.Write(Convert.ToUInt16(vtmp.Value));
+                                break;
+                            case (byte)TagType.Int:
+                                re.Write(Convert.ToInt32(vtmp.Value));
+                                break;
+                            case (byte)TagType.UInt:
+                                re.Write(Convert.ToUInt32(vtmp.Value));
+                                break;
+                            case (byte)TagType.Long:
+                            case (byte)TagType.ULong:
+                                re.Write(Convert.ToInt64(vtmp.Value));
+                                break;
+                            case (byte)TagType.Float:
+                                re.Write(Convert.ToSingle(vtmp.Value));
+                                break;
+                            case (byte)TagType.Double:
+                                re.Write(Convert.ToDouble(vtmp.Value));
+                                break;
+                            case (byte)TagType.String:
+                                string sval = vtmp.Value.ToString();
+                                re.Write(sval);
+                                //re.Write(sval.Length);
+                                //re.Write(sval, Encoding.Unicode);
+                                break;
+                            case (byte)TagType.DateTime:
+                                re.Write(((DateTime)vtmp.Value).Ticks);
+                                break;
+                            case (byte)TagType.IntPoint:
+                                re.Write(((IntPointData)vtmp.Value).X);
+                                re.Write(((IntPointData)vtmp.Value).Y);
+                                break;
+                            case (byte)TagType.UIntPoint:
+                                re.Write((int)((UIntPointData)vtmp.Value).X);
+                                re.Write((int)((UIntPointData)vtmp.Value).Y);
+                                break;
+                            case (byte)TagType.IntPoint3:
+                                re.Write(((IntPoint3Data)vtmp.Value).X);
+                                re.Write(((IntPoint3Data)vtmp.Value).Y);
+                                re.Write(((IntPoint3Data)vtmp.Value).Z);
+                                break;
+                            case (byte)TagType.UIntPoint3:
+                                re.Write((int)((UIntPoint3Data)vtmp.Value).X);
+                                re.Write((int)((UIntPoint3Data)vtmp.Value).Y);
+                                re.Write((int)((UIntPoint3Data)vtmp.Value).Z);
+                                break;
+                            case (byte)TagType.LongPoint:
+                                re.Write(((LongPointData)vtmp.Value).X);
+                                re.Write(((LongPointData)vtmp.Value).Y);
+                                break;
+                            case (byte)TagType.ULongPoint:
+                                re.Write((long)((ULongPointData)vtmp.Value).X);
+                                re.Write((long)((ULongPointData)vtmp.Value).Y);
+                                break;
+                            case (byte)TagType.LongPoint3:
+                                re.Write(((LongPoint3Data)vtmp.Value).X);
+                                re.Write(((LongPoint3Data)vtmp.Value).Y);
+                                re.Write(((LongPoint3Data)vtmp.Value).Z);
+                                break;
+                            case (byte)TagType.ULongPoint3:
+                                re.Write((long)((ULongPoint3Data)vtmp.Value).X);
+                                re.Write((long)((ULongPoint3Data)vtmp.Value).Y);
+                                re.Write((long)((ULongPoint3Data)vtmp.Value).Z);
+                                break;
+                        }
+                        re.Write(vtmp.Time.Ticks);
+                        re.Write(vtmp.Quality);
+                    }
+
+                    re.Write(tmp.Ticks);
+                    re.WriteByte((byte)QualityConst.Null);
+                }
+                else
+                {
+                    value = service.GetTagValue(vv, out qu, out time, out type);
+
+                    if (value != null)
+                    {
+                        re.WriteByte(type);
+                        switch (type)
+                        {
+                            case (byte)TagType.Bool:
+                                re.Write(Convert.ToByte(value));
+                                break;
+                            case (byte)TagType.Byte:
+                                re.Write(Convert.ToByte(value));
+                                break;
+                            case (byte)TagType.Short:
+                                re.Write(Convert.ToInt16(value));
+                                break;
+                            case (byte)TagType.UShort:
+                                re.Write(Convert.ToUInt16(value));
+                                break;
+                            case (byte)TagType.Int:
+                                re.Write(Convert.ToInt32(value));
+                                break;
+                            case (byte)TagType.UInt:
+                                re.Write(Convert.ToUInt32(value));
+                                break;
+                            case (byte)TagType.Long:
+                            case (byte)TagType.ULong:
+                                re.Write(Convert.ToInt64(value));
+                                break;
+                            case (byte)TagType.Float:
+                                re.Write(Convert.ToSingle(value));
+                                break;
+                            case (byte)TagType.Double:
+                                re.Write(Convert.ToDouble(value));
+                                break;
+                            case (byte)TagType.String:
+                                string sval = value.ToString();
+                                re.Write(sval);
+                                //re.Write(sval.Length);
+                                //re.Write(sval, Encoding.Unicode);
+                                break;
+                            case (byte)TagType.DateTime:
+                                re.Write(((DateTime)value).Ticks);
+                                break;
+                            case (byte)TagType.IntPoint:
+                                re.Write(((IntPointData)value).X);
+                                re.Write(((IntPointData)value).Y);
+                                break;
+                            case (byte)TagType.UIntPoint:
+                                re.Write((int)((UIntPointData)value).X);
+                                re.Write((int)((UIntPointData)value).Y);
+                                break;
+                            case (byte)TagType.IntPoint3:
+                                re.Write(((IntPoint3Data)value).X);
+                                re.Write(((IntPoint3Data)value).Y);
+                                re.Write(((IntPoint3Data)value).Z);
+                                break;
+                            case (byte)TagType.UIntPoint3:
+                                re.Write((int)((UIntPoint3Data)value).X);
+                                re.Write((int)((UIntPoint3Data)value).Y);
+                                re.Write((int)((UIntPoint3Data)value).Z);
+                                break;
+                            case (byte)TagType.LongPoint:
+                                re.Write(((LongPointData)value).X);
+                                re.Write(((LongPointData)value).Y);
+                                break;
+                            case (byte)TagType.ULongPoint:
+                                re.Write((long)((ULongPointData)value).X);
+                                re.Write((long)((ULongPointData)value).Y);
+                                break;
+                            case (byte)TagType.LongPoint3:
+                                re.Write(((LongPoint3Data)value).X);
+                                re.Write(((LongPoint3Data)value).Y);
+                                re.Write(((LongPoint3Data)value).Z);
+                                break;
+                            case (byte)TagType.ULongPoint3:
+                                re.Write((long)((ULongPoint3Data)value).X);
+                                re.Write((long)((ULongPoint3Data)value).Y);
+                                re.Write((long)((ULongPoint3Data)value).Z);
+                                break;
+                            case (byte)TagType.Complex:
+                                break;
+                        }
+
+                        re.Write(time.Ticks);
+                        re.WriteByte(qu);
+                    }
+                    else
+                    {
+                        re.WriteByte((byte)TagType.Byte);
+                        re.WriteByte(0);
+                        re.Write(tmp.Ticks);
+                        re.WriteByte((byte)QualityConst.Null);
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// 

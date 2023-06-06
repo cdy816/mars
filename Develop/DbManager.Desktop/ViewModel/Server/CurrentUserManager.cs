@@ -37,7 +37,10 @@ namespace DBInStudio.Desktop.ViewModel
         /// </summary>
         public string UserName { get; set; }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Password { get; set; }
 
         #endregion ...Properties...
 

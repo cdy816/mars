@@ -52,6 +52,7 @@
                     <Button x:Name="settagvaluetime" Content="带时间戳写入实时历史" HorizontalAlignment="Left" Margin="431,173,0,0" VerticalAlignment="Top" Width="146" Click="settagvaluetime_Click"/>
                     <Button x:Name="settagvaluetime2" Content="带时间戳写入实时" HorizontalAlignment="Left" Margin="600,173,0,0" VerticalAlignment="Top" Width="105" Click="settagvaluetime2_Click"/>
                     <Button x:Name="SettagvalueforScan" Content="循环写入实时历史" HorizontalAlignment="Left" Margin="600,243,0,0" VerticalAlignment="Top" Width="105" Click="SettagvalueforScan_Click"/>
+                    <Button x:Name="gettagvalue" Content="读取实时" HorizontalAlignment="Left" Margin="230,212,0,0" VerticalAlignment="Top" Width="167" Click="gettagvalue_Click"/>
                 </Grid>
             </TabItem>
             <TabItem Header="历史数据">
@@ -74,6 +75,35 @@
                     <Button x:Name="hsetval2" Content="多变量写入" HorizontalAlignment="Left" Margin="575,237,0,0" VerticalAlignment="Top" Width="116" Click="hsetval2_Click"/>
                     <Label Content="单变量写入" HorizontalAlignment="Left" Margin="42,167,0,0" VerticalAlignment="Top" Height="33"/>
                     <Label Content="多变量写入" HorizontalAlignment="Left" Margin="42,233,0,0" VerticalAlignment="Top" Height="33"/>
+                    <Button x:Name="hsetval_Copy" Content="读取" HorizontalAlignment="Left" Margin="575,302,0,0" VerticalAlignment="Top" Width="116" Click="hgetval_Click"/>
+                    <Button x:Name="hsetval_Copy1" Content="读取全部值" HorizontalAlignment="Left" Margin="575,350,0,0" VerticalAlignment="Top" Width="116" Click="hgetallval_Click"/>
+                    <Button x:Name="hsetval_Copy2" Content="按间隔读取" HorizontalAlignment="Left" Margin="575,390,0,0" VerticalAlignment="Top" Width="116" Click="hgetval2_Click"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="性能测试">
+                <Grid>
+                    <Label Content="写入开始变量ID:" HorizontalAlignment="Left" Margin="10,24,0,0" VerticalAlignment="Top"/>
+                    <Label Content="写入结束变量ID:" HorizontalAlignment="Left" Margin="289,24,0,0" VerticalAlignment="Top"/>
+                    <TextBox x:Name="fromId" HorizontalAlignment="Left" Margin="113,27,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+                    <TextBox x:Name="toId" HorizontalAlignment="Left" Margin="397,28,0,0" TextWrapping="Wrap" Text="100000" VerticalAlignment="Top" Width="120"/>
+                    <Button x:Name="StartWrite" Content="开始写入" HorizontalAlignment="Left" Margin="10,129,0,0" VerticalAlignment="Top" Width="223" Height="31" Click="StartWrite_Click"/>
+                    <Label Content="写入周期:" HorizontalAlignment="Left" Margin="10,71,0,0" VerticalAlignment="Top"/>
+                    <TextBox x:Name="writeCircle" HorizontalAlignment="Left" Margin="113,75,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="120"/>
+                    <Label Content="秒" HorizontalAlignment="Left" Margin="242,71,0,0" VerticalAlignment="Top"/>
+                    <RichTextBox x:Name="log" HorizontalAlignment="Stretch" Margin="0,198,0,0"  VerticalAlignment="Stretch" />
+                    <Button x:Name="StartWriteSync" Content="同步开始写入" HorizontalAlignment="Left" Margin="294,129,0,0" VerticalAlignment="Top" Width="223" Height="31" Click="StartWriteSync_Click"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="表结构测试">
+                <Grid>
+                    <Label Content="变量Id范围" HorizontalAlignment="Left" Margin="20,24,0,0" VerticalAlignment="Top"/>
+                    <TextBox x:Name="tf" HorizontalAlignment="Left" Margin="112,27,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="120"/>
+                    <TextBox x:Name="tt" HorizontalAlignment="Left" Margin="279,28,0,0" TextWrapping="Wrap" Text="100" VerticalAlignment="Top" Width="120"/>
+                    <Button x:Name="tbutton" Content="随机值连续写入" HorizontalAlignment="Left" Margin="442,28,0,0" VerticalAlignment="Top" Width="129" Click="tbutton_Click"/>
+                    <Label Content="根据SQL查询" HorizontalAlignment="Left" Margin="20,86,0,0" VerticalAlignment="Top"/>
+                    <TextBox x:Name="sqlexp" HorizontalAlignment="Left" Margin="112,90,0,0" TextWrapping="Wrap" Text="select tag1 from a where time&gt;='2023-04-29 0:0:0' and time &lt; '2023-04-29 23:59:59'" VerticalAlignment="Top" Width="595" Height="102"/>
+                    <Button x:Name="sqlQuery" Content="查询" HorizontalAlignment="Left" Margin="722,90,0,0" VerticalAlignment="Top" Width="62" Click="sqlQuery_Click"/>
+
                 </Grid>
             </TabItem>
         </TabControl>

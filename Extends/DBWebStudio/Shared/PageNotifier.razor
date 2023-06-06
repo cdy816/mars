@@ -1,0 +1,59 @@
+﻿<div class="btn-group" role="group" aria-label="Page navigate" style="background-color:rgba(100,100,100,0.2)">
+    <button type="button" class="btn btn-close-white" disabled="@(CurrentPage<=0)" onclick="@(()=>UpdateCurrentPage(CurrentPage-1))">前一页</button>
+    @{
+        int spage = CurrentPage - 1;
+        int epage = CurrentPage + 1;
+        if(spage<0)
+        {
+            spage = 0;
+            epage++;
+        }
+        if(epage>TotalPage-1)
+        {
+            epage = TotalPage-1;
+        }
+        if (spage >0)
+        {
+            <button type="button" class="btn btn-close-white">...</button>
+        }
+        @for (int i = spage; i <= epage; i++)
+        {
+            int icount = i;
+            if (i == CurrentPage)
+            {
+                <button type="button" class="btn btn-primary" >@(i+1)</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-close-white" onclick="@(()=>UpdateCurrentPage(icount))">@(i + 1)</button>
+            }
+        }
+        if(epage<TotalPage-1)
+        {
+            <button type="button" class="btn btn-close-white">...</button>
+        }
+    }
+    <button type="button" class="btn btn-close-white" disabled="@(CurrentPage>=TotalPage-1)" onclick="@(()=>UpdateCurrentPage(CurrentPage+1))">后一页</button>
+</div>
+
+@code {
+
+    [Parameter]
+    public int TotalPage{ get; set; }
+
+    [Parameter]
+    public int CurrentPage{ get; set; }
+
+    private void UpdateCurrentPage(int i)
+    {
+        if (i < 0 || i >= TotalPage) return;
+        if(CurrentPage!=i)
+        {
+            CurrentPage = i;
+            CurrentPageChanged.InvokeAsync(CurrentPage);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<int> CurrentPageChanged { get; set; }
+}

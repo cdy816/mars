@@ -413,6 +413,7 @@ namespace CalculateDriver
                         vv.Execute();
                     }
                 }
+                Thread.Sleep(10);
             }
         }
 

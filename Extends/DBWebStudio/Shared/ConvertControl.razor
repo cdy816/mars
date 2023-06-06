@@ -1,0 +1,129 @@
+﻿@using Cdy.Tag;
+@using Cdy.Tag.Real.ValueConvert;
+
+<div class="d-flex vstack">
+    <ul class="nav nav-tabs">
+        @foreach(var vv in mLinear)
+        {
+            <li class="nav-item">
+                <a class="nav-link @(vv==mCurrentConvert?"active":"")" aria-current="page" href="#" onclick="@(()=>SelectConvert(vv))">@vv</a>
+            </li>
+        }
+    </ul>
+    <div class="vstack gap-2">
+        @if (mCurrentConvert == "Linear")
+        {
+           <span >转换公式: (y=kx+b)</span>
+           <div class="hstack gap-2">
+               <span>y= </span>
+               <input type="text" class="form-control   bg-white bg-opacity-25  " style="width:160px" placeholder="k" @bind=@k />
+                <span style="width:40px">x  + </span>
+                <input type="text" class="form-control   bg-white bg-opacity-25  " style="width:160px" placeholder="b" @bind=@b />
+           </div>
+        }
+        else if (mCurrentConvert == "InvertConvert")
+        {
+            <div class="hstack gap-2">
+                <span>Bool值取反</span>
+                <input type="checkbox" class="form-control   bg-white bg-opacity-25  text-light" @bind=@boolReserve />
+            </div>
+        }
+        else if (mCurrentConvert == "BitConvert")
+        {
+            <div class="hstack gap-2">
+                <span>取位序号: </span>
+                <input type="text" class="form-control   bg-white bg-opacity-25  text-light" placeholder="取整数的第几位" @bind=@index />
+            </div>
+        }
+        else if (mCurrentConvert == "StringFormat")
+        {
+            <span>示例: Text{0}</span>
+            <div class="hstack gap-2">
+                <span>格式化字符串</span>
+                <input type="text" class="form-control   bg-white bg-opacity-25  text-light" placeholder="占位字符串{0}" @bind=@mStringFormat />
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Data.RowTagViewModel Target{ get; set; }
+
+    private List<string> mLinear = new List<string>();
+
+    private string mCurrentConvert = "";
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="convert"></param>
+    private void SelectConvert(string convert)
+    {
+        mCurrentConvert = convert;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        if (Target != null)
+        {
+            if (Target.RealTagMode is NumberTagBase)
+            {
+                mLinear.Add("Linear");
+                mCurrentConvert = "Linear";
+            }
+            else if (Target.RealTagMode is BoolTag)
+            {
+                mLinear.Add("BitConvert");
+                mLinear.Add("InvertConvert");
+                mCurrentConvert = "BitConvert";
+            }
+            else if (Target.RealTagMode is StringTag)
+            {
+                mLinear.Add("StringFormat");
+                mCurrentConvert = "StringFormat";
+            }
+        }
+    }
+
+    private int k;
+    private int b;
+
+    private int index;
+
+    private string mStringFormat = "";
+
+    private bool boolReserve = false;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public IValueConvert GetConvert()
+    {
+        if (mCurrentConvert == "Linear")
+        {
+            return new LinerConvert() { K = k, T = b };
+        }
+        else if (mCurrentConvert == "BitConvert")
+        {
+            return new BitConvert() { Index = (byte)index };
+        }
+        else if (mCurrentConvert == "InvertConvert")
+        {
+            if(boolReserve)
+            {
+                return new InvertConvert();
+            }
+        }
+        else if (mCurrentConvert == "StringFormat")
+        {
+            return new StringFormatConvert() { Format = mStringFormat };
+        }
+        return null;
+    }
+
+}

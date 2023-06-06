@@ -278,6 +278,13 @@
                                 <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
                             </StackPanel>
                         </HierarchicalDataTemplate>
+
+                        <HierarchicalDataTemplate  DataType="{x:Type local:AlarmNodeViewModel}"  ItemsSource="{Binding Children}">
+                            <StackPanel Orientation="Horizontal" Height="24">
+                                <Image Focusable="False" Source="/Image/alarm.png" VerticalAlignment="Center" Margin="4,0,10,0" Height="14" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                                <TextBlock Foreground="{DynamicResource Window.Forground}" Text="{Binding Name}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </HierarchicalDataTemplate>
                     </TreeView.Resources>
                 </TreeView>
 

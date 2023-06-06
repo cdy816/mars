@@ -52,6 +52,10 @@ namespace DBDevelopClientWebApi
         public double MinValue { get; set; }
         public byte Precision { get; set; }
 
+        public string Unit { get; set; }
+
+        public string ExtendField1 { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -78,6 +82,8 @@ namespace DBDevelopClientWebApi
             this.LinkAddress = realtag.LinkAddress;
             this.ReadWriteType = (int)realtag.ReadWriteType;
             this.Convert = realtag.Conveter != null ? realtag.Conveter.SeriseToString() : "";
+            this.Unit = realtag.Unit;
+            this.ExtendField1=realtag.ExtendField1;
             if (realtag is NumberTagBase)
             {
                 this.MaxValue = (realtag as NumberTagBase).MaxValue;
@@ -130,6 +136,21 @@ namespace DBDevelopClientWebApi
                 case (int)(Cdy.Tag.TagType.String):
                     re = new Cdy.Tag.StringTag();
                     break;
+                case (int)(Cdy.Tag.TagType.IntPoint):
+                    re = new Cdy.Tag.IntPointTag();
+                    break;
+                case (int)(Cdy.Tag.TagType.IntPoint3):
+                    re = new Cdy.Tag.IntPoint3Tag();
+                    break;
+                case (int)(Cdy.Tag.TagType.LongPoint):
+                    re = new Cdy.Tag.LongPointTag();
+                    break;
+                case (int)(Cdy.Tag.TagType.LongPoint3):
+                    re = new Cdy.Tag.LongPoint3Tag();
+                    break;
+                case (int)(Cdy.Tag.TagType.Complex):
+                    re = new Cdy.Tag.ComplexTag();
+                    break;
             }
             if (re != null)
             {
@@ -139,6 +160,9 @@ namespace DBDevelopClientWebApi
                 re.Desc = this.Desc;
                 re.Id = (int)this.Id;
                 re.ReadWriteType = (Cdy.Tag.ReadWriteMode)this.ReadWriteType;
+                re.ExtendField1 = this.ExtendField1;
+                re.Unit = this.Unit;
+
                 if (!string.IsNullOrEmpty(this.Convert))
                 {
                     re.Conveter = this.Convert.DeSeriseToValueConvert();

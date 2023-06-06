@@ -116,7 +116,19 @@ namespace Cdy.Tag
         /// <returns></returns>
         public abstract long Compress(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, IMemoryBlock statisticTarget,long statisticAddr);
 
-
+        /// <summary>
+        /// 压缩区域
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="target"></param>
+        /// <param name="targetAddr"></param>
+        /// <param name="size"></param>
+        /// <param name="statisticTarget"></param>
+        /// <param name="statisticAddr"></param>
+        /// <param name="timeAddr"></param>
+        /// <returns></returns>
+        public abstract long CompressByArea(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, IMemoryBlock statisticTarget, long statisticAddr, ref long timeAddr);
         /// <summary>
         /// 
         /// </summary>
@@ -141,7 +153,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public abstract int DeCompressAllValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result);
+        public abstract int DeCompressAllValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result,QueryContextBase ctx=null);
 
         /// <summary>
         /// 

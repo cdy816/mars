@@ -216,6 +216,109 @@ namespace Cdy.Tag
         #endregion ...Interfaces...
     }
 
+    public struct RealTagValue3
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string TagName { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public object Value { get; set; }
+
+        /// <summary>
+        /// 值类型
+        /// <see cref="Cdy.Tag.TagType"/>
+        /// </summary>
+        public byte ValueType { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte Quality { get; set; }
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 带时间戳的实时值
+    /// </summary>
+    public struct RealTagValueWithTimer2
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string TagName { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public object Value { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime Time { get; set; }
+
+        /// <summary>
+        /// 值类型
+        /// <see cref="Cdy.Tag.TagType"/>
+        /// </summary>
+        public byte ValueType { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte Quality { get; set; }
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
 
     /// <summary>
     /// 
@@ -266,8 +369,6 @@ namespace Cdy.Tag
 
         #endregion ...Interfaces...
     }
-
-
     /// <summary>
     /// 
     /// </summary>
@@ -312,6 +413,65 @@ namespace Cdy.Tag
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
+    }
+
+
+    /// <summary>
+    /// 变量的实时值
+    /// </summary>
+    public struct TagRealValue
+    {
+        /// <summary>
+        /// 值
+        /// </summary>
+        public object Value { get; set; }
+
+        /// <summary>
+        /// 质量戳
+        /// </summary>
+        public byte Quality { get; set; }
+
+        /// <summary>
+        /// 时间
+        /// </summary>
+        public DateTime Time { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ComplexRealValue : List<ComplexRealValueItem>
+    {
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public struct ComplexRealValueItem
+    {
+        public int Id { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte ValueType { get; set; }
+
+        /// <summary>
+        /// 值
+        /// </summary>
+        public object Value { get; set; }
+
+        /// <summary>
+        /// 质量戳
+        /// </summary>
+        public byte Quality { get; set; }
+
+        /// <summary>
+        /// 时间
+        /// </summary>
+        public DateTime Time { get; set; }
+
     }
 
 }

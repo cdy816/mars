@@ -503,6 +503,23 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         /// <param name="statisticTarget"></param>
         /// <param name="statisticAddr"></param>
+        /// <param name="timeAddr"></param>
+        /// <returns></returns>
+        public override long CompressByArea(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, IMemoryBlock statisticTarget, long statisticAddr, ref long timeAddr)
+        {
+            return Compress(source, sourceAddr, target,targetAddr, size, statisticTarget,statisticAddr);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="target"></param>
+        /// <param name="targetAddr"></param>
+        /// <param name="size"></param>
+        /// <param name="statisticTarget"></param>
+        /// <param name="statisticAddr"></param>
         /// <returns></returns>
         public override long Compress(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, IMemoryBlock statisticTarget, long statisticAddr)
         {
@@ -5132,7 +5149,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
+        public override int DeCompressAllValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result, QueryContextBase ctx)
         {
             if (typeof(T) == typeof(bool))
             {

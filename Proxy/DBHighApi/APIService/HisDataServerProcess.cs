@@ -80,6 +80,23 @@ namespace DBHighApi.Api
         /// </summary>
         public const byte DeleteHisData = 17;
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestHisDatasByTimePointIgnorSystemExit = 20;
+
+        /// <summary>
+        /// 
+        /// </summary>
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestHisDataByTimeSpanIgnorSystemExit = 22;
+
+        public const byte ReadHisValueBySQL = 140;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -122,8 +139,14 @@ namespace DBHighApi.Api
                     case RequestHisDatasByTimePoint:
                         ProcessRequestHisDatasByTimePointByMemory(client, data);
                         break;
+                    case RequestHisDatasByTimePointIgnorSystemExit:
+                        ProcessRequestHisDatasByTimePointByIgnorSystemExit(client, data);
+                        break;
                     case RequestHisDataByTimeSpan:
                         ProcessRequestHisDataByTimeSpanByMemory(client, data);
+                        break;
+                    case RequestHisDataByTimeSpanIgnorSystemExit:
+                        ProcessRequestHisDataByTimeSpanByIgnorSystemExit(client, data);
                         break;
                     case RequestStatisticData:
                         ProcessRequestStatisticsDataByMemory(client, data);
@@ -155,6 +178,9 @@ namespace DBHighApi.Api
                     case DeleteHisData:
                         ProcessDeleteHisData(client, data);
                         break;
+                    case ReadHisValueBySQL:
+                        ProcessRequestBySql(client,data);
+                        break;
                 }
             }
             else
@@ -184,6 +210,49 @@ namespace DBHighApi.Api
             //re.SetWriterIndex(re.WriterIndex + vdata.Size);
 
             return re;
+        }
+
+        private void ProcessRequestBySql(string clientId, ByteBuffer data)
+        {
+            string sql = data.ReadString();
+            int id = data.ReadInt();
+            var res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisValueBySql(sql);
+            if(res is ByteBuffer)
+            {
+                var byt = res as ByteBuffer;
+                var re = Parent.Allocate(FunId, (int)(10 + byt.WriteIndex));
+                re.Write(id);
+                re.Write((byte)ReadHisValueBySQL);
+                re.Write((byte)2);
+                re.Write(new IntPtr(byt.Handles[0].ToInt64() + byt.ReadIndex), (int)byt.ReadableCount);
+                Parent.AsyncCallback(clientId, re);
+            }
+            else if(res is HisQueryTableResult)
+            {
+                var qq = res as HisQueryTableResult;
+                var smetas = qq.SeriseMeta();
+                var re = Parent.Allocate(FunId, 12 + qq.AvaiableSize + smetas.Length * 2);
+                re.Write(id);
+                re.Write((byte)ReadHisValueBySQL);
+                re.Write((byte)0);
+                re.Write(smetas);
+                re.Write(qq.AvaiableSize);
+                re.Write(qq.Address, qq.AvaiableSize);
+                Parent.AsyncCallback(clientId, re);
+            }
+            else if(res is List<double>)
+            {
+                var byt = res as List<double>;
+                var re = Parent.Allocate(FunId, (int)(10 + byt.Count*8));
+                re.Write(id);
+                re.Write((byte)ReadHisValueBySQL);
+                re.Write((byte)1);
+                for(int i=0;i<byt.Count;i++)
+                {
+                    re.Write(byt[i]);
+                }
+                Parent.AsyncCallback(clientId, re);
+            }
         }
 
         /// <summary>
@@ -281,6 +350,46 @@ namespace DBHighApi.Api
             //Parent.AsyncCallback(clientId, re);
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        private void ProcessRequestHisDatasByTimePointByIgnorSystemExit(string clientId, ByteBuffer data)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            int id = data.ReadInt();
+            Cdy.Tag.QueryValueMatchType type = (QueryValueMatchType)data.ReadByte();
+            int count = data.ReadInt();
+            List<DateTime> times = new List<DateTime>();
+            for (int i = 0; i < count; i++)
+            {
+                times.Add(new DateTime(data.ReadLong()));
+            }
+            ByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisDataByIgnorSystemExit(id, times, type);
+
+            if (re != null)
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, (int)(re.WriteIndex));
+                int icount = (int)(re.WriteIndex - re.ReadIndex);
+                re.CopyTo(ree, re.ReadIndex, 1, icount);
+                re.UnlockAndReturn();
+                ree.WriteIndex += icount;
+                Parent.AsyncCallback(clientId, ree);
+            }
+            else
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, 1);
+                Parent.AsyncCallback(clientId, ree);
+            }
+            sw.Stop();
+            LoggerService.Service.Info("ProcessRequestHisDatasByTimePointByIgnorSystemExit", $" 查询耗时{sw.ElapsedMilliseconds}");
+            //re.UnLock();
+            //Parent.AsyncCallback(clientId, re);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -347,6 +456,42 @@ namespace DBHighApi.Api
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        private void ProcessRequestHisDataByTimeSpanByIgnorSystemExit(string clientId, ByteBuffer data)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            int id = data.ReadInt();
+            Cdy.Tag.QueryValueMatchType type = (QueryValueMatchType)data.ReadByte();
+            DateTime stime = new DateTime(data.ReadLong());
+            DateTime etime = new DateTime(data.ReadLong());
+            TimeSpan ts = new TimeSpan(data.ReadLong());
+
+            ByteBuffer re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.QueryHisDataByIgnorSystemExit(id, stime, etime, ts, type);
+            //re.UnLock();
+            //Parent.AsyncCallback(clientId, re);
+            if (re != null)
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, (int)(re.WriteIndex));
+                int icount = (int)(re.WriteIndex - re.ReadIndex);
+                re.CopyTo(ree, re.ReadIndex, 1, icount);
+                re.UnlockAndReturn();
+                ree.WriteIndex += icount;
+                Parent.AsyncCallback(clientId, ree);
+            }
+            else
+            {
+                var ree = Parent.Allocate(ApiFunConst.HisDataRequestFun, 1);
+                Parent.AsyncCallback(clientId, ree);
+            }
+            sw.Stop();
+            LoggerService.Service.Info("ProcessRequestHisDataByTimeSpanByIgnorSystemExit", $" 查询耗时{sw.ElapsedMilliseconds}");
+        }
+
 
         /// <summary>
         /// 
@@ -358,6 +503,7 @@ namespace DBHighApi.Api
             int id = data.ReadInt();
             DateTime sTime = new DateTime(data.ReadLong());
             DateTime eTime = new DateTime(data.ReadLong());
+            byte type = data.ReadByte();
             ByteBuffer re = Parent.Allocate(ApiFunConst.HisDataRequestFun, 20);
             re.Write((byte)RequestFindTagValue);
 
@@ -370,7 +516,7 @@ namespace DBHighApi.Api
                 switch (tag.Type)
                 {
                     case Cdy.Tag.TagType.DateTime:
-                        dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValue(tag.Id, sTime, eTime, data.ReadDateTime());
+                        dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValue(tag.Id, sTime, eTime, DateTime.Parse(data.ReadString()));
                         if (dres != null)
                         {
                             re.Write((byte)1);
@@ -384,7 +530,7 @@ namespace DBHighApi.Api
                         re.Write((double)0);
                         break;
                     case Cdy.Tag.TagType.Bool:
-                        dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValue(tag.Id, sTime, eTime, data.ReadByte());
+                        dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValue(tag.Id, sTime, eTime,Convert.ToByte(bool.Parse(data.ReadString())));
                         if (dres != null)
                         {
                             re.Write((byte)1);
@@ -421,7 +567,7 @@ namespace DBHighApi.Api
                         break;
                     case Cdy.Tag.TagType.Double:
                     case Cdy.Tag.TagType.Float:
-                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValue(tag.Id, sTime, eTime, (NumberStatisticsType)(byte)data.ReadByte(), data.ReadDouble(),data.ReadInt());
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValue(tag.Id, sTime, eTime, (NumberStatisticsType)type, double.Parse( data.ReadString()), double.Parse(data.ReadString()));
                         if (res != null)
                         {
                             re.Write((byte)1);
@@ -441,7 +587,7 @@ namespace DBHighApi.Api
                     case Cdy.Tag.TagType.Short:
                     case Cdy.Tag.TagType.ULong:
                     case Cdy.Tag.TagType.UShort:
-                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValue(tag.Id, sTime, eTime, (NumberStatisticsType)(byte)data.ReadByte(), data.ReadLong(), data.ReadInt());
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValue(tag.Id, sTime, eTime, (NumberStatisticsType)type, long.Parse(data.ReadString()), int.Parse(data.ReadString()));
                         if (res != null)
                         {
                             re.Write((byte)1);
@@ -470,9 +616,11 @@ namespace DBHighApi.Api
             int id = data.ReadInt();
             DateTime sTime = new DateTime(data.ReadLong());
             DateTime eTime = new DateTime(data.ReadLong());
+            byte type = data.ReadByte();
             ByteBuffer re = Parent.Allocate(ApiFunConst.HisDataRequestFun, 20);
             re.Write((byte)RequestFindTagValues);
             var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
+
             if (tag != null)
             {
                 IEnumerable<DateTime> dres = null;
@@ -481,7 +629,7 @@ namespace DBHighApi.Api
                 switch (tag.Type)
                 {
                     case Cdy.Tag.TagType.DateTime:
-                        dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValues(tag.Id, sTime, eTime, data.ReadDateTime());
+                        dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValues(tag.Id, sTime, eTime,DateTime.Parse(data.ReadString()));
                         if (dres != null)
                         {
                             re.Write((byte)1);
@@ -500,7 +648,7 @@ namespace DBHighApi.Api
                         }
                         break;
                     case Cdy.Tag.TagType.Bool:
-                        dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValues(tag.Id, sTime, eTime, data.ReadByte());
+                        dres = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValues(tag.Id, sTime, eTime,Convert.ToByte(bool.Parse( data.ReadString())));
                         if (dres != null)
                         {
                             re.Write((byte)1);
@@ -547,12 +695,12 @@ namespace DBHighApi.Api
                         break;
                     case Cdy.Tag.TagType.Double:
                     case Cdy.Tag.TagType.Float:
-                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValues(tag.Id, sTime, eTime, (NumberStatisticsType)(byte)data.ReadByte(), data.ReadDouble(), data.ReadInt());
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValues(tag.Id, sTime, eTime, (NumberStatisticsType)type, double.Parse( data.ReadString()),double.Parse( data.ReadString()));
                         if (res != null)
                         {
                             re.Write((byte)1);
                             re.CheckAndResize(20 + 4 + res.Count() * 16);
-                            re.Write(dres.Count());
+                            re.Write(res.Count());
                             foreach (var vv in res)
                             {
                                 re.Write(vv.Key);
@@ -572,12 +720,12 @@ namespace DBHighApi.Api
                     case Cdy.Tag.TagType.Short:
                     case Cdy.Tag.TagType.ULong:
                     case Cdy.Tag.TagType.UShort:
-                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValues(tag.Id, sTime, eTime, (NumberStatisticsType)(byte)data.ReadByte(), data.ReadLong(), data.ReadInt());
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValues(tag.Id, sTime, eTime, (NumberStatisticsType)type, long.Parse(data.ReadString()), int.Parse(data.ReadString()));
                         if (res != null)
                         {
                             re.Write((byte)1);
                             re.CheckAndResize(20 + 4 + res.Count() * 16);
-                            re.Write(dres.Count());
+                            re.Write(res.Count());
                             foreach (var vv in res)
                             {
                                 re.Write(vv.Key);
@@ -606,6 +754,7 @@ namespace DBHighApi.Api
             int id = data.ReadInt();
             DateTime sTime = new DateTime(data.ReadLong());
             DateTime eTime = new DateTime(data.ReadLong());
+            byte type = data.ReadByte();
             ByteBuffer re = Parent.Allocate(ApiFunConst.HisDataRequestFun, 20);
             re.Write((byte)RequestCalTagValueKeepTime);
             var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
@@ -616,10 +765,10 @@ namespace DBHighApi.Api
                 switch (tag.Type)
                 {
                     case Cdy.Tag.TagType.DateTime:
-                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValueDuration(tag.Id, sTime, eTime, data.ReadDateTime());
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValueDuration(tag.Id, sTime, eTime, DateTime.Parse(data.ReadString()));
                         break;
                     case Cdy.Tag.TagType.Bool:
-                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValueDuration(tag.Id, sTime, eTime, data.ReadByte());
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNoNumberTagValueDuration(tag.Id, sTime, eTime, Convert.ToByte(bool.Parse(data.ReadString())));
                         break;
                     case Cdy.Tag.TagType.String:
                     case Cdy.Tag.TagType.IntPoint:
@@ -634,7 +783,7 @@ namespace DBHighApi.Api
                         break;
                     case Cdy.Tag.TagType.Double:
                     case Cdy.Tag.TagType.Float:
-                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValueDuration(tag.Id, sTime, eTime, (NumberStatisticsType)data.ReadByte(),data.ReadDouble(), data.ReadInt());
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValueDuration(tag.Id, sTime, eTime, (NumberStatisticsType)type, double.Parse(data.ReadString()), double.Parse(data.ReadString()));
                         break;
                     case Cdy.Tag.TagType.Byte:
                     case Cdy.Tag.TagType.Int:
@@ -643,7 +792,7 @@ namespace DBHighApi.Api
                     case Cdy.Tag.TagType.Short:
                     case Cdy.Tag.TagType.ULong:
                     case Cdy.Tag.TagType.UShort:
-                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValueDuration(tag.Id, sTime, eTime, (NumberStatisticsType)data.ReadByte(), data.ReadLong(), data.ReadInt());
+                        res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.FindNumberTagValueDuration(tag.Id, sTime, eTime, (NumberStatisticsType)type, long.Parse(data.ReadString()), int.Parse(data.ReadString()));
                         break;
 
                 }
@@ -714,7 +863,7 @@ namespace DBHighApi.Api
             DateTime sTime = new DateTime(data.ReadLong());
             DateTime eTime = new DateTime(data.ReadLong());
             ByteBuffer re = Parent.Allocate(ApiFunConst.HisDataRequestFun, 20);
-            re.Write((byte)RequestCalTagValueKeepTime);
+            re.Write((byte)RequestFindNumberTagMaxValue);
             var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
             if (tag != null)
             {
@@ -766,7 +915,7 @@ namespace DBHighApi.Api
             DateTime sTime = new DateTime(data.ReadLong());
             DateTime eTime = new DateTime(data.ReadLong());
             ByteBuffer re = Parent.Allocate(ApiFunConst.HisDataRequestFun, 20);
-            re.Write((byte)RequestCalTagValueKeepTime);
+            re.Write((byte)RequestFindNumberTagMinValue);
             var tag = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
             if (tag != null)
             {

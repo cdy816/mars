@@ -59,6 +59,8 @@ namespace DBInStudio.Desktop
 
         private ICommand mAlarmConfigCommand;
 
+        private ICommand mSpiderConfigCommand;
+
         private ICommand mStartMonitorCommand;
 
         private TreeItemViewModel mCurrentSelectTreeItem;
@@ -88,6 +90,9 @@ namespace DBInStudio.Desktop
 
         private MarInfoViewModel infoModel;
 
+        private bool ServerHasSpider;
+        private bool ServerHasAnt;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -106,18 +111,18 @@ namespace DBInStudio.Desktop
             ServiceLocator.Locator.Registor<IProcessNotify>(this);
             CurrentUserManager.Manager.RefreshNameEvent += Manager_RefreshNameEvent;
             mCheckRunningTimer = new System.Timers.Timer(1000);
-            mCheckRunningTimer.Elapsed += MCheckRunningTimer_Elapsed;
+            //mCheckRunningTimer.Elapsed += MCheckRunningTimer_Elapsed;
             infoModel = new MarInfoViewModel();
 
             mContentViewModel = infoModel;
 
             DevelopServiceHelper.Helper.OfflineCallBack = new Action(() => {
-
-                MessageBox.Show(Res.Get("serveroffline"));
+              
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     Logout();
                 });
+                MessageBox.Show(Res.Get("serveroffline"));
             });
         }
 
@@ -641,7 +646,7 @@ namespace DBInStudio.Desktop
                 {
                     mAlarmConfigCommand = new RelayCommand(() => {
                         RunAlarmConfig();
-                    }, () => { return IsLogin && !string.IsNullOrEmpty(Database) && HasAlarmStudio(); });
+                    }, () => { return IsLogin && !string.IsNullOrEmpty(Database) && HasAlarmStudioConfig; });
                 }
                 return mAlarmConfigCommand;
             }
@@ -651,7 +656,33 @@ namespace DBInStudio.Desktop
         {
             get
             {
-                return HasAlarmStudio();
+                return HasAlarmStudio()&ServerHasAnt;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand SpiderConfigCommand
+        {
+            get
+            {
+                if (mSpiderConfigCommand == null)
+                {
+                    mSpiderConfigCommand = new RelayCommand(() => {
+                        RunSpiderConfig();
+                    }, () => { return IsLogin && !string.IsNullOrEmpty(Database) && HasSpiderStudioConfig; });
+                }
+                return mSpiderConfigCommand;
+            }
+        }
+
+        public bool HasSpiderStudioConfig
+        {
+            get
+            {
+                return HasSpiderStudio()&ServerHasSpider;
             }
         }
 
@@ -695,9 +726,19 @@ namespace DBInStudio.Desktop
         /// 
         /// </summary>
         /// <returns></returns>
+        private bool HasSpiderStudio()
+        {
+            string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "Spider", "InSpiderStudio.exe");
+            return System.IO.File.Exists(sfile);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         private bool HasAlarmStudio()
         {
-            string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "InAntStudio.exe");
+            string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath,"Ant", "InAntStudio.exe");
             return System.IO.File.Exists(sfile);
         }
 
@@ -706,9 +747,19 @@ namespace DBInStudio.Desktop
         /// </summary>
         private void RunAlarmConfig()
         {
-            string arg = ServerHelper.Helper.Server + " " + ServerHelper.Helper.UserName + " " + ServerHelper.Helper.Password + " " + ServerHelper.Helper.Database;
-            Process.Start(new ProcessStartInfo() { FileName = System.IO.Path.Combine(PathHelper.helper.AppPath, "InAntStudio.exe"), Arguments = arg });
+            string arg = ServerHelper.Helper.Server + " " + CurrentUserManager.Manager.UserName + " " + CurrentUserManager.Manager.Password + " " + this.Database;
+            Process.Start(new ProcessStartInfo() { FileName = System.IO.Path.Combine(PathHelper.helper.AppPath, "Ant", "InAntStudio.exe"), Arguments = arg });
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void RunSpiderConfig()
+        {
+            string arg = "/a server=" + ServerHelper.Helper.Server + " username=" + CurrentUserManager.Manager.UserName + " password=" + CurrentUserManager.Manager.Password + " solution=" + this.Database;
+            Process.Start(new ProcessStartInfo() { FileName = System.IO.Path.Combine(PathHelper.helper.AppPath, "Spider", "InSpiderStudio.exe"), Arguments = arg });
+        }
+
 
         /// <summary>
         /// 
@@ -999,6 +1050,7 @@ namespace DBInStudio.Desktop
                     }
 
                     Database = ldm.SelectDatabase.Name;
+                    ServerHelper.Helper.Database = Database;
                     OnPropertyChanged("MainwindowTitle");
 
                     foreach (var vv in this.TagGroup) vv.Dispose();
@@ -1055,6 +1107,7 @@ namespace DBInStudio.Desktop
         /// </summary>
         private void StartCheckDatabaseRunning()
         {
+            mCheckRunningTimer.Elapsed += MCheckRunningTimer_Elapsed;
             mCheckRunningTimer.Start();
         }
 
@@ -1063,6 +1116,7 @@ namespace DBInStudio.Desktop
         /// </summary>
         private void StopCheckDatabaseRunning()
         {
+            mCheckRunningTimer.Elapsed -= MCheckRunningTimer_Elapsed;
             mCheckRunningTimer.Stop();
         }
 
@@ -1116,7 +1170,8 @@ namespace DBInStudio.Desktop
                     this.TagGroup.Clear();
 
                     CurrentUserManager.Manager.UserName = login.UserName;
-                    Database = AutoLogin.Database;
+                    CurrentUserManager.Manager.Password = login.Password;
+                   Database = AutoLogin.Database;
                     ServerHelper.Helper.Database = Database;
 
                     OnPropertyChanged("MainwindowTitle");
@@ -1173,6 +1228,8 @@ namespace DBInStudio.Desktop
                     this.TagGroup.Clear();
                     
                     CurrentUserManager.Manager.UserName = login.UserName;
+                    CurrentUserManager.Manager.Password = login.Password;
+
                     Database = ldm.SelectDatabase.Name;
                     ServerHelper.Helper.Database = Database;
 
@@ -1212,6 +1269,16 @@ namespace DBInStudio.Desktop
                     });
 
                     StartCheckDatabaseRunning();
+
+
+                    if (DevelopServiceHelper.Helper.GetExtendFunctions(out bool spider,out bool ant))
+                    {
+                        ServerHasSpider = spider;
+                        ServerHasAnt = ant;
+
+                        OnPropertyChanged("HasAlarmStudioConfig");
+                        OnPropertyChanged("HasSpiderStudioConfig");
+                    }
                 }
             }
         }

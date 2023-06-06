@@ -160,6 +160,24 @@ namespace HisDataTools.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Export 的本地化字符串。
+        /// </summary>
+        internal static string Export {
+            get {
+                return ResourceManager.GetString("Export", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ExportQuality 的本地化字符串。
+        /// </summary>
+        internal static string ExportQuality {
+            get {
+                return ResourceManager.GetString("ExportQuality", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Good 的本地化字符串。
         /// </summary>
         internal static string good {
@@ -192,6 +210,15 @@ namespace HisDataTools.Properties {
         internal static string Id {
             get {
                 return ResourceManager.GetString("Id", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Ignore system exit 的本地化字符串。
+        /// </summary>
+        internal static string IgnorClosedQuality {
+            get {
+                return ResourceManager.GetString("IgnorClosedQuality", resourceCulture);
             }
         }
         

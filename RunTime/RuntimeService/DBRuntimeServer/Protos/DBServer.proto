@@ -22,6 +22,12 @@ service DBServer {
 	rpc HotStartDatabse(DatabaseCommonRequest) returns (StartDatabseResponse);
 
 	rpc StopDatabse(DatabaseCommonRequest) returns (StartDatabseResponse);
+
+	rpc HasAlarm(DatabaseCommonRequest) returns (HasAlarmResponse);
+
+	//rpc ListHisData(ListHisDataRequest) returns (ListHisDataReponse);
+
+	//rpc GetFileStream(FileRequest) returns (stream FileResponse);
 }
 
 message CommonRequest
@@ -39,6 +45,30 @@ message DatabaseCommonRequest
 {
 	string Token=1;
 	string Database=2;
+}
+
+message ListHisDataRequest
+{
+	string Token=1;
+	string Database=2;
+	int64 StartTime=3;
+	int64 EndTime=4;
+}
+
+message ListHisDataReponse
+{
+	repeated string Files=1;
+}
+
+message FileRequest
+{
+	string Token=1;
+	string File=2;
+}
+
+message FileResponse
+{
+	bytes data=1; 
 }
 
 message DatabaseApiRequest
@@ -83,5 +113,12 @@ message DiskInfo
 	string Total=2;
 	string Used=3;
 	string UsedFor=5;
+}
+
+message HasAlarmResponse
+{
+	bool Result=1;
+	bool Grpc=2;
+	int32 Port=3;
 }
 

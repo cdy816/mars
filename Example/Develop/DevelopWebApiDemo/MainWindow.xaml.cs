@@ -105,5 +105,57 @@ namespace DevelopWebApiDemo
         {
             mHelper.Save(mCurrentDatabase);
         }
+
+        private void startdb_Click(object sender, RoutedEventArgs e)
+        {
+            if (mHelper.Start(mCurrentDatabase))
+            {
+                MessageBox.Show("启动成功!");
+            }
+        }
+
+        private void newdbgroup_Click(object sender, RoutedEventArgs e)
+        {
+            if(mHelper.AddTagGroup(groupname.Text, mTagGroup, mCurrentDatabase))
+            {
+                MessageBox.Show("新建成功");
+            }
+        }
+        Dictionary<string, Dictionary<string, string>> mdriversettings;
+        private void getdriversetting_Click(object sender, RoutedEventArgs e)
+        {
+            mdriversettings = mHelper.GetDriverSetting(mCurrentDatabase);
+        }
+
+        private void updatedriversetting_Click(object sender, RoutedEventArgs e)
+        {
+            mHelper.UpdateDriverSetting(mCurrentDatabase,mdriversettings);
+        }
+
+        private void getproxyapisetting_Click(object sender, RoutedEventArgs e)
+        {
+            var res = mHelper.GetDatabaseProxySetting(mCurrentDatabase);
+        }
+
+        private void updateproxyapisetting_Click(object sender, RoutedEventArgs e)
+        {
+            mHelper.UpdateDatabaseProxySetting(mCurrentDatabase,false,false,true,false);
+        }
+
+        private void modifyUser_Click(object sender, RoutedEventArgs e)
+        {
+            mHelper.ModifyDatabaseUserPassword("Admin", pwd.Text, mCurrentDatabase);
+           
+        }
+
+        private void getpermission_Click(object sender, RoutedEventArgs e)
+        {
+            mHelper.GetDatabasePermission(mCurrentDatabase);
+        }
+
+        private void getcurrentuserconfig_Click(object sender, RoutedEventArgs e)
+        {
+            var config = mHelper.GetCurrentUserConfig();
+        }
     }
 }

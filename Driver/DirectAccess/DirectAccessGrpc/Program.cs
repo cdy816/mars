@@ -60,7 +60,26 @@ namespace DirectAccessGrpc
                     }
                     else
                     {
-                        webBuilder.UseUrls("https://0.0.0.0:" + Port);
+                        string spath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mars.pfx");
+                        if (System.IO.File.Exists(spath))
+                        {
+                            webBuilder.UseKestrel(options =>
+                            {
+                                options.ListenAnyIP(Port, listenOps =>
+                                {
+                                    listenOps.UseHttps(callback =>
+                                    {
+                                        callback.AllowAnyClientCertificate();
+                                        callback.ServerCertificate = new System.Security.Cryptography.X509Certificates.X509Certificate2(spath, "mars");
+                                    });
+                                });
+                            });
+                        }
+                        else
+                        {
+                            webBuilder.UseUrls("https://0.0.0.0:" + Port);
+                        }
+                        //webBuilder.UseUrls("https://0.0.0.0:" + Port);
                     }
                     webBuilder.UseStartup<Startup>();
                 });

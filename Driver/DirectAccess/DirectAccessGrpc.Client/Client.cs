@@ -309,6 +309,261 @@ namespace DirectAccess
             }
             return false;
         }
+
+        /// <summary>
+        /// 获取某个时间段内记录的所有值
+        /// </summary>
+        /// <param name="tag">变量集合/param>
+        /// <param name="stime">开始时间</param>
+        /// <param name="etime">结束时间</param>
+        /// <returns></returns>
+        public Dictionary<string, HisDataValueCollection> GetAllHisValue(IEnumerable<string> tags, DateTime stime,DateTime etime)
+        {
+            try
+            {
+                if (mDataClient != null && !string.IsNullOrEmpty(mLoginId))
+                {
+                    var dr = new QueryAllHisDataRequest() { Token = mLoginId,StartTime=stime.Ticks,EndTime=etime.Ticks };
+                    dr.Tags.AddRange(tags);
+                    Dictionary<string, HisDataValueCollection> re = new Dictionary<string, HisDataValueCollection>();
+                     var res = mDataClient.GetAllHisValue(dr);
+                    if(res != null && res.Result)
+                    {
+                        foreach(var vv in res.Values)
+                        {
+                            HisDataValueCollection hvc = new HisDataValueCollection();
+                            hvc.AddRange(vv.Values.Select(e => new HisDataValuePoint() { Quality = (byte)e.Quality, Time = DateTime.FromBinary(e.Time), Value = e.Value }));
+                            re.Add(vv.Tag, hvc);
+                        }
+                    }
+                    return re;
+                }
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 在某个时间段，查询一些列时间间隔上时间对应的值
+        /// </summary>
+        /// <param name="tag">变量集合</param>
+        /// <param name="stime">开始时间</param>
+        /// <param name="etime">结束时间</param>
+        /// <param name="timespan">时间间隔（毫秒）</param>
+        /// <param name="queryType">拟合类型(0：取前一个值，1： 取后一个值，2：取较近的值 ，3：线性插值</param>
+        /// <returns></returns>
+        public Dictionary<string, HisDataValueCollection> GetHisValue(IEnumerable<string> tags, DateTime stime, DateTime etime,int timespan,byte queryType)
+        {
+            try
+            {
+                if (mDataClient != null && !string.IsNullOrEmpty(mLoginId))
+                {
+                    var dr = new QueryHisDataRequest() { Token = mLoginId, StartTime = stime.Ticks, EndTime = etime.Ticks,Duration = timespan,QueryType=queryType  };
+                    dr.Tags.AddRange(tags);
+                    Dictionary<string, HisDataValueCollection> re = new Dictionary<string, HisDataValueCollection>();
+                    var res = mDataClient.GetHisValue(dr);
+                    if (res != null && res.Result)
+                    {
+                        foreach (var vv in res.Values)
+                        {
+                            HisDataValueCollection hvc = new HisDataValueCollection();
+                            hvc.AddRange(vv.Values.Select(e => new HisDataValuePoint() { Quality = (byte)e.Quality, Time = DateTime.FromBinary(e.Time), Value = e.Value }));
+                            re.Add(vv.Tag, hvc);
+                        }
+                    }
+                    return re;
+                }
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 在某个时间段，查询一些列时间间隔上时间对应的值，数据拟合时忽略系统退出时的影响
+        /// </summary>
+        /// <param name="tag">变量集合</param>
+        /// <param name="stime">开始时间</param>
+        /// <param name="etime">结束时间</param>
+        /// <param name="timespan">时间间隔（毫秒）</param>
+        /// <param name="queryType">拟合类型(0：取前一个值，1： 取后一个值，2：取较近的值 ，3：线性插值</param>
+        /// <returns></returns>
+        public Dictionary<string, HisDataValueCollection> GetHisValueByIgnorSystemExit(IEnumerable<string> tags, DateTime stime, DateTime etime, int timespan, byte queryType)
+        {
+            try
+            {
+                if (mDataClient != null && !string.IsNullOrEmpty(mLoginId))
+                {
+                    var dr = new QueryHisDataRequest() { Token = mLoginId, StartTime = stime.Ticks, EndTime = etime.Ticks, Duration = timespan, QueryType = queryType };
+                    dr.Tags.AddRange(tags);
+                    Dictionary<string, HisDataValueCollection> re = new Dictionary<string, HisDataValueCollection>();
+                    var res = mDataClient.GetHisValueIgnorSystemExit(dr);
+                    if (res != null && res.Result)
+                    {
+                        foreach (var vv in res.Values)
+                        {
+                            HisDataValueCollection hvc = new HisDataValueCollection();
+                            hvc.AddRange(vv.Values.Select(e => new HisDataValuePoint() { Quality = (byte)e.Quality, Time = DateTime.FromBinary(e.Time), Value = e.Value }));
+                            re.Add(vv.Tag, hvc);
+                        }
+                    }
+                    return re;
+                }
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+
+
+        /// <summary>
+        /// 些列时间点上时间对应的值
+        /// </summary>
+        /// <param name="tag">变量集合</param>
+        /// <param name="times">时间集合</param>
+        /// <param name="queryType">拟合类型(0：取前一个值，1： 取后一个值，2：取较近的值 ，3：线性插值</param>
+        /// <returns></returns>
+        public Dictionary<string, HisDataValueCollection> GetHisValueAtTimePoint(IEnumerable<string> tags, IEnumerable<DateTime> times, byte queryType)
+        {
+            try
+            {
+                if (mDataClient != null && !string.IsNullOrEmpty(mLoginId))
+                {
+                    var dr = new QueryHisDataAtTimesRequest() { Token = mLoginId,  QueryType = queryType };
+                    dr.Times.AddRange(times.Select(e => e.Ticks));
+                    dr.Tags.AddRange(tags);
+                    Dictionary<string, HisDataValueCollection> re = new Dictionary<string, HisDataValueCollection>();
+                    var res = mDataClient.GetHisValueAtTimes(dr);
+                    if (res != null && res.Result)
+                    {
+                        foreach (var vv in res.Values)
+                        {
+                            HisDataValueCollection hvc = new HisDataValueCollection();
+                            hvc.AddRange(vv.Values.Select(e => new HisDataValuePoint() { Quality = (byte)e.Quality, Time = DateTime.FromBinary(e.Time), Value = e.Value }));
+                            re.Add(vv.Tag, hvc);
+                        }
+                    }
+                    return re;
+                }
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 些列时间点上时间对应的值,数据拟合时忽略系统退出时的影响
+        /// </summary>
+        /// <param name="tag">变量集合</param>
+        /// <param name="times">时间集合</param>
+        /// <param name="queryType">拟合类型(0：取前一个值，1： 取后一个值，2：取较近的值 ，3：线性插值</param>
+        /// <returns></returns>
+        public Dictionary<string, HisDataValueCollection> GetHisValueAtTimePointByIgnorSystemExit(IEnumerable<string> tags, IEnumerable<DateTime> times, byte queryType)
+        {
+            try
+            {
+                if (mDataClient != null && !string.IsNullOrEmpty(mLoginId))
+                {
+                    var dr = new QueryHisDataAtTimesRequest() { Token = mLoginId, QueryType = queryType };
+                    dr.Times.AddRange(times.Select(e => e.Ticks));
+                    dr.Tags.AddRange(tags);
+                    Dictionary<string, HisDataValueCollection> re = new Dictionary<string, HisDataValueCollection>();
+                    var res = mDataClient.GetHisValueAtTimesIgnorSystemExit(dr);
+                    if (res != null && res.Result)
+                    {
+                        foreach (var vv in res.Values)
+                        {
+                            HisDataValueCollection hvc = new HisDataValueCollection();
+                            hvc.AddRange(vv.Values.Select(e => new HisDataValuePoint() { Quality = (byte)e.Quality, Time = DateTime.FromBinary(e.Time), Value = e.Value }));
+                            re.Add(vv.Tag, hvc);
+                        }
+                    }
+                    return re;
+                }
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 获取变量的实时值
+        /// </summary>
+        /// <param name="tags"></param>
+        /// <returns></returns>
+        public Dictionary<string, RealValuePoint> GetTagRealValue(List<string> tags)
+        {
+            try
+            {
+                if (mDataClient != null && !string.IsNullOrEmpty(mLoginId))
+                {
+                    var dr = new GetRealValueRequest() { Token = mLoginId };
+                    dr.TagNames.AddRange(tags);
+                    Dictionary<string, RealValuePoint> re = new Dictionary<string, RealValuePoint>();
+                    var res = mDataClient.GetRealValue(dr);
+                    if (res != null && res.Result)
+                    {
+                        foreach (var vv in res.Values)
+                        {
+                            re.Add(tags[vv.Id], new RealValuePoint() { Value = ConvertValue((byte)vv.ValueType, vv.Value), Quality = (byte)vv.Quality });
+                        }
+                    }
+                    return re;
+                }
+            }
+            catch
+            {
+
+            }
+            return null;
+        }
+
+        private object ConvertValue(byte type,string value)
+        {
+            switch (type)
+            {
+                case 0:
+                    return bool.Parse(value);
+                case 1:
+                    return Convert.ToByte(value);
+                case 2:
+                    return Convert.ToInt16(value);
+                case 3:
+                    return Convert.ToUInt16(value);
+                case 4:
+                    return Convert.ToInt32(value);
+                case 5:
+                    return Convert.ToUInt32(value);
+                case 6:
+                    return Convert.ToInt64(value);
+                case 7:
+                    return Convert.ToUInt64(value);
+                case 8:
+                    return Convert.ToDouble(value);
+                case 9:
+                    return Convert.ToSingle(value);
+                case 10:
+                    return DateTime.Parse(value);
+                case 11:
+                    return value;
+                default:
+                    return value;
+                
+            }
+            return value;
+        }
+
         /// <summary>
         /// 
         /// </summary>

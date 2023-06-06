@@ -43,6 +43,9 @@ namespace Cdy.Tag
         /// </summary>
         public string Name { get; set; } = "";
 
+
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -66,6 +69,31 @@ namespace Cdy.Tag
         /// 描述
         /// </summary>
         public string Desc { get; set; } = "";
+
+        /// <summary>
+        /// 区域，同一个区域内的变量具有相同的特性
+        /// </summary>
+        public string Area { get; set; } = "";
+
+        /// <summary>
+        /// 单位
+        /// </summary>
+        public string Unit { get; set; } = "";
+
+        /// <summary>
+        /// 运行状态，仅用作运行时
+        /// </summary>
+        public short State { get; set; }
+
+        /// <summary>
+        /// 扩展字段1
+        /// </summary>
+        public string ExtendField1 { get; set; } = "";
+
+        /// <summary>
+        /// 数字扩展字段2，仅用作运行时
+        /// </summary>
+        public long ExtendField2 { get; set; }
 
         /// <summary>
         /// 外部管理IO的地址
@@ -119,7 +147,7 @@ namespace Cdy.Tag
         {
             var target = obj as Tagbase;
             if (target == null) return false;
-            return this.Name == target.Name && target.FullName == target.FullName && target.Group == this.Group && target.Desc == this.Desc && target.LinkAddress == this.LinkAddress && target.Conveter == this.Conveter && target.ReadWriteType == this.ReadWriteType && this.Id == target.Id && this.Type == target.Type;
+            return this.Name == target.Name && target.Area == target.Area && target.FullName == target.FullName && target.Group == this.Group && target.Desc == this.Desc && target.LinkAddress == this.LinkAddress && target.Conveter == this.Conveter && target.ReadWriteType == this.ReadWriteType && this.Id == target.Id && this.Type == target.Type && this.Unit==target.Unit && this.ExtendField1==target.ExtendField1&&this.ExtendField2==target.ExtendField2&&this.State == target.State;
         }
 
         /// <summary>
@@ -145,7 +173,11 @@ namespace Cdy.Tag
             tag.Desc = this.Desc;
             tag.Group=this.Group;
             tag.LinkAddress = this.LinkAddress;
-
+            tag.Unit = this.Unit;
+            tag.ExtendField1 = this.ExtendField1;
+            tag.ExtendField2 = this.ExtendField2;
+            tag.State = this.State;
+            tag.Area=this.Area;
         }
     }
 
@@ -313,13 +345,28 @@ namespace Cdy.Tag
             xe.SetAttributeValue("Group", tag.Group);
             xe.SetAttributeValue("Desc", tag.Desc);
             xe.SetAttributeValue("Parent", tag.Parent);
-            if(!string.IsNullOrEmpty(tag.FullName))
+            xe.SetAttributeValue("Area", tag.Area);
+
+            if (!string.IsNullOrEmpty(tag.FullName))
             xe.SetAttributeValue("FullName", tag.FullName);
 
             if(!tag.LinkAddress.Contains(":"))
             {
                 tag.LinkAddress=tag.LinkAddress+":";
             }
+
+            if(!string.IsNullOrEmpty(tag.ExtendField1))
+            {
+                xe.SetAttributeValue("ExtendField1", tag.ExtendField1);
+            }
+
+            if (!string.IsNullOrEmpty(tag.Unit))
+            {
+                xe.SetAttributeValue("Unit", tag.Unit);
+            }
+
+
+            //xe.SetAttributeValue("ExtendField2", tag.ExtendField2);
 
             xe.SetAttributeValue("LinkAddress", tag.LinkAddress);
             xe.SetAttributeValue("ReadWriteType", (int)tag.ReadWriteType);
@@ -445,11 +492,16 @@ namespace Cdy.Tag
 
             re.Id = int.Parse(xe.Attribute("Id").Value);
             re.Name = xe.Attribute("Name").Value;
+            re.Parent = xe.Attribute("Parent") != null ? xe.Attribute("Parent").Value : "";
             re.Group = xe.Attribute("Group")!=null? xe.Attribute("Group").Value:"";
             re.Desc = xe.Attribute("Desc") != null ? xe.Attribute("Desc").Value : "";
             re.LinkAddress = xe.Attribute("LinkAddress") != null ? xe.Attribute("LinkAddress").Value : "";
-            re.Parent = xe.Attribute("Parent") != null ? xe.Attribute("Parent").Value : "";
+            re.Area = xe.Attribute("Area") != null ? xe.Attribute("Area").Value : "";
+
             re.FullName = xe.Attribute("FullName") != null ? xe.Attribute("FullName").Value : re.FullName;
+
+            re.Unit = xe.Attribute("Unit") != null ? xe.Attribute("Unit").Value : "";
+            re.ExtendField1 = xe.Attribute("ExtendField1") != null ? xe.Attribute("ExtendField1").Value : "";
 
             if (xe.Attribute("Conveter") !=null)
             {

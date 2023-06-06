@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Authors>Cdy</Authors>
+    <Authors>chongdaoyang</Authors>
     <Product>Mars</Product>
     <PackageId>Mars.DBDevelopClientWebApi</PackageId>
     <PackageProjectUrl>https://github.com/cdy816/mars</PackageProjectUrl>
     <Description>DBDevelop Server WebApi SDK</Description>
     <Copyright />
-    <Version>1.0.4</Version>
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <Version>1.0.11</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>

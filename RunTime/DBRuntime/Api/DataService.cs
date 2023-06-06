@@ -54,6 +54,8 @@ namespace DBRuntime.Api
 
         public const byte SyncSecuritySetting = 32;
 
+        public const byte RealTagMemoryInfo = 33;
+
         /// <summary>
         /// 
         /// </summary>

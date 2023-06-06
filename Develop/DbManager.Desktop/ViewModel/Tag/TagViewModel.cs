@@ -876,6 +876,67 @@ namespace DBInStudio.Desktop
         /// <summary>
         /// 
         /// </summary>
+        public string Unit
+        {
+            get
+            {
+                return mRealTagMode.Unit;
+            }
+            set
+            {
+                if(mRealTagMode.Unit!=value)
+                {
+                    mRealTagMode.Unit = value;
+                    IsChanged=true;
+                    OnPropertyChanged("Unit");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string ExtendField1
+        {
+            get
+            {
+                return mRealTagMode.ExtendField1;
+            }
+            set
+            {
+                if(mRealTagMode.ExtendField1 != value)
+                {
+                    mRealTagMode.ExtendField1 = value;
+                    IsChanged = true;
+                    OnPropertyChanged("ExtendField");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Area
+        {
+            get
+            {
+                return mRealTagMode != null ? mRealTagMode.Area : "";
+            }
+            set
+            {
+                if(mRealTagMode != null && mRealTagMode.Area!=value)
+                {
+                    mRealTagMode.Area = value;
+                    IsChanged = true;
+                    OnPropertyChanged("Area");
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsFloatingTag
         {
             get
@@ -920,7 +981,7 @@ namespace DBInStudio.Desktop
             }
             set
             {
-                var val = value - 1;
+                var val = value + 1;
                 if (mHisTagMode != null && mHisTagMode.CompressType != val)
                 {
                     mHisTagMode.CompressType = val;
@@ -1405,7 +1466,7 @@ namespace DBInStudio.Desktop
                 CompressParameterModel = null;
                 return;
             }
-            switch (CompressType)
+            switch (mHisTagMode.CompressType)
             {
                 case 0:
                 case 1:
@@ -1560,6 +1621,9 @@ namespace DBInStudio.Desktop
                         mHisTagMode.TagType = Cdy.Tag.TagType.ULongPoint3;
                     }
                     break;
+                case TagType.Complex:
+                    ntag = new Cdy.Tag.ComplexTag() { Id = this.mRealTagMode.Id, Desc = mRealTagMode.Desc, LinkComplexClass = (this.mRealTagMode as ComplexTag).LinkComplexClass, Group = mRealTagMode.Group, Name = mRealTagMode.Name };
+                    break;
                 default:
                     break;
             }
@@ -1591,24 +1655,26 @@ namespace DBInStudio.Desktop
                     if (QueryTagSubTagsDelegate != null)
                     {
                         var res = QueryTagSubTagsDelegate((this.mRealTagMode as ComplexTag).LinkComplexClass);
-                        foreach (var vvv in res)
-                        {
-                            Application.Current?.Dispatcher.Invoke(new Action(() => {
+                        Application.Current?.Dispatcher.Invoke(new Action(() => {
+                            foreach (var vvv in res)
+                            {
                                 mSubItems.Add(vvv);
-                            }));
-                        }
+                            }
+                        }));
+                        
                     }
                     else
                     {
                         Dictionary<int, Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>> res = null;
                         res = DevelopServiceHelper.Helper.QueryTagSubTags(this.Database, Id);
-                        foreach (var vvv in res)
-                        {
-                            TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2) { Database = Database };
-                            Application.Current?.Dispatcher.Invoke(new Action(() => {
+
+                        Application.Current?.Dispatcher.Invoke(new Action(() => {
+                            foreach (var vvv in res)
+                            {
+                                TagViewModel model = new TagViewModel(vvv.Value.Item1, vvv.Value.Item2) { Database = Database };
                                 mSubItems.Add(model);
-                            }));
-                        }
+                            }
+                        }));
                     }
                    
                 });
@@ -1663,13 +1729,14 @@ namespace DBInStudio.Desktop
             {
                 sb.Append(",");
             }
-
+            sb.Append(mRealTagMode.Area + ",");
             if (this.mHisTagMode!=null)
             {
                 sb.Append(mHisTagMode.Type + ",");
                 sb.Append(mHisTagMode.Circle + ",");
                 sb.Append(mHisTagMode.CompressType + ",");
                 sb.Append(mHisTagMode.MaxValueCountPerSecond + ",");
+              
                 if (mHisTagMode.Parameters!=null)
                 {
                     foreach(var vv in mHisTagMode.Parameters)
@@ -1720,20 +1787,22 @@ namespace DBInStudio.Desktop
             {
                 (realtag as ComplexTag).LinkComplexClass = stmp[12];
             }
+            realtag.Area = stmp[13];
 
             if (stmp.Length > 13)
             {
                 Cdy.Tag.HisTag histag = new HisTag();
-                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[13]);
+                histag.Type = (Cdy.Tag.RecordType)Enum.Parse(typeof(Cdy.Tag.RecordType), stmp[14]);
 
-                histag.Circle = int.Parse(stmp[14]);
-                histag.CompressType = int.Parse(stmp[15]);
+                histag.Circle = int.Parse(stmp[15]);
+                histag.CompressType = int.Parse(stmp[16]);
                 histag.Parameters = new Dictionary<string, double>();
                 histag.TagType = realtag.Type;
                 histag.Id = realtag.Id;
-                histag.MaxValueCountPerSecond = short.Parse(stmp[16]);
+                histag.MaxValueCountPerSecond = short.Parse(stmp[17]);
+               
 
-                for (int i=17;i<stmp.Length;i++)
+                for (int i=18;i<stmp.Length;i++)
                 {
                     string skey = stmp[i];
                     if(string.IsNullOrEmpty(skey))

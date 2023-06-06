@@ -8,6 +8,7 @@ using Cdy.Tag;
 using System.Text;
 using System.Data.Common;
 using System.Text.RegularExpressions;
+using Cdy.Tag.Common.Common;
 
 namespace DBDevelopService
 {
@@ -103,7 +104,7 @@ namespace DBDevelopService
         /// <returns></returns>
         private bool HasNewDatabasePermission(string id)
         {
-            return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.HasNewDatabasePermission(id);
+            return SecurityManager.Manager.CheckKeyAvaiable(id) && (SecurityManager.Manager.HasNewDatabasePermission(id)|| SecurityManager.Manager.IsAdmin(id));
         }
 
         /// <summary>
@@ -113,7 +114,7 @@ namespace DBDevelopService
         /// <returns></returns>
         private bool HasDeleteDatabasePerssion(string id)
         {
-            return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.HasDeleteDatabasePermission(id);
+            return SecurityManager.Manager.CheckKeyAvaiable(id) && (SecurityManager.Manager.HasDeleteDatabasePermission(id)|| SecurityManager.Manager.IsAdmin(id));
 
         }
 
@@ -155,6 +156,30 @@ namespace DBDevelopService
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        private bool IsApiUser(string user)
+        {
+            return user == "Admin";
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="user"></param>
+        /// <param name="password"></param>
+        private void SaveApiUser(string database, string user, string password)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(user + "," + password);
+            string spath = System.IO.Path.Combine(PathHelper.helper.DataPath, database, "ApiUser.sdb");
+            System.IO.File.WriteAllText(spath, Md5Helper.Encode(sb.ToString()));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
@@ -171,6 +196,10 @@ namespace DBDevelopService
                 if(uss.ContainsKey(request.UserName))
                 {
                     uss[request.UserName].Password = request.Password;
+                    if (IsApiUser(request.UserName))
+                    {
+                        SaveApiUser(db.Name, request.UserName, request.Password);
+                    }
                 }
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
@@ -257,6 +286,34 @@ namespace DBDevelopService
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
+        public override Task<BoolResultReplay> ReNameDatabasePermission(ReNameDatabasePermissionRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                if (db.Security.Permission.Permissions.ContainsKey(request.OldName) && !db.Security.Permission.Permissions.ContainsKey(request.NewName))
+                {
+                    var pp = db.Security.Permission.Permissions[request.OldName];
+                    db.Security.Permission.Remove(request.OldName);
+                    pp.Name = request.NewName;
+                    db.Security.Permission.Add(pp);
+                    return Task.FromResult(new BoolResultReplay() { Result = true });
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = false });
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public override Task<BoolResultReplay> RemoveDatabasePermission(RemoveDatabasePermissionRequest request, ServerCallContext context)
         {
             if (!CheckLoginId(request.LoginId, request.Database))
@@ -301,6 +358,39 @@ namespace DBDevelopService
                     var user = new Cdy.Tag.UserItem() { Name = request.UserName,Group=request.Group };
                     user.Permissions = request.Permission.ToList();
                     db.Security.User.AddUser(user);
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        public override Task<BoolResultReplay> RenameDatabaseUser(RenameGroupRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                var uss = db.Security.User.Users;
+                if (uss.ContainsKey(request.OldFullName))
+                {
+                    var user = uss[request.OldFullName];
+                    uss.Remove(request.OldFullName);
+
+                    if(!uss.ContainsKey(request.NewName))
+                    {
+                        user.Name = request.NewName;
+                        uss.Add(user.Name, user);
+                    }
+                    else
+                    {
+                        return Task.FromResult(new BoolResultReplay() { Result = false });
+                    }
+                }
+                else
+                {
+                    return Task.FromResult(new BoolResultReplay() { Result = false });
                 }
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
@@ -679,7 +769,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> NewDatabase(NewDatabaseRequest request, ServerCallContext context)
         {
-            if (!IsAdmin(request.LoginId) && !HasNewDatabasePermission(request.LoginId))
+            if (!HasNewDatabasePermission(request.LoginId))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -700,6 +790,48 @@ namespace DBDevelopService
                 }
             }
             return Task.FromResult(new BoolResultReplay() { Result = true });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> RemoveDatabase(NewDatabaseRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId,request.Database) || !HasDeleteDatabasePerssion(request.LoginId))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+
+            lock (DbManager.Instance)
+            {
+                var db = DbManager.Instance.GetDatabase(request.Database);
+                if (db != null)
+                {
+                    if (!ServiceLocator.Locator.Resolve<IDatabaseManager>().IsRunning(request.Database))
+                    {
+                        var re = DbManager.Instance.RemoveDB(request.Database);
+                        if (re)
+                        {
+                            return Task.FromResult(new BoolResultReplay() { Result = true });
+                        }
+                        else
+                        {
+                            return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "删除失败" });
+                        }
+                    }
+                    else
+                    {
+                        return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "数据库正在运行，请先停止运行!" });
+                    }
+                }
+                else
+                {
+                    return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "数据库不存在" });
+                }
+            }
         }
 
         /// <summary>
@@ -738,7 +870,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> Start(DatabasesRequest request, ServerCallContext context)
         {
-            if (!IsAdmin(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -753,7 +885,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> Stop(DatabasesRequest request, ServerCallContext context)
         {
-            if (!IsAdmin(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -768,7 +900,7 @@ namespace DBDevelopService
         /// <returns></returns>
         public override Task<BoolResultReplay> ReRun(DatabasesRequest request, ServerCallContext context)
         {
-            if (!IsAdmin(request.LoginId))
+            if (!CheckLoginId(request.LoginId, request.Database))
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false });
             }
@@ -1025,6 +1157,8 @@ namespace DBDevelopService
                     }
                   
                 }
+                re.TagCount = total;
+                re.Count = totalpage;
                 return Task.FromResult(re);
             }
             return Task.FromResult(new GetTagMessageReply() { Result = false, ErroMessage = "database not exist!" });
@@ -1073,7 +1207,6 @@ namespace DBDevelopService
                             hisTag.CompressType = (int)(vtag.CompressType);
                             hisTag.Circle = (int)vtag.Circle;
                             hisTag.MaxValueCountPerSecond = (short)vtag.MaxValueCountPerSecond;
-
                             hisTag.Parameters = new Dictionary<string, double>();
                             if (vtag.Parameter != null)
                             {
@@ -1199,6 +1332,7 @@ namespace DBDevelopService
                             hisTag.Circle = (int)vtag.Circle;
                             hisTag.MaxValueCountPerSecond = (short)vtag.MaxValueCountPerSecond;
                             hisTag.Parameters = new Dictionary<string, double>();
+                          
                             if (vtag.Parameter != null)
                             {
                                 foreach (var vv in vtag.Parameter)
@@ -1606,7 +1740,7 @@ namespace DBDevelopService
                             string[] ss = vv.Value.Split(" ", StringSplitOptions.RemoveEmptyEntries);
                             foreach(var vvv in ss)
                             {
-                                btmp |= (tag.Name.Contains(vvv) || tag.Desc.Contains(vvv));
+                                btmp |= (tag.Name.Contains(vvv) || tag.Desc.Contains(vvv)||tag.Area.Contains(vvv));
                             }
                             re = re && btmp;
                             //re = re && (tag.Name.Contains(vv.Value) || tag.Desc.Contains(vv.Value));
@@ -1654,7 +1788,12 @@ namespace DBDevelopService
                             }
                             break;
                         case "linkaddress":
-                            re = re && (tag.LinkAddress.Contains(vv.Value));
+                            if (!string.IsNullOrEmpty(vv.Value))
+                                re = re && (tag.LinkAddress.Contains(vv.Value));
+                            break;
+                        case "area":
+                            if(!string.IsNullOrEmpty(vv.Value))
+                            re = re && (tag.Area.Contains(vv.Value));
                             break;
 
 
@@ -1785,7 +1924,7 @@ namespace DBDevelopService
 
         private RealTagMessage ConvertToMessage(Tagbase vv)
         {
-            return new RealTagMessage() { Id = vv.Id, Name = vv.Name, Desc = vv.Desc, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0, LinkComplexClass = vv is ComplexTag ? (vv as ComplexTag).LinkComplexClass : "", Parent = vv.Parent };
+            return new RealTagMessage() { Id = vv.Id, Name = vv.Name, Desc = vv.Desc,Unit=vv.Unit==null?"":vv.Unit,ExtendField1=vv.ExtendField1==null?"": vv.ExtendField1, Group = vv.Group, LinkAddress = vv.LinkAddress, TagType = (uint)vv.Type, Convert = vv.Conveter != null ? vv.Conveter.SeriseToString() : string.Empty, ReadWriteMode = (int)vv.ReadWriteType, MaxValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MaxValue : 0, MinValue = (vv is Cdy.Tag.NumberTagBase) ? (vv as Cdy.Tag.NumberTagBase).MinValue : 0, Precision = (vv is Cdy.Tag.FloatingTagBase) ? (vv as Cdy.Tag.FloatingTagBase).Precision : 0, LinkComplexClass = vv is ComplexTag ? (vv as ComplexTag).LinkComplexClass : "", Parent = vv.Parent,Area=vv.Area };
         }
 
         /// <summary>
@@ -2250,6 +2389,11 @@ namespace DBDevelopService
                             }
                         }
 
+                        if (tag is ComplexTag)
+                        {
+                            CheckRenameComplexTag(tag as ComplexTag,db.RealDatabase);
+                        }
+
                         if (db.RealDatabase.Tags.ContainsKey(tag.Id) && tag.Id > -1)
                         {
 
@@ -2265,6 +2409,9 @@ namespace DBDevelopService
                         {
                             return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = "Tag not exist" });
                         }
+
+                       
+
                     }
                 }
                 return Task.FromResult(new BoolResultReplay() { Result = false });
@@ -2273,6 +2420,45 @@ namespace DBDevelopService
             {
                 return Task.FromResult(new BoolResultReplay() { Result = false, ErroMessage = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="database"></param>
+        private void CheckRenameComplexTag(ComplexTag tag,RealDatabase database)
+        {
+            IEnumerable<Tagbase> tags=null;
+            if(tag.Tags.Count==0)
+            {
+                tags = database.Tags.Where(e=>e.Value.Parent==tag.Id.ToString()).Select(e=>e.Value);
+            }
+            else
+            {
+                tags = tag.Tags.Values;
+            }
+            if(tags!=null)
+            {
+                foreach (var vv in tags)
+                {
+                    string sname = vv.FullName;
+                    if (!string.IsNullOrEmpty(sname) && database.NamedTags.ContainsKey(sname))
+                    {
+                        database.NamedTags.Remove(sname);
+                        vv.FullName = tag.FullName + "." + vv.Name;
+                        if (!database.NamedTags.ContainsKey(vv.FullName))
+                        {
+                            database.NamedTags.Add(vv.FullName, vv);
+                        }
+                        if (vv is ComplexTag)
+                        {
+                            CheckRenameComplexTag(vv as ComplexTag, database);
+                        }
+                    }
+                }
+            }
+            
         }
 
         /// <summary>
@@ -2357,6 +2543,9 @@ namespace DBDevelopService
                 re.Desc = tmsg.Desc;
                 re.Id = (int)tmsg.Id;
                 re.ReadWriteType = (Cdy.Tag.ReadWriteMode)tmsg.ReadWriteMode;
+                re.Unit = tmsg.Unit;
+                re.ExtendField1 = tmsg.ExtendField1;
+                re.Area= tmsg.Area;
                 if(!string.IsNullOrEmpty(tmsg.Convert))
                 {
                     re.Conveter = tmsg.Convert.DeSeriseToValueConvert();
@@ -2424,7 +2613,6 @@ namespace DBDevelopService
                             hisTag.CompressType = (int)(vtag.CompressType);
                             hisTag.Circle = (int)vtag.Circle;
                             hisTag.MaxValueCountPerSecond = (short)vtag.MaxValueCountPerSecond;
-
                             hisTag.Parameters = new Dictionary<string, double>();
                             if (vtag.Parameter != null)
                             {
@@ -2685,7 +2873,6 @@ namespace DBDevelopService
                                 hisTag.CompressType = (int)(vtag.CompressType);
                                 hisTag.Circle = (int)vtag.Circle;
                                 hisTag.MaxValueCountPerSecond = (short)vtag.MaxValueCountPerSecond;
-
                                 hisTag.Parameters = new Dictionary<string, double>();
                                 if (vtag.Parameter != null)
                                 {
@@ -2710,7 +2897,7 @@ namespace DBDevelopService
                             hisTag.CompressType = (int)(vtag.CompressType);
                             hisTag.Circle = (int)vtag.Circle;
                             hisTag.MaxValueCountPerSecond = (short)vtag.MaxValueCountPerSecond;
-
+                       
                             hisTag.Parameters = new Dictionary<string, double>();
                             if (vtag.Parameter != null)
                             {
@@ -2743,7 +2930,6 @@ namespace DBDevelopService
                                 hisTag.CompressType = (int)(vtag.CompressType);
                                 hisTag.Circle = (int)vtag.Circle;
                                 hisTag.MaxValueCountPerSecond = (short)vtag.MaxValueCountPerSecond;
-
                                 hisTag.Parameters = new Dictionary<string, double>();
                                 if (vtag.Parameter != null)
                                 {
@@ -3013,7 +3199,42 @@ namespace DBDevelopService
             return Task.FromResult(new BoolResultReplay() { Result = false });
         }
 
-        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReplay> SetTagId(SetTagIdRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new BoolResultReplay() { Result = false });
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+
+                if(db.RealDatabase.Tags.ContainsKey(request.TagID)&&!db.RealDatabase.Tags.ContainsKey(request.Value))
+                {
+                    var vtag = db.RealDatabase.Tags[request.TagID];
+
+                    db.RealDatabase.Tags.Remove(vtag.Id);
+                    vtag.Id = request.Value;
+                    db.RealDatabase.Tags.Add(vtag.Id, vtag);
+                    if (vtag.Id >= db.RealDatabase.MaxId)
+                    {
+                        db.RealDatabase.MaxId = vtag.Id;
+                    }
+                    return Task.FromResult(new BoolResultReplay() { Result = true });
+                }
+                else
+                {
+                    return Task.FromResult(new BoolResultReplay() { Result = false });
+                }
+            }
+            return Task.FromResult(new BoolResultReplay() { Result = false });
+        }
 
         /// <summary>
         /// 
@@ -3050,7 +3271,7 @@ namespace DBDevelopService
                             rtag.Id = i;
                             db.RealDatabase.Tags.Add(i, rtag);
 
-                            if(rtag.Id>db.RealDatabase.MaxId)
+                            if(rtag.Id>=db.RealDatabase.MaxId)
                             {
                                 db.RealDatabase.MaxId = rtag.Id;
                             }
@@ -3124,6 +3345,40 @@ namespace DBDevelopService
                 return Task.FromResult<GetProxyApiSettingReply>(re);
             }
             return Task.FromResult(new GetProxyApiSettingReply() { Result = false });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<ExtendFunctionReplay> ExtendFunction(GetRequest request, ServerCallContext context)
+        {
+            if (!CheckLoginId(request.LoginId, request.Database))
+            {
+                return Task.FromResult(new ExtendFunctionReplay() { Result = false });
+            }
+
+            ExtendFunctionReplay re = new ExtendFunctionReplay();
+            re.Spider = HasExtendFunction("Spider");
+            re.Ant = HasExtendFunction("Ant");
+            re.Result = true;
+
+            return Task.FromResult(re);
+        }
+
+        private bool HasExtendFunction(string name)
+        {
+            var vpath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), name);
+            if(System.IO.Directory.Exists(vpath))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
     }

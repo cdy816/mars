@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,6 +33,26 @@ namespace DBRuntime.Api
         /// 获取实时值
         /// </summary>
         public const byte RequestRealData = 0;
+
+        /// <summary>
+        /// 请求变量状态数据
+        /// </summary>
+        public const byte RequestStateData = 6;
+
+        /// <summary>
+        /// 请求变量扩展字段
+        /// </summary>
+        public const byte RequestExtendField2 = 7;
+
+        /// <summary>
+        /// 设置状态数据
+        /// </summary>
+        public const byte SetStateData = 8;
+
+        /// <summary>
+        /// 设置扩展数据
+        /// </summary>
+        public const byte SetExtendField2Data = 9;
 
         /// <summary>
         /// 
@@ -174,27 +195,41 @@ namespace DBRuntime.Api
                 {
                     case RequestRealData:
                         int cid = data.ReadInt();
-                        ProcessGetRealData(client, data,cid);
+                        ProcessGetRealData(client, data, cid);
                         break;
                     case RequestRealDataByMemoryCopy:
                         cid = data.ReadInt();
-                        ProcessGetRealDataByMemoryCopy(client, data,cid);
+                        ProcessGetRealDataByMemoryCopy(client, data, cid);
                         break;
                     case RequestRealData2:
                         cid = data.ReadInt();
-                        ProcessGetRealData2(client, data,cid);
+                        ProcessGetRealData2(client, data, cid);
                         break;
                     case RequestComplexTagRealValue:
                         cid = data.ReadInt();
-                        ProcessComplexTagRealValue(client, data,cid);
+                        ProcessComplexTagRealValue(client, data, cid);
                         break;
                     case RequestRealData2ByMemoryCopy:
                         cid = data.ReadInt();
-                        ProcessGetRealData2ByMemoryCopy(client, data,cid);
+                        ProcessGetRealData2ByMemoryCopy(client, data, cid);
                         break;
                     case RealMemorySync:
                         cid = data.ReadInt();
-                        ProcessRealMemorySync(client, data,cid);
+                        ProcessRealMemorySync(client, data, cid);
+                        break;
+                    case RequestStateData:
+                        cid = data.ReadInt();
+                        ProcessGetStateData(client, data,cid);
+                        break;
+                    case SetStateData:
+                        ProcessSetStateData(client, data);
+                        break;
+                    case RequestExtendField2:
+                        cid = data.ReadInt();
+                        ProcessGetExtendField2Data(client, data,cid);
+                        break;
+                    case SetExtendField2Data:
+                        ProcessSetExtendField2Data(client, data);
                         break;
                     case SetDataValue:
                         ProcessSetRealData(client, data);
@@ -204,11 +239,11 @@ namespace DBRuntime.Api
                         break;
                     case BlockValueChangeNotify:
                         cid = data.ReadInt();
-                        BlockProcessValueChangeNotify(client, data,cid);
+                        BlockProcessValueChangeNotify(client, data, cid);
                         break;
                     case ResetValueChangeNotify:
-                        cid= data.ReadInt();
-                        ProcessResetValueChangedNotify(client, data,cid);
+                        cid = data.ReadInt();
+                        ProcessResetValueChangedNotify(client, data, cid);
                         break;
                     case SetRealDataToLastData:
                         Task.Run(() => { ProcessSetRealDataToLastData(client, data); data.UnlockAndReturn(); });
@@ -680,12 +715,120 @@ namespace DBRuntime.Api
                 }
                 else
                 {
-                    re.WriteByte((byte)TagType.Byte);
+                    re.WriteByte((byte)type);
                     re.WriteByte(0);
                     re.Write(tmp.Ticks);
                     re.WriteByte((byte)QualityConst.Null);
                 }
             }
+        }
+
+        /// <summary>
+        /// 处理获取变量的状态
+        /// </summary>
+        /// <param name="block"></param>
+        private void ProcessGetStateData(string clientId, ByteBuffer block, int cid)
+        {
+            int count = block.ReadInt();
+            int[] cc = ArrayPool<int>.Shared.Rent(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                cc[i] = block.ReadInt();
+            }
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, count * 2+8);
+            re.Write(cid);
+            re.Write(count);
+            for (int i = 0; i < count; i++)
+            {
+                var val = service.GetTagState(cc[i]);
+                if(val != null)
+                {
+                    re.Write(val.Value);
+                }
+                else
+                {
+                    re.Write((short)-1);
+                }
+            }
+            Parent.AsyncCallback(clientId, re);
+            ArrayPool<int>.Shared.Return(cc);
+        }
+
+        /// <summary>
+        /// 处理获取变量的扩展字段2
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="block"></param>
+        private void ProcessGetExtendField2Data(string clientId, ByteBuffer block, int cid)
+        {
+            int count = block.ReadInt();
+            int[] cc = ArrayPool<int>.Shared.Rent(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                cc[i] = block.ReadInt();
+            }
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+
+            var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, count * 8+8);
+            re.Write(cid);
+            re.Write(count);
+            for (int i = 0; i < count; i++)
+            {
+                var val = service.GetTagExtend2(cc[i]);
+                if (val != null)
+                {
+                    re.Write(val.Value);
+                }
+                else
+                {
+                    re.Write((long)-1);
+                }
+            }
+            Parent.AsyncCallback(clientId, re);
+            ArrayPool<int>.Shared.Return(cc);
+        }
+
+        /// <summary>
+        /// 处理设置变量的状态
+        /// </summary>
+        /// <param name="block"></param>
+        private void ProcessSetStateData(string clientId, ByteBuffer block)
+        {
+            int count = block.ReadInt();
+            int[] cc = ArrayPool<int>.Shared.Rent(count);
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+            for (int i = 0; i < count; i++)
+            {
+                var vid = block.ReadInt();
+                var state = block.ReadShort();
+                service.SetTagState(vid, state);
+            }
+
+            Parent.AsyncCallback(clientId, ToByteBuffer(ApiFunConst.RealDataSetFun, (byte)1));
+        }
+
+        /// <summary>
+        /// 处理设置变量的扩展字段2
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="block"></param>
+        private void ProcessSetExtendField2Data(string clientId, ByteBuffer block)
+        {
+            int count = block.ReadInt();
+            int[] cc = ArrayPool<int>.Shared.Rent(count);
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+            for (int i = 0; i < count; i++)
+            {
+                var vid = block.ReadInt();
+                var state = block.ReadLong();
+                service.SetTagExtend2(vid, state);
+            }
+
+            Parent.AsyncCallback(clientId, ToByteBuffer(ApiFunConst.RealDataSetFun, (byte)1));
         }
 
         /// <summary>

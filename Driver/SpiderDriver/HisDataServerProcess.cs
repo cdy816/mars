@@ -369,8 +369,8 @@ namespace SpiderDriver
                     }
                     break;
             }
-            
-            
+
+            service.SubmitCach();
             //service.SetTagHisValue(id, tagvalues);
 
             Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.HisValueFun, (byte)1));
@@ -610,7 +610,7 @@ namespace SpiderDriver
                     break;
             }
 
-
+            service.SubmitCach();
             //service.SetTagHisValue(id, tagvalues);
 
             //Parent.AsyncCallback(clientid, ToByteBuffer(APIConst.HisValueFun, (byte)1));
@@ -776,8 +776,8 @@ namespace SpiderDriver
                         break;
                 }
             }
+            service.SubmitCach();
 
-           
         }
 
 
@@ -936,7 +936,7 @@ namespace SpiderDriver
                         break;
                 }
             }
-
+            service.SubmitCach();
 
         }
         #endregion ...Methods...

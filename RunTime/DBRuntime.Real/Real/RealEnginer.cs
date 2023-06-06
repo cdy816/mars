@@ -161,6 +161,73 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagAddress"></param>
+        /// <param name="totalMemorySize"></param>
+        public unsafe void Init(RealDatabase database,Dictionary<int, long> tagAddress,int totalMemorySize)
+        {
+            mConfigDatabase = database;
+            byte unknowQuality = (byte)QualityConst.Init;
+
+            mIdAndAddr = tagAddress;
+            mUsedSize = totalMemorySize;
+            mMemory = new byte[totalMemorySize];
+            mGCHandle = GCHandle.Alloc(mMemory, GCHandleType.Pinned);
+
+            mMHandle = (void*)mGCHandle.AddrOfPinnedObject();
+            mMemory.AsSpan().Clear();
+
+            LoggerService.Service.Info("RealEnginer", "分配内存大小:" + (totalMemorySize / 1024.0 / 1024).ToString("f1") + " M");
+
+            foreach(var vv in tagAddress)
+            {
+                if (mConfigDatabase.Tags.TryGetValue(vv.Key, out Tagbase tag))
+                {
+                    tag.ValueAddress = vv.Value;
+                    switch (tag.Type)
+                    {
+                        case TagType.Bool:
+                        case TagType.Byte:
+                            MemoryHelper.WriteByte(mMHandle, tag.ValueAddress + 9, unknowQuality);
+                            break;
+                        case TagType.Short:
+                        case TagType.UShort:
+                            MemoryHelper.WriteByte(mMHandle, tag.ValueAddress + 10, unknowQuality);
+                            break;
+                        case TagType.Int:
+                        case TagType.UInt:
+                        case TagType.Float:
+                            MemoryHelper.WriteByte(mMHandle, tag.ValueAddress + 12, unknowQuality);
+                            break;
+                        case TagType.Long:
+                        case TagType.ULong:
+                        case TagType.Double:
+                        case TagType.IntPoint:
+                        case TagType.UIntPoint:
+                            MemoryHelper.WriteByte(mMHandle, tag.ValueAddress + 16, unknowQuality);
+                            break;
+                        case TagType.IntPoint3:
+                        case TagType.UIntPoint3:
+                            MemoryHelper.WriteByte(mMHandle, tag.ValueAddress + 20, unknowQuality);
+                            break;
+                        case TagType.LongPoint:
+                        case TagType.ULongPoint:
+                            MemoryHelper.WriteByte(mMHandle, tag.ValueAddress + 24, unknowQuality);
+                            break;
+                        case TagType.LongPoint3:
+                        case TagType.ULongPoint3:
+                            MemoryHelper.WriteByte(mMHandle, tag.ValueAddress + 32, unknowQuality);
+                            break;
+                        case TagType.String:
+                            MemoryHelper.WriteByte(mMHandle, tag.ValueAddress + Const.StringSize + 8, unknowQuality);
+                            break;
+                    }
+                }
+            }
+
+        }
 
         /// <summary>
         /// 
@@ -303,72 +370,84 @@ namespace Cdy.Tag
                     var tagcount = mmb.ReadInt(8);
                     for (int i = 0; i < tagcount; i++)
                     {
+                        if(mmb.Position>= mmb.Length) 
+                        {
+                            break;
+                        }
                         var vid = mmb.ReadInt();
                         var time = mmb.ReadDateTime();
                         var quality = mmb.ReadByte();
                         var type = (TagType)mmb.ReadByte();
                         object val = null;
-                        switch (type)
+                        try
                         {
-                            case TagType.Bool:
-                            case TagType.Byte:
-                                val = mmb.ReadByte();
-                                break;
-                            case TagType.Short:
-                                val = mmb.ReadShort();
-                                break;
-                            case TagType.UShort:
-                                val = mmb.ReadUShort();
-                                break;
-                            case TagType.Int:
-                                val = mmb.ReadInt();
-                                break;
-                            case TagType.UInt:
-                                val = mmb.ReadUInt();
-                                break;
-                            case TagType.Long:
-                                val = mmb.ReadLong();
-                                break;
-                            case TagType.ULong:
-                                val = mmb.ReadULong();
-                                break;
-                            case TagType.Float:
-                                val = mmb.ReadFloat();
-                                break;
-                            case TagType.Double:
-                                val = mmb.ReadDouble();
-                                break;
-                            case TagType.String:
-                                val = mmb.ReadString();
-                                break;
-                            case TagType.DateTime:
-                                val = mmb.ReadDateTime();
-                                break;
-                            case TagType.IntPoint:
-                                val = new IntPointData(mmb.ReadInt(), mmb.ReadInt());
-                                break;
-                            case TagType.UIntPoint:
-                                val = new UIntPointData(mmb.ReadUInt(), mmb.ReadUInt());
-                                break;
-                            case TagType.IntPoint3:
-                                val = new IntPoint3Data(mmb.ReadInt(), mmb.ReadInt(), mmb.ReadInt());
-                                break;
-                            case TagType.UIntPoint3:
-                                val = new UIntPoint3Data(mmb.ReadUInt(), mmb.ReadUInt(), mmb.ReadUInt());
-                                break;
-                            case TagType.LongPoint:
-                                val = new LongPointData(mmb.ReadLong(), mmb.ReadLong());
-                                break;
-                            case TagType.ULongPoint:
-                                val = new ULongPointData(mmb.ReadULong(), mmb.ReadULong());
-                                break;
-                            case TagType.LongPoint3:
-                                val = new LongPoint3Data(mmb.ReadLong(), mmb.ReadLong(), mmb.ReadLong());
-                                break;
-                            case TagType.ULongPoint3:
-                                val = new ULongPoint3Data(mmb.ReadULong(), mmb.ReadULong(), mmb.ReadULong());
-                                break;
+                            switch (type)
+                            {
+                                case TagType.Bool:
+                                case TagType.Byte:
+                                    val = mmb.ReadByte();
+                                    break;
+                                case TagType.Short:
+                                    val = mmb.ReadShort();
+                                    break;
+                                case TagType.UShort:
+                                    val = mmb.ReadUShort();
+                                    break;
+                                case TagType.Int:
+                                    val = mmb.ReadInt();
+                                    break;
+                                case TagType.UInt:
+                                    val = mmb.ReadUInt();
+                                    break;
+                                case TagType.Long:
+                                    val = mmb.ReadLong();
+                                    break;
+                                case TagType.ULong:
+                                    val = mmb.ReadULong();
+                                    break;
+                                case TagType.Float:
+                                    val = mmb.ReadFloat();
+                                    break;
+                                case TagType.Double:
+                                    val = mmb.ReadDouble();
+                                    break;
+                                case TagType.String:
+                                    val = mmb.ReadString();
+                                    break;
+                                case TagType.DateTime:
+                                    val = mmb.ReadDateTime();
+                                    break;
+                                case TagType.IntPoint:
+                                    val = new IntPointData(mmb.ReadInt(), mmb.ReadInt());
+                                    break;
+                                case TagType.UIntPoint:
+                                    val = new UIntPointData(mmb.ReadUInt(), mmb.ReadUInt());
+                                    break;
+                                case TagType.IntPoint3:
+                                    val = new IntPoint3Data(mmb.ReadInt(), mmb.ReadInt(), mmb.ReadInt());
+                                    break;
+                                case TagType.UIntPoint3:
+                                    val = new UIntPoint3Data(mmb.ReadUInt(), mmb.ReadUInt(), mmb.ReadUInt());
+                                    break;
+                                case TagType.LongPoint:
+                                    val = new LongPointData(mmb.ReadLong(), mmb.ReadLong());
+                                    break;
+                                case TagType.ULongPoint:
+                                    val = new ULongPointData(mmb.ReadULong(), mmb.ReadULong());
+                                    break;
+                                case TagType.LongPoint3:
+                                    val = new LongPoint3Data(mmb.ReadLong(), mmb.ReadLong(), mmb.ReadLong());
+                                    break;
+                                case TagType.ULongPoint3:
+                                    val = new ULongPoint3Data(mmb.ReadULong(), mmb.ReadULong(), mmb.ReadULong());
+                                    break;
+                            }
                         }
+                        catch
+                        {
+
+                        }
+
                         try
                         {
                             if (mConfigDatabase.Tags.ContainsKey(vid))
@@ -456,8 +535,55 @@ namespace Cdy.Tag
 
                     mmb.Dispose();
                 }
+
+                LoadPropertyCach();
             }
             catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", $"加载上次退出时实时数据缓存出错： {ex.Message} {ex.StackTrace} ");
+            }
+        }
+
+        private void LoadPropertyCach()
+        {
+            try
+            {
+                string sfile = GetCachFileName()+"p";
+                if (!string.IsNullOrEmpty(sfile) && System.IO.File.Exists(sfile))
+                {
+
+                    MarshalFixedMemoryBlock mmb = sfile.LoadMarshalFixedFromFile();
+
+                    var tagcount = mmb.ReadInt(8);
+                    for (int i = 0; i < tagcount; i++)
+                    {
+                        if (mmb.Position >= mmb.Length)
+                        {
+                            break;
+                        }
+                        var vid = mmb.ReadInt();
+                        var statue = mmb.ReadShort();
+                        var exd2 = mmb.ReadLong();
+                       
+                        try
+                        {
+                            if (mConfigDatabase.Tags.ContainsKey(vid))
+                            {
+                                var tag = mConfigDatabase.Tags[vid];
+                                tag.State = statue;
+                                tag.ExtendField2 = exd2;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            LoggerService.Service.Warn("RealEnginer", $" LoadDataCach {ex.Message} {ex.StackTrace} ");
+                        }
+                    }
+
+                    mmb.Dispose();
+                }
+            }
+            catch (Exception ex)
             {
                 LoggerService.Service.Warn("RealEnginer", $"加载上次退出时实时数据缓存出错： {ex.Message} {ex.StackTrace} ");
             }
@@ -475,7 +601,13 @@ namespace Cdy.Tag
                     //to do fill
                     mmb.Position = 0;
                     mmb.Write((long)0);
-                    mmb.Write(mConfigDatabase.Tags.Count);
+                    int count = 0;
+                    if (mConfigDatabase.Tags.Count > 0)
+                    {
+                        count = mConfigDatabase.Tags.Where(e => !(e.Value is ComplexTag)).Count();
+                    }
+                    
+                    mmb.Write(count);
                     foreach (var vv in mConfigDatabase.Tags)
                     {
                         if (vv.Value is ComplexTag) continue;
@@ -583,8 +715,58 @@ namespace Cdy.Tag
                     }
 
                 }
+
+                CachPropertyDataToDisk();
             }
             catch(Exception ex)
+            {
+                LoggerService.Service.Warn("RealEnginer", $"将实时内存数据存盘出错： {ex.Message} {ex.StackTrace} ");
+            }
+        }
+
+        /// <summary>
+        /// 缓存除值外的其他属性的值
+        /// </summary>
+        public void CachPropertyDataToDisk()
+        {
+            try
+            {
+                using (MarshalFixedMemoryBlock mmb = new MarshalFixedMemoryBlock(mConfigDatabase.Tags.Count * 14 + 12))
+                {
+                    mmb.Position = 0;
+                    mmb.Write((long)0);
+                    int count = 0;
+                    if (mConfigDatabase.Tags.Count > 0)
+                    {
+                        count = mConfigDatabase.Tags.Where(e => !(e.Value is ComplexTag)).Count();
+                    }
+
+                    mmb.Write(count);
+                    //mmb.Write(mConfigDatabase.Tags.Count);
+                    foreach (var vv in mConfigDatabase.Tags)
+                    {
+                        if (vv.Value is ComplexTag) continue;
+
+                        mmb.Write(vv.Key);
+                        var val = GetTagValue(vv.Value, out byte quality, out DateTime time);
+                        mmb.Write(vv.Value.State);
+                        mmb.Write(vv.Value.ExtendField2);
+                        
+                    }
+                    long ltmp = mmb.Position;
+                    mmb.WriteLong(0, ltmp);
+
+                    using (System.IO.UnmanagedMemoryStream ums = new System.IO.UnmanagedMemoryStream((byte*)mmb.Buffers, ltmp))
+                    {
+                        using (var vff = System.IO.File.Open(GetCachFileName()+"p", System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite, System.IO.FileShare.ReadWrite))
+                        {
+                            ums.CopyTo(vff);
+                        }
+                    }
+
+                }
+            }
+            catch (Exception ex)
             {
                 LoggerService.Service.Warn("RealEnginer", $"将实时内存数据存盘出错： {ex.Message} {ex.StackTrace} ");
             }
@@ -5272,7 +5454,7 @@ namespace Cdy.Tag
                 if (mConfigDatabase != null)
                 {
                     var tag = mConfigDatabase.Tags[id];
-
+                    
                     SetTagValue(tag, ref value, time, quality);
                 }
             }
@@ -6322,7 +6504,7 @@ namespace Cdy.Tag
             var tag = mConfigDatabase?.GetTagById(id);
             if (tag == null) return;
 
-            List<RealTagValueWithTimer> vals = new List<RealTagValueWithTimer>();
+            //List<RealTagValueWithTimer> vals = new List<RealTagValueWithTimer>();
             if (tag is ComplexTag)
             {
                 foreach(var vv in (tag as ComplexTag).Tags)
@@ -6342,6 +6524,36 @@ namespace Cdy.Tag
             {
                 var val = GetTagValue(tag.Id, out byte quality, out DateTime time, out byte valuetype);
                 res.Add(new RealTagValueWithTimer() { Id = tag.Id, Value = val, Quality = quality, Time = time, ValueType = valuetype });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="res"></param>
+        public void ListComplexTagChildTagId(int id, Dictionary<int,string> res)
+        {
+            Take();
+            var tag = mConfigDatabase?.GetTagById(id);
+            if (tag == null) return;
+            if (tag is ComplexTag)
+            {
+                foreach (var vv in (tag as ComplexTag).Tags)
+                {
+                    if (tag is ComplexTag)
+                    {
+                        ListComplexTagChildTagId(vv.Value.Id, res);
+                    }
+                    else
+                    {
+                        res.Add(vv.Value.Id,vv.Value.FullName);
+                    }
+                }
+            }
+            else
+            {
+                res.Add(tag.Id,tag.FullName);
             }
         }
 
@@ -6563,6 +6775,72 @@ namespace Cdy.Tag
 
 
         #region Set value By Tag Instance  from Comsumer
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tag"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagState(int tagid,short value)
+        {
+            var vtag = this.mConfigDatabase.GetTagById(tagid);
+            if(vtag!=null)
+            {
+                vtag.State = value;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagid"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public short? GetTagState(int tagid)
+        {
+            var vtag = this.mConfigDatabase.GetTagById(tagid);
+            if (vtag != null)
+            {
+                return vtag.State;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagid"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagExtend2(int tagid,long value)
+        {
+            var vtag = this.mConfigDatabase.GetTagById(tagid);
+            if (vtag != null)
+            {
+                vtag.ExtendField2 = value;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="tagid"></param>
+        /// <returns></returns>
+        public long? GetTagExtend2(int tagid)
+        {
+            var vtag = this.mConfigDatabase.GetTagById(tagid);
+            if (vtag != null)
+            {
+                return vtag.ExtendField2;
+            }
+            return null;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -7193,6 +7471,32 @@ namespace Cdy.Tag
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public DateTime GetTagUpdateTime(int id)
+        {
+            try
+            {
+                if (mConfigDatabase.Tags.TryGetValue(id, out Tagbase tag))
+                {
+                    GetTagValue(tag, out byte qu, out DateTime time);
+                    return time;
+                }
+                else
+                {
+                    return DateTime.MinValue;
+                }
+            }
+            catch
+            {
+
+            }
+            return DateTime.MinValue;
         }
 
         public bool SetTagValue(int id,ref long value, byte quality)
@@ -8325,7 +8629,118 @@ namespace Cdy.Tag
         }
 
 
+        /// <summary>
+        /// 读取变量的值
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public object Read(int id, out byte quality, out DateTime time)
+        {
+            var tag = GetTagById(id);
+            if (tag != null)
+            {
+                return GetTagValue(tag, out quality, out time);
+            }
+            else
+            {
+                quality = 255;
+                time = DateTime.MinValue;
+                return null;
+            }
+        }
 
+        /// <summary>
+        /// 写入变量的值
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        public bool Write(int id, object value, DateTime time, byte quality)
+        {
+            Take();
+            var tag = GetTagById(id);
+            if(tag!=null)
+            {
+                switch (tag.Type)
+                {
+                    case TagType.Bool:
+                        SetBoolTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.Byte:
+                        SetByteTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.DateTime:
+                        SetDateTimeTagValue(tag, Convert.ToDateTime(value), quality, time);
+                        break;
+                    case TagType.Double:
+                        SetDoubleTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.Float:
+                        SetFloatTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.Int:
+                        SetIntTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.Long:
+                        SetLongTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.Short:
+                        SetShortTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.String:
+                        SetSrtingTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.UInt:
+                        SetUIntTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.ULong:
+                        SetULongTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.UShort:
+                        SetUShortTagValue(tag, value, quality, time);
+                        break;
+                    case TagType.IntPoint:
+                        var val = (IntPointData)((object)value);
+                        SetPointValue<int>(tag, quality, time, val.X, val.Y);
+                        break;
+                    case TagType.UIntPoint:
+                        var uval = (UIntPointData)((object)value);
+                        SetPointValue<uint>(tag, quality, time, uval.X, uval.Y);
+                        break;
+                    case TagType.IntPoint3:
+                        var val3 = (IntPoint3Data)((object)value);
+                        SetPointValue<int>(tag, quality, time, val3.X, val3.Y, val3.Z);
+                        break;
+                    case TagType.UIntPoint3:
+                        var uval3 = (UIntPoint3Data)((object)value);
+                        SetPointValue<uint>(tag, quality, time, uval3.X, uval3.Y, uval3.Z);
+                        break;
+                    case TagType.LongPoint:
+                        var lval = (LongPointData)((object)value);
+                        SetPointValue<long>(tag, quality, time, lval.X, lval.Y);
+                        break;
+                    case TagType.ULongPoint:
+                        var ulval = (ULongPointData)((object)value);
+                        SetPointValue<ulong>(tag, quality, time, ulval.X, ulval.Y);
+                        break;
+                    case TagType.LongPoint3:
+                        var lval3 = (LongPoint3Data)((object)value);
+                        SetPointValue<long>(tag, quality, time, lval3.X, lval3.Y, lval3.Z);
+                        break;
+                    case TagType.ULongPoint3:
+                        var luval3 = (ULongPoint3Data)((object)value);
+                        SetPointValue<ulong>(tag, quality, time, luval3.X, luval3.Y, luval3.Z);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return true;
+        }
         #endregion ...Interfaces...
     }
 }

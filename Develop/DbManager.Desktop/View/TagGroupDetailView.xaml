@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:DBInStudio.Desktop"
              xmlns:view="clr-namespace:DBInStudio.Desktop.View"
              mc:Ignorable="d"  Foreground="{DynamicResource Window.Forground}"
-             d:DesignHeight="450" d:DesignWidth="1024" x:Name="tgd" Background="#7F000000">
+             d:DesignHeight="450" d:DesignWidth="1920" x:Name="tgd" Background="#7F000000">
     <UserControl.Resources>
         <local:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
@@ -294,6 +294,21 @@
                         </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>
 
+                    <DataGridTemplateColumn Header="{local:ResMarker Unit}" MinWidth="60" >
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" Text="{Binding Unit}" >
+
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox  Padding="3,0"   Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding Unit,Mode=TwoWay,UpdateSourceTrigger=LostFocus}"  VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+                    
                     <DataGridTemplateColumn IsReadOnly="True" Header="{local:ResMarker Record}" Width="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -340,13 +355,26 @@
                                 </TextBlock>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
-                        <!--<DataGridTemplateColumn.CellEditingTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
                             <DataTemplate>
                                 <ComboBox  Padding="5,0" Loaded="ComboBox_Loaded" Background="#1FFFFFFF" SelectionChanged="Type_SelectionChanged"  Margin="0" VerticalContentAlignment="Center" BorderThickness="0" ItemsSource="{Binding RegistorList}"  IsEditable="True" Text="{Binding RegistorName,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" />
                             </DataTemplate>
-                        </DataGridTemplateColumn.CellEditingTemplate>-->
+                        </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>
 
+                    <DataGridTemplateColumn Header="{local:ResMarker Area}" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0" Text="{Binding Area}" VerticalAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox  Loaded="TextBox_Loaded"  CaretBrush="White" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Margin="0,0" Padding="3,0" BorderThickness="0" Text="{Binding Area,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+                    
                     <DataGridTemplateColumn IsReadOnly="True" Header="{local:ResMarker Desc}" Width="*">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -360,6 +388,20 @@
                         </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>
 
+                    <DataGridTemplateColumn Header="{local:ResMarker ExtendField1}" Width="*" >
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" Text="{Binding ExtendField1}" >
+
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox  Padding="3,0"   Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding ExtendField1,Mode=TwoWay,UpdateSourceTrigger=LostFocus}"  VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
 
             </DataGrid>
@@ -465,11 +507,17 @@
                     </ToggleButton>
                 </StackPanel>
 
+                <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal">
+                    <CheckBox Background="Transparent" Content="{local:ResMarker Area, :}"  Grid.Row="1" VerticalAlignment="Center" Margin="5,0,5,0"  Foreground="{DynamicResource Window.Forground}" IsChecked="{Binding FilterAreaEnable}" />
 
+                    <ComboBox VerticalAlignment="Center"  Grid.Row="2" Grid.Column="1" Margin="10,0" Width="100" IsEditable="True" IsEnabled="{Binding FilterAreaEnable}" BorderThickness="1" ItemsSource="{Binding AreaList}" Text="{Binding FilterArea,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" />
+
+                </StackPanel>
+                
             </Grid>
         </Grid>
         <GridSplitter HorizontalAlignment="Stretch" Height="5" VerticalAlignment="Bottom" Background="Transparent" />
-        <DataGrid x:Name="dg" Grid.Row="1"  SelectedCellsChanged="DataGrid_SelectedCellsChanged"  RowHeaderWidth="36" SelectionUnit="{Binding SelectMode}" Style="{DynamicResource DataGridStyle1}" ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" CellStyle="{DynamicResource DataGridCellStyle1}" RowHeaderStyle="{DynamicResource DataGridRowHeaderStyle1}" RowStyle="{DynamicResource DataGridRowStyle2}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,0" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,1,0,1" Background="Transparent" >
+        <DataGrid x:Name="dg" Grid.Row="1"   SelectedCellsChanged="DataGrid_SelectedCellsChanged"  RowHeaderWidth="36" SelectionUnit="{Binding SelectMode}" Style="{DynamicResource DataGridStyle1}" ColumnHeaderStyle="{DynamicResource DataGridColumnHeaderStyle1}" CellStyle="{DynamicResource DataGridCellStyle1}" RowHeaderStyle="{DynamicResource DataGridRowHeaderStyle1}" RowStyle="{DynamicResource DataGridRowStyle2}" ScrollViewer.CanContentScroll="True" ContextMenu="{StaticResource ctxmenu}" VerticalScrollBarVisibility="Auto" ScrollViewer.ScrollChanged="DataGrid_ScrollChanged"  VirtualizingPanel.IsVirtualizing="True" RowDetailsVisibilityMode="VisibleWhenSelected" MinRowHeight="24" Margin="0,0,0,0" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" ItemsSource="{Binding SelectGroupTags}" SelectedItem="{Binding CurrentSelectTag,Mode=TwoWay}"   BorderThickness="0,1,0,1" Background="Transparent" >
 
             <DataGrid.InputBindings>
                 <KeyBinding Command="{Binding CopyCommand}" Key="C" Modifiers="Ctrl" />
@@ -654,6 +702,21 @@
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
+                <DataGridTemplateColumn Header="{local:ResMarker Unit}" MinWidth="60" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" Text="{Binding Unit}" >
+                                
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox  Padding="3,0"   Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding Unit,Mode=TwoWay,UpdateSourceTrigger=LostFocus}"  VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
                 <DataGridTemplateColumn Header="{local:ResMarker Record}" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -701,6 +764,19 @@
 
                 </DataGridTemplateColumn>
 
+                <DataGridTemplateColumn Header="{local:ResMarker Area}" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0" Text="{Binding Area}" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox  Loaded="TextBox_Loaded"  CaretBrush="White" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Margin="0,0" Padding="3,0" BorderThickness="0" Text="{Binding Area,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+                
                 <DataGridTemplateColumn Header="{local:ResMarker Desc}" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -710,6 +786,21 @@
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
                             <TextBox  Loaded="TextBox_Loaded"  CaretBrush="White" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Margin="0,0" Padding="3,0" BorderThickness="0" Text="{Binding Desc,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{local:ResMarker ExtendField1}" Width="*" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" Text="{Binding ExtendField1}" >
+
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox  Padding="3,0"   Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding ExtendField1,Mode=TwoWay,UpdateSourceTrigger=LostFocus}"  VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>

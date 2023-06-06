@@ -96,6 +96,11 @@ namespace Cdy.Tag
         {
             tag.FullName = parentname + "." + tag.Name;
 
+            if(tag.Group!=null && tag.FullName.StartsWith(tag.Group+"."))
+            {
+                tag.FullName=tag.FullName.Substring(tag.Group.Length+1);
+            }
+
             if (tag is ComplexTag)
             {
                 foreach (var vv in (tag as ComplexTag).Tags)

@@ -1,0 +1,98 @@
+﻿@page "/sqlquery"
+@using Cdy.Tag;
+@using System.Text;
+@using DBWebStudio;
+@inject MarsProxy mProxy;
+@inject IJSRuntime JS;
+
+<PageTitle>Sql 语句查询</PageTitle>
+<div class="d-flex flex-row" style="width:100%;height:100%" >
+    <div class="card  text-light h-100 flex-fill" style="background-color:rgba(100,100,100,0.2)">
+        <div class="card-header">
+            Sql 语句查询
+        </div>
+        <div class="card-body">
+            <div class="hstack mb-2">
+                <div class="col-3 input-group mb-0 p-0" style="width:80%">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0" id="basic-addon1">Sql 语句</span>
+                    <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-0" placeholder="select * from area" aria-label="KeyFilter" aria-describedby="basic-addon1" @bind=mSqlExp @onkeyup="@OnEnterKeyUp">
+                </div>
+                <button type="button" class="col-1 btn btn-success ms-2 py-0" onclick="@(()=>{ProcessSql();})">查询</button>
+            </div>
+            <textarea class="form-control text-light" readonly id="ta" @ref=taa Style="height:95%;background-color:rgba(100,100,100,0.2)">
+
+            </textarea>
+        </div>
+       
+     </div>
+  
+</div>
+@code {
+    private string mSqlExp;
+
+    private void OnEnterKeyUp(KeyboardEventArgs arg)
+    {
+        if (arg.Code == "Enter" || arg.Code == "NumpadEnter")
+        {
+            ProcessSql();
+        }
+    }
+
+    private void ProcessSql()
+    {
+        if(!string.IsNullOrEmpty(mSqlExp))
+        {
+            var res = mProxy.QueryValueBySql(mSqlExp);
+            if(res!=null)
+            {
+                if (res is HisQueryTableResult)
+                {
+                    HisQueryTableResult rs = res as HisQueryTableResult;
+                    foreach (var vv in rs.ReadRows())
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        sb.Append(vv.Item1.ToString());
+                        foreach (var vv2 in vv.Item2)
+                        {
+                            sb.Append($",{vv2}");
+                        }
+                        AppendMsg(sb.ToString());
+                    }
+                }
+                else if(res is List<double>)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    foreach(var vv in res as List<double>)
+                    {
+                        sb.Append(vv + ",");
+                    }
+                    AppendMsg(sb.ToString());
+                }
+                else if (res is Dictionary<int, TagRealValue>)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    Dictionary<int, TagRealValue> rval = res as Dictionary<int, TagRealValue>;
+                    foreach(var vv in rval)
+                    {
+                        sb.AppendLine($"{vv.Key} {vv.Value.Value} {vv.Value.Quality} {vv.Value.Time}");
+                    }
+                    AppendMsg(sb.ToString());
+                }
+            }
+        }
+    }
+    ElementReference taa;
+    InnerJsHelper helper;
+
+
+    private async void AppendMsg(string text)
+    {
+        if(helper==null)
+        {
+            helper = new InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+        helper.ClearTextAreaValue(taa);
+        helper.AppendTextAreaValue(taa, text);
+    }
+}

@@ -170,16 +170,16 @@ namespace RuntimeServiceImp
             line = line.Replace(" ", string.Empty);
             line = line.Substring(line.IndexOf(':') + 1);
             string[] any = line.Split(',');
-            if (any.Length != 4)
+            if (any.Length < 4)
                 return;
             try
             {
                 _mem = new Mem()
                 {
-                    Total = Convert.ToInt32(GetNum(ref any[0])),
-                    Free = Convert.ToInt32(GetNum(ref any[1])),
-                    Used = Convert.ToInt32(GetNum(ref any[2])),
-                    Buffers = Convert.ToInt32(GetNum(ref any[3]))
+                    Total = Convert.ToDouble(GetNum(ref any[0])),
+                    Free = Convert.ToDouble(GetNum(ref any[1])),
+                    Used = Convert.ToDouble(GetNum(ref any[2])),
+                    Buffers = Convert.ToDouble(GetNum(ref any[3]))
                 };
                 _mem.IsSuccess = true;
             }
@@ -208,10 +208,10 @@ namespace RuntimeServiceImp
                 string[] used = any[2].Split('.');
                 _swap = new Swap()
                 {
-                    Total = Convert.ToInt32(GetNum(ref any[0])),
-                    Free = Convert.ToInt32(GetNum(ref any[1])),
-                    Used = Convert.ToInt32(GetNum(ref used[0])),
-                    AvailMem = Convert.ToInt32(GetNum(ref used[1]))
+                    Total = Convert.ToDouble(GetNum(ref any[0])),
+                    Free = Convert.ToDouble(GetNum(ref any[1])),
+                    Used = Convert.ToDouble(GetNum(ref used[0])),
+                    AvailMem = Convert.ToDouble(GetNum(ref used[1]))
                 };
                 _mem.IsSuccess = true;
             }
@@ -292,7 +292,15 @@ namespace RuntimeServiceImp
         /// <returns></returns>
         private string GetNum(ref string str)
         {
-            return str.Substring(0, GetCharIndex(ref str));
+            var vid = GetCharIndex(ref str);
+            if (vid > -1)
+            {
+                return str.Substring(0, GetCharIndex(ref str));
+            }
+            else
+            {
+                return str;
+            }
         }
 
         /// <summary>
@@ -427,28 +435,28 @@ namespace RuntimeServiceImp
         /// <summary>
         /// 总内存大小
         /// </summary>
-        public long Total { get; set; }
+        public double Total { get; set; }
 
         /// <summary>
         /// 已使用内存
         /// </summary>
-        public long Used { get; set; }
+        public double Used { get; set; }
 
         /// <summary>
         /// 剩余内存
         /// </summary>
-        public long Free { get; set; }
+        public double Free { get; set; }
 
         /// <summary>
         /// 缓存内存
         /// </summary>
 
-        public long Buffers { get; set; }
+        public double Buffers { get; set; }
 
         /// <summary>
         /// 实际剩余可用内存
         /// </summary>
-        public long CanUsed
+        public double CanUsed
         {
             get { return Free + Buffers; }
         }
@@ -624,21 +632,21 @@ namespace RuntimeServiceImp
         /// <summary>
         /// 总内存大小
         /// </summary>
-        public long Total { get; set; }
+        public double Total { get; set; }
 
         /// <summary>
         /// 已使用内存
         /// </summary>
-        public long Used { get; set; }
+        public double Used { get; set; }
 
         /// <summary>
         /// 剩余可使用内存
         /// </summary>
-        public long Free { get; set; }
+        public double Free { get; set; }
 
         /// <summary>
         /// 进程下一次可分配的物理内存
         /// </summary>
-        public long AvailMem { get; set; }
+        public double AvailMem { get; set; }
     }
 }

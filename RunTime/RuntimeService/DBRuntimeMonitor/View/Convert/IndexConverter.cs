@@ -60,7 +60,11 @@ namespace DBRuntimeMonitor
                 {
                     mCollectionView = CollectionViewSource.GetDefaultView(values[1]) as ListCollectionView;
                 }
-                return (mCollectionView.IndexOf(item) + 1).ToString();
+                if (mCollectionView != null)
+                {
+                    return (mCollectionView.IndexOf(item) + 1).ToString();
+                }
+            
             }
             return 0;
         }

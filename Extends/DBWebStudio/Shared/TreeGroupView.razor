@@ -1,0 +1,105 @@
+﻿@inject NavigationManager Navigation
+
+<div class="d-flex flex-column nav nav-pills">
+    <div class="d-flex align-items-center tree-item rounded-2 @IsSelected()">
+        @if(Data.Items.Count>0)
+        {
+            @if(Data.IsExpanded)
+            {
+                <span class="align-items-center ms-1" style="height:16px;width:16px;transform:rotate(90deg);line-height:16px;text-align:center" onclick=@(()=>BtnClick2())>
+                    &gt;
+                </span>
+            }
+            else
+            {
+                <span class="align-items-center ms-1" style="height:16px;width:16px;line-height:16px;text-align:center" onclick=@(()=>BtnClick2())>
+                    &gt;
+                </span>
+            }
+            <div class="ms-1 flex-fill  align-items-center " onclick=@(()=>BtnClick())>
+                @if (!string.IsNullOrEmpty(Data.Icon))
+                {
+                    <img class="rounded float-start m-1" src="@Data.Icon" style="width:16px" />
+                }
+                 @Data.Name
+            </div>
+        }
+        else
+        {
+            <div class="ms-4 flex-fill  align-items-center" onclick=@(()=>BtnClick())>
+                @if (!string.IsNullOrEmpty(Data.Icon))
+                {
+                    <img class="rounded float-start m-1" src="@Data.Icon" style="width:16px" />
+                }
+                 @Data.Name
+            </div>
+        }
+    </div>
+   
+    @if(Data.IsExpanded)
+    {
+        <div class="d-flex flex-column ms-4">
+        @foreach(var vv in Data.Items)
+        {
+            if(vv is Data.TreeItemCollection)
+            {
+                var tc = vv as Data.TreeItemCollection;
+                <TreeGroupView  Data="@tc" @key=vv.Name/>
+            }
+            else
+            {
+               <TreeItemView Data="@vv" @key=vv.Name />
+            }
+        }
+        </div>
+    }
+</div>
+
+@code {
+
+    private string IsSelected()
+    {
+        return Data.IsSelected ? "active" : "";
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    [Parameter]
+    public Data.TreeItemCollection Data{ get; set; }
+
+    /// <summary>
+    ///
+    /// </summary>
+    private void BtnClick()
+    {
+        Data?.Click();
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    private void BtnClick2()
+    {
+        if (Data != null)
+            Data.IsExpanded = !Data.IsExpanded;
+    }
+
+    protected override void OnInitialized()
+    {
+        Data.ClickAction = new Action<Data.TreeItem>((e) =>
+        {
+        if (!string.IsNullOrEmpty(Data.Url))
+        {
+            Navigation.NavigateTo(Data.Url);
+        }
+        });
+        Data.SelectedChangedEvent += OnSelectedChanged;
+    }
+
+    private void OnSelectedChanged(bool val)
+    {
+        StateHasChanged();
+    }
+
+}

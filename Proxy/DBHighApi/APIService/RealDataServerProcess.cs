@@ -12,6 +12,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -41,6 +42,11 @@ namespace DBHighApi.Api
         /// <summary>
         /// 
         /// </summary>
+        public DateTime Time { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public TagType Type { get; set; }
 
         /// <summary>
@@ -52,14 +58,32 @@ namespace DBHighApi.Api
         /// 
         /// </summary>
         /// <param name="value"></param>
-        public void CheckValueChaned(object value,byte qu)
+        public void CheckValueChaned(object value,byte qu,DateTime time)
         {
-            if(value!=Value)
+            bool ischanged = this.Time != time || Quality != qu;
+
+            if (value == null)
             {
-                Value = value;
-                IsValueChanged = true;
+                if (Value == null)
+                {
+                    return;
+                }
+                else
+                {
+                    Value = value;
+                    IsValueChanged = true;
+                }
+            }
+            else
+            {
+                if (!value.Equals(Value) || ischanged)
+                {
+                    Value = value;
+                    IsValueChanged = true;
+                }
             }
             Quality = qu;
+            this.Time = time;
         }
 
         public void IncRef()
@@ -153,6 +177,11 @@ namespace DBHighApi.Api
         public const byte ValueChangeNotify2 = 22;
 
         /// <summary>
+        /// 按变量ID清空值改变通知2
+        /// </summary>
+        public const byte ResetValueChangeNotify2 = 23;
+
+        /// <summary>
         /// 
         /// </summary>
         public const byte RealDataBlockPush = 1;
@@ -162,6 +191,28 @@ namespace DBHighApi.Api
         public const byte SetRealDataToLastData = 120;
 
         public const byte SetTagValueCallBack = 30;
+
+
+        /// <summary>
+        /// 请求变量状态数据
+        /// </summary>
+        public const byte RequestStateData = 26;
+
+        /// <summary>
+        /// 请求变量扩展字段
+        /// </summary>
+        public const byte RequestExtendField2 = 27;
+
+        /// <summary>
+        /// 设置状态数据
+        /// </summary>
+        public const byte SetStateData = 28;
+
+        /// <summary>
+        /// 设置扩展数据
+        /// </summary>
+        public const byte SetExtendField2Data = 29;
+
 
 
         private Dictionary<string, HashSet<int>> mCallBackRegistorIds = new Dictionary<string, HashSet<int>>();
@@ -177,7 +228,7 @@ namespace DBHighApi.Api
         private ManualResetEvent resetEvent;
 
         private bool mIsClosed = false;
-        private ITagManager mTagManager;
+        //private ITagManager mTagManager;
         private IRealTagConsumer mTagConsumer;
 
         private Dictionary<string, ByteBuffer> buffers = new Dictionary<string, ByteBuffer>();
@@ -195,7 +246,7 @@ namespace DBHighApi.Api
 
         public RealDataServerProcess()
         {
-            mTagManager = ServiceLocator.Locator.Resolve<ITagManager>();
+            //mTagManager = ServiceLocator.Locator.Resolve<ITagManager>();
             mTagConsumer = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
             DatabaseRunner.Manager.ValueUpdateEvent += Manager_ValueUpdateEvent;
         }
@@ -262,8 +313,20 @@ namespace DBHighApi.Api
                         case RequestReal2DataValueAndQuality:
                             ProcessGetRealData2ValueAndQuality(client, data);
                             break;
+                        case RequestStateData:
+                            ProcessGetStateData(client, data);
+                            break;
+                        case RequestExtendField2:
+                            ProcessGetExtendField2Data(client, data);
+                            break;
                         case SetDataValue:
                             ProcessSetRealData(client, data);
+                            break;
+                        case SetStateData:
+                            ProcessSetStateData(client, data);
+                            break;
+                        case SetExtendField2Data:
+                            ProcessSetExtendFiled2Data(client, data);
                             break;
                         case ValueChangeNotify:
                             ProcessValueChangeNotify(client, data);
@@ -273,6 +336,9 @@ namespace DBHighApi.Api
                             break;
                         case ResetValueChangeNotify:
                             ProcessResetValueChangedNotify(client, data);
+                            break;
+                        case ResetValueChangeNotify2:
+                            ProcessResetValueChangedNotify2(client,data);
                             break;
                         case SetRealDataToLastData:
                             ProcessSetRealDataToLastData(client, data);
@@ -371,6 +437,45 @@ namespace DBHighApi.Api
             Parent.AsyncCallback(clientid, ToByteBuffer(ApiFunConst.SetTagValueCallBack, (byte)1));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientid"></param>
+        /// <param name="block"></param>
+        private void ProcessSetStateData(string clientid, ByteBuffer block)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+            Dictionary<int, short> mvals = new Dictionary<int, short>();
+            int count = block.ReadInt();
+            for (int i = 0; i < count; i++)
+            {
+                var id = block.ReadInt();
+                short typ = block.ReadShort();
+                mvals.Add(id, typ);
+            }
+            var res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.SetTagState(mvals);
+            Parent.AsyncCallback(clientid, ToByteBuffer(SetTagValueCallBack, res ? (byte)1 : (byte)0));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientid"></param>
+        /// <param name="block"></param>
+        private void ProcessSetExtendFiled2Data(string clientid, ByteBuffer block)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+            Dictionary<int, long> mvals = new Dictionary<int, long>();
+            int count = block.ReadInt();
+            for (int i = 0; i < count; i++)
+            {
+                var id = block.ReadInt();
+                var typ = block.ReadLong();
+                mvals.Add(id, typ);
+            }
+            var res = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.SetTagExtendField2(mvals);
+            Parent.AsyncCallback(clientid, ToByteBuffer(SetTagValueCallBack, res ? (byte)1 : (byte)0));
+        }
 
         /// <summary>
         /// 
@@ -469,6 +574,95 @@ namespace DBHighApi.Api
                             re.Write((long)((ULongPoint3Data)value).Y);
                             re.Write((long)((ULongPoint3Data)value).Z);
                             break;
+                        case (byte)TagType.Complex:
+                            List<RealTagValueWithTimer> vals = new List<RealTagValueWithTimer>();
+                            re.WriteByte((byte)TagType.Complex);
+
+                            service.GetComplexTagValue(vv, vals);
+
+                            re.Write(vals.Count);
+                            foreach (var vtmp in vals)
+                            {
+                                re.Write(vtmp.Id);
+                                re.Write((byte)vtmp.ValueType);
+                                switch ((byte)vtmp.ValueType)
+                                {
+                                    case (byte)TagType.Bool:
+                                        re.Write(Convert.ToByte(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Byte:
+                                        re.Write(Convert.ToByte(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Short:
+                                        re.Write(Convert.ToInt16(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.UShort:
+                                        re.Write(Convert.ToUInt16(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Int:
+                                        re.Write(Convert.ToInt32(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.UInt:
+                                        re.Write(Convert.ToUInt32(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Long:
+                                    case (byte)TagType.ULong:
+                                        re.Write(Convert.ToInt64(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Float:
+                                        re.Write(Convert.ToSingle(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Double:
+                                        re.Write(Convert.ToDouble(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.String:
+                                        string ssval = vtmp.Value.ToString();
+                                        re.Write(ssval);
+                                        break;
+                                    case (byte)TagType.DateTime:
+                                        re.Write(((DateTime)vtmp.Value).Ticks);
+                                        break;
+                                    case (byte)TagType.IntPoint:
+                                        re.Write(((IntPointData)vtmp.Value).X);
+                                        re.Write(((IntPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.UIntPoint:
+                                        re.Write((int)((UIntPointData)vtmp.Value).X);
+                                        re.Write((int)((UIntPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.IntPoint3:
+                                        re.Write(((IntPoint3Data)vtmp.Value).X);
+                                        re.Write(((IntPoint3Data)vtmp.Value).Y);
+                                        re.Write(((IntPoint3Data)vtmp.Value).Z);
+                                        break;
+                                    case (byte)TagType.UIntPoint3:
+                                        re.Write((int)((UIntPoint3Data)vtmp.Value).X);
+                                        re.Write((int)((UIntPoint3Data)vtmp.Value).Y);
+                                        re.Write((int)((UIntPoint3Data)vtmp.Value).Z);
+                                        break;
+                                    case (byte)TagType.LongPoint:
+                                        re.Write(((LongPointData)vtmp.Value).X);
+                                        re.Write(((LongPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.ULongPoint:
+                                        re.Write((long)((ULongPointData)vtmp.Value).X);
+                                        re.Write((long)((ULongPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.LongPoint3:
+                                        re.Write(((LongPoint3Data)vtmp.Value).X);
+                                        re.Write(((LongPoint3Data)vtmp.Value).Y);
+                                        re.Write(((LongPoint3Data)vtmp.Value).Z);
+                                        break;
+                                    case (byte)TagType.ULongPoint3:
+                                        re.Write((long)((ULongPoint3Data)vtmp.Value).X);
+                                        re.Write((long)((ULongPoint3Data)vtmp.Value).Y);
+                                        re.Write((long)((ULongPoint3Data)vtmp.Value).Z);
+                                        break;
+                                }
+                                re.Write(vtmp.Time.Ticks);
+                                re.Write(vtmp.Quality);
+                            }
+                            break;
                     }
 
                     re.Write(time.Ticks);
@@ -564,6 +758,24 @@ namespace DBHighApi.Api
                             re.Write(vdata.ReadLong());
                             re.Write(vdata.ReadLong());
                             re.Write(vdata.ReadLong());
+                            break;
+                        case (byte)TagType.Complex:
+
+                            vdata.ReadByte();
+                            var vdd = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.GetComplexTagRealData(vid);
+                                             
+                            if (vdd != null)
+                            {
+                                vdd.ReadByte();
+                                re.CheckAndResize(re.WriteIndex + vdd.ReadableCount);
+                                vdd.CopyTo(re, vdd.ReadIndex, re.WriteIndex, vdd.ReadableCount);
+                                re.WriteIndex += vdd.ReadableCount;
+                                RelaseBlock(vdd);
+                            }
+                            else
+                            {
+                                re.Write((int)0);
+                            }
                             break;
                     }
 
@@ -695,6 +907,96 @@ namespace DBHighApi.Api
                             re.Write((long)((ULongPoint3Data)value).Y);
                             re.Write((long)((ULongPoint3Data)value).Z);
                             break;
+                        case (byte)TagType.Complex:
+                            List<RealTagValueWithTimer> vals = new List<RealTagValueWithTimer>();
+                            re.WriteByte((byte)TagType.Complex);
+
+                            service.GetComplexTagValue(vv, vals);
+
+                            re.Write(vals.Count);
+                            foreach (var vtmp in vals)
+                            {
+                                re.Write(vtmp.Id);
+                                re.Write((byte)vtmp.ValueType);
+                                switch ((byte)vtmp.ValueType)
+                                {
+                                    case (byte)TagType.Bool:
+                                        re.Write(Convert.ToByte(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Byte:
+                                        re.Write(Convert.ToByte(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Short:
+                                        re.Write(Convert.ToInt16(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.UShort:
+                                        re.Write(Convert.ToUInt16(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Int:
+                                        re.Write(Convert.ToInt32(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.UInt:
+                                        re.Write(Convert.ToUInt32(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Long:
+                                    case (byte)TagType.ULong:
+                                        re.Write(Convert.ToInt64(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Float:
+                                        re.Write(Convert.ToSingle(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Double:
+                                        re.Write(Convert.ToDouble(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.String:
+                                        string ssval = vtmp.Value.ToString();
+                                        re.Write(ssval);
+                                        break;
+                                    case (byte)TagType.DateTime:
+                                        re.Write(((DateTime)vtmp.Value).Ticks);
+                                        break;
+                                    case (byte)TagType.IntPoint:
+                                        re.Write(((IntPointData)vtmp.Value).X);
+                                        re.Write(((IntPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.UIntPoint:
+                                        re.Write((int)((UIntPointData)vtmp.Value).X);
+                                        re.Write((int)((UIntPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.IntPoint3:
+                                        re.Write(((IntPoint3Data)vtmp.Value).X);
+                                        re.Write(((IntPoint3Data)vtmp.Value).Y);
+                                        re.Write(((IntPoint3Data)vtmp.Value).Z);
+                                        break;
+                                    case (byte)TagType.UIntPoint3:
+                                        re.Write((int)((UIntPoint3Data)vtmp.Value).X);
+                                        re.Write((int)((UIntPoint3Data)vtmp.Value).Y);
+                                        re.Write((int)((UIntPoint3Data)vtmp.Value).Z);
+                                        break;
+                                    case (byte)TagType.LongPoint:
+                                        re.Write(((LongPointData)vtmp.Value).X);
+                                        re.Write(((LongPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.ULongPoint:
+                                        re.Write((long)((ULongPointData)vtmp.Value).X);
+                                        re.Write((long)((ULongPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.LongPoint3:
+                                        re.Write(((LongPoint3Data)vtmp.Value).X);
+                                        re.Write(((LongPoint3Data)vtmp.Value).Y);
+                                        re.Write(((LongPoint3Data)vtmp.Value).Z);
+                                        break;
+                                    case (byte)TagType.ULongPoint3:
+                                        re.Write((long)((ULongPoint3Data)vtmp.Value).X);
+                                        re.Write((long)((ULongPoint3Data)vtmp.Value).Y);
+                                        re.Write((long)((ULongPoint3Data)vtmp.Value).Z);
+                                        break;
+                                }
+                                re.Write(vtmp.Time.Ticks);
+                                re.Write(vtmp.Quality);
+                            }
+
+                            break;
                     }
                     re.WriteByte(qu);
 
@@ -792,6 +1094,24 @@ namespace DBHighApi.Api
                             re.Write(vdata.ReadLong());
                             re.Write(vdata.ReadLong());
                             re.Write(vdata.ReadLong());
+                            break;
+                        case (byte)TagType.Complex:
+
+                            vdata.ReadByte();
+
+                            var vdd = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.GetComplexTagRealData(vid);
+                            if (vdd != null)
+                            {
+                                vdd.ReadByte();
+                                re.CheckAndResize(re.WriteIndex + vdd.ReadableCount);
+                                vdd.CopyTo(re, vdd.ReadIndex, re.WriteIndex, vdd.ReadableCount);
+                                re.WriteIndex += vdd.ReadableCount;
+                                RelaseBlock(vdd);
+                            }
+                            else
+                            {
+                                re.Write((int)0);
+                            }
                             break;
                     }
 
@@ -908,6 +1228,96 @@ namespace DBHighApi.Api
                             re.Write((long)((ULongPoint3Data)value).Y);
                             re.Write((long)((ULongPoint3Data)value).Z);
                             break;
+                        case (byte)TagType.Complex:
+                            List<RealTagValueWithTimer> vals = new List<RealTagValueWithTimer>();
+                            re.WriteByte((byte)TagType.Complex);
+
+                            service.GetComplexTagValue(vv, vals);
+
+                            re.Write(vals.Count);
+                            foreach (var vtmp in vals)
+                            {
+                                re.Write(vtmp.Id);
+                                re.Write((byte)vtmp.ValueType);
+                                switch ((byte)vtmp.ValueType)
+                                {
+                                    case (byte)TagType.Bool:
+                                        re.Write(Convert.ToByte(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Byte:
+                                        re.Write(Convert.ToByte(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Short:
+                                        re.Write(Convert.ToInt16(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.UShort:
+                                        re.Write(Convert.ToUInt16(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Int:
+                                        re.Write(Convert.ToInt32(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.UInt:
+                                        re.Write(Convert.ToUInt32(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Long:
+                                    case (byte)TagType.ULong:
+                                        re.Write(Convert.ToInt64(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Float:
+                                        re.Write(Convert.ToSingle(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.Double:
+                                        re.Write(Convert.ToDouble(vtmp.Value));
+                                        break;
+                                    case (byte)TagType.String:
+                                        string ssval = vtmp.Value.ToString();
+                                        re.Write(ssval);
+                                        break;
+                                    case (byte)TagType.DateTime:
+                                        re.Write(((DateTime)vtmp.Value).Ticks);
+                                        break;
+                                    case (byte)TagType.IntPoint:
+                                        re.Write(((IntPointData)vtmp.Value).X);
+                                        re.Write(((IntPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.UIntPoint:
+                                        re.Write((int)((UIntPointData)vtmp.Value).X);
+                                        re.Write((int)((UIntPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.IntPoint3:
+                                        re.Write(((IntPoint3Data)vtmp.Value).X);
+                                        re.Write(((IntPoint3Data)vtmp.Value).Y);
+                                        re.Write(((IntPoint3Data)vtmp.Value).Z);
+                                        break;
+                                    case (byte)TagType.UIntPoint3:
+                                        re.Write((int)((UIntPoint3Data)vtmp.Value).X);
+                                        re.Write((int)((UIntPoint3Data)vtmp.Value).Y);
+                                        re.Write((int)((UIntPoint3Data)vtmp.Value).Z);
+                                        break;
+                                    case (byte)TagType.LongPoint:
+                                        re.Write(((LongPointData)vtmp.Value).X);
+                                        re.Write(((LongPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.ULongPoint:
+                                        re.Write((long)((ULongPointData)vtmp.Value).X);
+                                        re.Write((long)((ULongPointData)vtmp.Value).Y);
+                                        break;
+                                    case (byte)TagType.LongPoint3:
+                                        re.Write(((LongPoint3Data)vtmp.Value).X);
+                                        re.Write(((LongPoint3Data)vtmp.Value).Y);
+                                        re.Write(((LongPoint3Data)vtmp.Value).Z);
+                                        break;
+                                    case (byte)TagType.ULongPoint3:
+                                        re.Write((long)((ULongPoint3Data)vtmp.Value).X);
+                                        re.Write((long)((ULongPoint3Data)vtmp.Value).Y);
+                                        re.Write((long)((ULongPoint3Data)vtmp.Value).Z);
+                                        break;
+                                }
+                                re.Write(vtmp.Time.Ticks);
+                                re.Write(vtmp.Quality);
+                            }
+
+                            break;
                     }
                 }
             }
@@ -1002,6 +1412,24 @@ namespace DBHighApi.Api
                             re.Write(vdata.ReadLong());
                             re.Write(vdata.ReadLong());
                             break;
+                        case (byte)TagType.Complex:
+
+                            vdata.ReadByte();
+
+                            var vdd = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.GetComplexTagRealData(vid);
+                            if (vdd != null)
+                            {
+                                vdd.ReadByte();
+                                re.CheckAndResize(re.WriteIndex + vdd.ReadableCount);
+                                vdd.CopyTo(re, vdd.ReadIndex, re.WriteIndex, vdd.ReadableCount);
+                                re.WriteIndex += vdd.ReadableCount;
+                                RelaseBlock(vdd);
+                            }
+                            else
+                            {
+                                re.Write((int)0);
+                            }
+                            break;
                     }
 
                     vdata.ReadLong();
@@ -1024,6 +1452,68 @@ namespace DBHighApi.Api
             }
 
            
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="block"></param>
+        private void ProcessGetStateData(string clientId, ByteBuffer block)
+        {
+            int count = block.ReadInt();
+            List<int> cc = new List<int>(count);
+            for (int i = 0; i < count; i++)
+            {
+                cc.Add(block.ReadInt());
+            }
+            if (Parent != null)
+            {
+                var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, count * 6 + 5);
+                var vss = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.GetTagState(cc);
+                re.WriteByte(RequestStateData);
+                if (vss != null)
+                {
+                    re.Write(vss.Count);
+                    for (int i = 0; i < vss.Count; i++)
+                    {
+                        re.Write(cc[i]);
+                        re.Write(vss[i]);
+                    }
+                }
+                else
+                {
+                    re.Write(0);
+                }
+                Parent?.AsyncCallback(clientId, re);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="block"></param>
+        private void ProcessGetExtendField2Data(string clientId, ByteBuffer block)
+        {
+            int count = block.ReadInt();
+            List<int> cc = new List<int>(count);
+            for (int i = 0; i < count; i++)
+            {
+                cc.Add(block.ReadInt());
+            }
+            if (Parent != null)
+            {
+                var re = Parent.Allocate(ApiFunConst.RealDataRequestFun, count * 12 + 5);
+                var vss = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.GetTagExtendField2(cc);
+                re.WriteByte(RequestExtendField2);
+                re.Write(vss.Count);
+                for (int i = 0; i < vss.Count; i++)
+                {
+                    re.Write(cc[i]);
+                    re.Write(vss[i]);
+                }
+                Parent?.AsyncCallback(clientId, re);
+            }
         }
 
         /// <summary>
@@ -1338,9 +1828,22 @@ namespace DBHighApi.Api
         {
             try
             {
+               
                 int minid = block.ReadInt();
                 int maxid = block.ReadInt();
-                HashSet<int> ids = new HashSet<int>();
+                HashSet<int> ids;
+                lock (mCallBackRegistorIds)
+                {
+                    if (mCallBackRegistorIds.ContainsKey(clientId))
+                    {
+                        ids = new HashSet<int>(mCallBackRegistorIds[clientId]);
+                    }
+                    else
+                    {
+                        ids = new HashSet<int>();
+                    }
+                }
+
                 for (int i = minid; i <= maxid; i++)
                 {
                     ids.Add(i);
@@ -1348,9 +1851,13 @@ namespace DBHighApi.Api
                     {
                         if (!mMonitors.ContainsKey(i))
                         {
-                            var vtag = mTagManager.GetTagById(i);
-                            if(vtag!=null)
-                            mtmp.Add(i, new MonitorTag() { Value = 0, RefCount = 1, Type = vtag.Type });
+                            var vtag = ServiceLocator.Locator.Resolve<ITagManager>()?.GetTagById(i);
+                            if(vtag!=null&&!mtmp.ContainsKey(i))
+                            mtmp.Add(i, new MonitorTag() {  RefCount = 1, Type = vtag.Type });
+                            else
+                            {
+                                LoggerService.Service.Info("ProcessValueChangeNotify", $" {clientId}  订购变量 Id {i} 不存在");
+                            }
                         }
                         else
                         {
@@ -1359,13 +1866,16 @@ namespace DBHighApi.Api
                     }
                 }
 
-                if (mCallBackRegistorIds.ContainsKey(clientId))
+                lock (mCallBackRegistorIds)
                 {
-                    mCallBackRegistorIds[clientId] = ids;
-                }
-                else
-                {
-                    mCallBackRegistorIds.Add(clientId, ids);
+                    if (mCallBackRegistorIds.ContainsKey(clientId))
+                    {
+                        mCallBackRegistorIds[clientId] = ids;
+                    }
+                    else
+                    {
+                        mCallBackRegistorIds.Add(clientId, ids);
+                    }
                 }
 
                 lock(mDataCounts)
@@ -1375,11 +1885,20 @@ namespace DBHighApi.Api
                 }
 
                 Parent?.AsyncCallback(clientId, ToByteBuffer(ApiFunConst.RealDataRequestFun, 1));
+
+                StringBuilder sb = new StringBuilder();
+                foreach (var vv in ids)
+                {
+                    sb.Append(vv + ",");
+                }
+                LoggerService.Service.Info("ProcessValueChangeNotify", $"客户端 {clientId} 订购的变量列表:{sb.ToString()}");
+
+                resetEvent?.Set();
             }
             catch(Exception ex)
             {
                 Parent?.AsyncCallback(clientId, ToByteBuffer(ApiFunConst.RealDataRequestFun, 0));
-                Debug.Print(ex.Message);
+                LoggerService.Service.Warn("ProcessValueChangeNotify", ex.Message);
             }
         }
 
@@ -1394,8 +1913,20 @@ namespace DBHighApi.Api
             {
                 int count = block.ReadInt();
 
-                HashSet<int> ids = new HashSet<int>();
-                for (int i = 0; i <= count; i++)
+                HashSet<int> ids;
+                lock (mCallBackRegistorIds)
+                {
+                    if (mCallBackRegistorIds.ContainsKey(clientId))
+                    {
+                        ids = new HashSet<int>(mCallBackRegistorIds[clientId]);
+                    }
+                    else
+                    {
+                        ids = new HashSet<int>();
+                    }
+                }
+
+                for (int i = 0; i < count; i++)
                 {
                     int nid = block.ReadInt();
                     ids.Add(nid);
@@ -1403,9 +1934,13 @@ namespace DBHighApi.Api
                     {
                         if (!mMonitors.ContainsKey(nid))
                         {
-                            var vtag = mTagManager.GetTagById(nid);
-                            if (vtag != null)
-                                mtmp.Add(i, new MonitorTag() { Value = 0, RefCount = 1, Type = vtag.Type });
+                            var vtag = ServiceLocator.Locator.Resolve<ITagManager>()?.GetTagById(nid);
+                            if (vtag != null && !mtmp.ContainsKey(nid))
+                                mtmp.Add(nid, new MonitorTag() { RefCount = 1, Type = vtag.Type }); 
+                            else
+                            {
+                                LoggerService.Service.Info("ProcessValueChangeNotify2", $" {clientId}  订购变量 Id {nid} 不存在");
+                            }
                         }
                         else
                         {
@@ -1413,14 +1948,16 @@ namespace DBHighApi.Api
                         }
                     }
                 }
-
-                if (mCallBackRegistorIds.ContainsKey(clientId))
+                lock (mCallBackRegistorIds)
                 {
-                    mCallBackRegistorIds[clientId] = ids;
-                }
-                else
-                {
-                    mCallBackRegistorIds.Add(clientId, ids);
+                    if (mCallBackRegistorIds.ContainsKey(clientId))
+                    {
+                        mCallBackRegistorIds[clientId] = ids;
+                    }
+                    else
+                    {
+                        mCallBackRegistorIds.Add(clientId, ids);
+                    }
                 }
 
                 lock (mDataCounts)
@@ -1430,11 +1967,20 @@ namespace DBHighApi.Api
                     }
 
                 Parent?.AsyncCallback(clientId, ToByteBuffer(ApiFunConst.RealDataRequestFun, 1));
+
+                StringBuilder sb = new StringBuilder();
+                foreach(var vv in ids)
+                {
+                    sb.Append(vv + ",");
+                }
+                LoggerService.Service.Info("ProcessValueChangeNotify2", $"客户端 {clientId} 订购的变量列表:{sb.ToString()}");
+
+                resetEvent?.Set();
             }
             catch (Exception ex)
             {
                 Parent?.AsyncCallback(clientId, ToByteBuffer(ApiFunConst.RealDataRequestFun, 0));
-                Debug.Print(ex.Message);
+                LoggerService.Service.Warn("ProcessValueChangeNotify2", ex.Message);
             }
         }
 
@@ -1446,18 +1992,20 @@ namespace DBHighApi.Api
         {
             try
             {
-                
-                if (mCallBackRegistorIds.ContainsKey(clientId))
+                lock (mCallBackRegistorIds)
                 {
-                    var vtags = mCallBackRegistorIds[clientId];
-                    foreach(var vv in vtags)
+                    if (mCallBackRegistorIds.ContainsKey(clientId))
                     {
-                        if(mMonitors.ContainsKey(vv))
+                        var vtags = mCallBackRegistorIds[clientId];
+                        foreach (var vv in vtags)
                         {
-                            mMonitors[vv].DecRef();
+                            if (mMonitors.ContainsKey(vv))
+                            {
+                                mMonitors[vv].DecRef();
+                            }
                         }
+                        mCallBackRegistorIds.Remove(clientId);
                     }
-                    mCallBackRegistorIds.Remove(clientId);
                 }
                 lock (mDataCounts)
                 {
@@ -1473,6 +2021,62 @@ namespace DBHighApi.Api
                 Parent?.AsyncCallback(clientId, ToByteBuffer(ApiFunConst.RealDataRequestFun, 0));
             }
             
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="block"></param>
+        private void ProcessResetValueChangedNotify2(string clientId, ByteBuffer block)
+        {
+            try
+            {
+                int count = block.ReadInt();
+
+               var  ids = new HashSet<int>();
+
+                for (int i = 0; i < count; i++)
+                {
+                    int nid = block.ReadInt();
+                    ids.Add(nid);
+                }
+                lock (mCallBackRegistorIds)
+                {
+                    if (mCallBackRegistorIds.ContainsKey(clientId))
+                    {
+                        var vtags = mCallBackRegistorIds[clientId];
+
+                        foreach(var vv in ids)
+                        {
+                            if(vtags.Contains(vv))
+                            {
+                                vtags.Remove(vv);
+                            }
+                            if (mMonitors.ContainsKey(vv))
+                            {
+                                mMonitors[vv].DecRef();
+                            }
+                        }
+                    }
+                }
+
+
+                Parent?.AsyncCallback(clientId, ToByteBuffer(ApiFunConst.RealDataRequestFun, 1));
+
+                StringBuilder sb = new StringBuilder();
+                foreach (var vv in ids)
+                {
+                    sb.Append(vv + ",");
+                }
+                LoggerService.Service.Info("ProcessResetValueChangedNotify2", $"客户端 {clientId} 取消订购变量列表:{sb.ToString()}");
+
+            }
+            catch (Exception ex)
+            {
+                Parent?.AsyncCallback(clientId, ToByteBuffer(ApiFunConst.RealDataRequestFun, 0));
+                LoggerService.Service.Warn("ProcessResetValueChangedNotify2", ex.Message);
+            }
         }
 
         /// <summary>
@@ -1500,7 +2104,7 @@ namespace DBHighApi.Api
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="id"></param>
-        private void ProcessTagPush(ByteBuffer re,int id,byte type, object value,byte qu)
+        private void ProcessTagPush(ByteBuffer re,int id,byte type, object value,byte qu,DateTime time)
         {
             re.Write(id);
             re.Write(type);
@@ -1580,6 +2184,7 @@ namespace DBHighApi.Api
                     break;
             }
             re.WriteByte(qu);
+            re.Write(time.Ticks);
             //Debug.Print(buffer.WriterIndex.ToString());
         }
 
@@ -1589,10 +2194,18 @@ namespace DBHighApi.Api
         /// </summary>
         private void SendThreadPro()
         {
-            while(!mIsClosed)
+            while (!mIsClosed)
             {
                 try
                 {
+                    mTagConsumer= ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+
+                    if (mTagConsumer == null)
+                    {
+                        Thread.Sleep(100);
+                        continue;
+                    }
+
                     resetEvent.WaitOne();
                     if (mIsClosed) return;
                     resetEvent.Reset();
@@ -1606,19 +2219,19 @@ namespace DBHighApi.Api
                         {
                             foreach (var vv in mtmp)
                             {
-                                if(!mMonitors.ContainsKey(vv.Key))
-                                mMonitors.Add(vv.Key, vv.Value);
+                                if (!mMonitors.ContainsKey(vv.Key))
+                                    mMonitors.Add(vv.Key, vv.Value);
                             }
                         }
                         mtmp.Clear();
                     }
 
-                    foreach(var vv in mMonitors.Where(e=>e.Value.RefCount<=0).ToArray())
+                    foreach (var vv in mMonitors.Where(e => e.Value.RefCount <= 0).ToArray())
                     {
                         mMonitors.Remove(vv.Key);
                     }
 
- 
+
                     var chgarry = ArrayPool<int>.Shared.Rent(mMonitors.Count());
                     Array.Clear(chgarry, 0, chgarry.Length);
 
@@ -1628,32 +2241,38 @@ namespace DBHighApi.Api
                     byte vtype;
                     foreach (var vv in mMonitors)
                     {
-                        var oval = mTagConsumer.GetTagValue(vv.Key,out qu,out te,out vtype);
-                        vv.Value.CheckValueChaned(oval,qu);
-                        if(vv.Value.IsValueChanged)
+                        var oval = mTagConsumer.GetTagValue(vv.Key, out qu, out te, out vtype);
+                        vv.Value.CheckValueChaned(oval, qu, te);
+                        if (vv.Value.IsValueChanged)
                         {
                             chgarry[i++] = vv.Key;
                             vv.Value.IsValueChanged = false;
                         }
                     }
 
-                    if(i>0)
+
+                    if (i > 0)
                     {
-                        var clients = mCallBackRegistorIds.ToArray();
+
+                        KeyValuePair<string, HashSet<int>>[] clients;
+                        lock (mCallBackRegistorIds)
+                            clients = mCallBackRegistorIds.ToArray();
 
                         foreach (var cb in clients)
                         {
-                            var buffer = Parent.Allocate(Api.ApiFunConst.RealDataPushFun, i * 64 + 4);
+                            var buffer = Parent.Allocate(Api.ApiFunConst.RealDataPushFun, i * (64 + 8) + 4);
                             buffer.Write(0);
                             buffers.Add(cb.Key, buffer);
                             lock (mDataCounts)
                             {
-                                if(mDataCounts.ContainsKey(cb.Key))
-                                mDataCounts[cb.Key] = 0;
+                                if (mDataCounts.ContainsKey(cb.Key))
+                                    mDataCounts[cb.Key] = 0;
                             }
                         }
 
-                        for(int j=0;j<i;j++)
+                        //StringBuilder sb = new StringBuilder();
+
+                        for (int j = 0; j < i; j++)
                         {
                             var vid = chgarry[j];
                             MonitorTag tag = mMonitors[vid];
@@ -1661,13 +2280,16 @@ namespace DBHighApi.Api
                             {
                                 foreach (var vvc in clients)
                                 {
-                                    if (vvc.Value.Contains(vid))
+                                    lock (mCallBackRegistorIds)
                                     {
-
-                                        ProcessTagPush(buffers[vvc.Key], vid, (byte)tag.Type, tag.Value, tag.Quality);
-                                        lock (mDataCounts)
+                                        if (vvc.Value.Contains(vid))
                                         {
-                                            if (mDataCounts.ContainsKey(vvc.Key)) mDataCounts[vvc.Key]++;
+                                            ProcessTagPush(buffers[vvc.Key], vid, (byte)tag.Type, tag.Value, tag.Quality, tag.Time);
+                                            lock (mDataCounts)
+                                            {
+                                                if (mDataCounts.ContainsKey(vvc.Key)) mDataCounts[vvc.Key]++;
+                                            }
+                                            //sb.Append(vid + ":" + tag.Value + "  ");
                                         }
                                     }
                                 }
@@ -1685,8 +2307,9 @@ namespace DBHighApi.Api
                                 {
                                     cb.Value.Write(mDataCounts[cb.Key]);
                                     cb.Value.WriteIndex = vindex;
-                                   // cb.Value.ResetWriterIndex();
+                                    // cb.Value.ResetWriterIndex();
                                     Parent.PushRealDatatoClient(cb.Key, cb.Value);
+                                    //LoggerService.Service.Info("RealDataServerProcess", $"推送到客户端{cb.Key} 数据: {sb.ToString()}");
                                 }
                             }
                         }

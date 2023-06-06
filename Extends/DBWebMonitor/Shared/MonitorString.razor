@@ -1,0 +1,35 @@
+﻿@using System.ComponentModel;
+<span>@mValue</span>
+
+@code {
+
+    private string mValue;
+
+    [Parameter]
+    public Func<string> UpdateValue{ get; set; }
+
+    [Parameter]
+    public TagViewModel Target{ get; set; }
+
+    [Parameter]
+    public string PropertyName{ get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if(Target!=null)
+        {
+            Target.PropertyChanged += OnPropertyChanged;
+            mValue= UpdateValue();
+        }
+    }
+
+    private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if(e.PropertyName==PropertyName)
+        {
+            mValue = UpdateValue();
+            InvokeAsync(StateHasChanged);
+        }
+    }
+}

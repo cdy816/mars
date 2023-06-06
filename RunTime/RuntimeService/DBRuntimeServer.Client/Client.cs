@@ -55,6 +55,9 @@ namespace DBRuntimeServer
         /// </summary>
         public bool UseTls { get; set; } = true;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public string Ip { get; set; }
 
         /// <summary>
@@ -351,6 +354,31 @@ namespace DBRuntimeServer
         /// 
         /// </summary>
         /// <returns></returns>
+        public List<ProcessInfoItem> GetProcessInfo()
+        {
+            List<ProcessInfoItem> re = new List<ProcessInfoItem>();
+            if (!IsLogined) return re;
+            var res = this.mMachineClient.GetProcessInfo(new GetProcessInfoRequest() { Token = mLoginId });
+            if (res != null)
+            {
+                foreach (var vv in res.Infos)
+                {
+                    var vp = new ProcessInfoItem() { Name = vv.Name,CPU=vv.CPU,TotalCPU=vv.TotalCPU,Memory=vv.Memory,ThreadCount=vv.ThreadCount,StartTime=vv.StartTime,IsOpened=vv.IsOpened };
+                    vp.RemoteClients = new List<RemoteClientItem>();
+                    foreach(var vvv in vv.Clients)
+                    {
+                        vp.RemoteClients.Add(new RemoteClientItem() { Ip=vvv.Ip, Port=vvv.Port,DateTime=vvv.DateTime });
+                    }
+                    re.Add(vp);
+                }
+            }
+            return re;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public MachineInfo? GetMachineInfo()
         {
             if (!IsLogined) return null;
@@ -392,7 +420,6 @@ namespace DBRuntimeServer
                     }
                 }
             }
-            return string.Empty;
         }
 
         /// <summary>
@@ -428,6 +455,49 @@ namespace DBRuntimeServer
             {
                 return new MachineResourceItem();
             }
+        }
+
+        /// <summary>
+        /// 监测某个API是否在运行状态
+        /// </summary>
+        /// <param name="api"></param>
+        /// <returns></returns>
+        public bool IsApiIsRunning(string api)
+        {
+            if (!IsLogined) return false;
+            var res = mDBClient.CheckApiIsRunning(new DatabaseApiRequest() { Api = api });
+            if(res!=null)
+            {
+                return res.IsRunning;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 是否拥有报警配置
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="isgrpc"></param>
+        /// <param name="port"></param>
+        /// <returns></returns>
+        public bool HasAntAlarm(string database, out bool isgrpc, out int port)
+        {
+            if (!IsLogined)
+            {
+                isgrpc = false;
+                port = -1;
+                return false;
+            }
+            var res = mDBClient.HasAlarm(new DatabaseCommonRequest() { Database = database,Token=mLoginId });
+            if (res != null)
+            {
+                isgrpc = res.Grpc;
+                port = res.Port;
+                return res.Result;
+            }
+            isgrpc = false;
+            port = -1;
+            return true;
         }
 
         /// <summary>
@@ -501,6 +571,41 @@ namespace DBRuntimeServer
         public double Total { get; set; }
         public string UsedFor { get; set; }
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public struct ProcessInfoItem
+    {
+        public string Name { get; set; }
+
+        public double CPU { get; set; }
+
+        public double TotalCPU { get; set; }
+
+        public double Memory { get; set; }
+
+        public int ThreadCount { get; set; }
+
+        public string StartTime { get; set; }
+
+        public bool IsOpened { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<RemoteClientItem> RemoteClients { get; set; }
+
+    }
+
+    public struct RemoteClientItem
+    {
+        public string Ip { get; set; }
+        public int Port { get; set; }
+        public string DateTime { get; set; }
+    }
+
+
 
     /// <summary>
     /// 

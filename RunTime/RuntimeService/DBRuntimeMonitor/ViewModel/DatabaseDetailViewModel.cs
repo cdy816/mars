@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DBRuntimeServer;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,6 +25,10 @@ namespace DBRuntimeMonitor.ViewModel
 
         private System.Collections.ObjectModel.ObservableCollection<DriverInfo> mDiskInfo = new System.Collections.ObjectModel.ObservableCollection<DriverInfo>();
 
+        private System.Collections.ObjectModel.ObservableCollection<ProcessInfo> mProcessInfo = new System.Collections.ObjectModel.ObservableCollection<ProcessInfo>();
+
+        private Dictionary<string, ProcessInfo> mPInfoCach = new Dictionary<string, ProcessInfo>();
+
         private Dictionary<string, DriverInfo> mDriverInfoDic = new Dictionary<string, DriverInfo>();
 
         private DatabaseViewModel mNode;
@@ -47,6 +52,14 @@ namespace DBRuntimeMonitor.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public System.Collections.ObjectModel.ObservableCollection<ProcessInfo> ProcessInfo
+        {
+            get { return mProcessInfo; }
+        }
 
         /// <summary>
         /// 
@@ -424,6 +437,41 @@ namespace DBRuntimeMonitor.ViewModel
                             }
                         });
                     }
+
+
+                    var pinfo = mNode.ServerClient.GetProcessInfo();
+                    Application.Current.Dispatcher.BeginInvoke(() =>
+                    {
+                        if (pinfo != null)
+                        {
+                            foreach (var vv in pinfo)
+                            {
+                                if (mPInfoCach.ContainsKey(vv.Name))
+                                {
+                                    if (!vv.IsOpened)
+                                    {
+                                        var vinfo = mPInfoCach[vv.Name];
+                                        mProcessInfo.Remove(vinfo);
+                                        mPInfoCach.Remove(vv.Name);
+                                    }
+                                    else
+                                    {
+                                        mPInfoCach[vv.Name].Mode = vv;
+                                    }
+                                }
+                                else
+                                {
+                                    if (vv.IsOpened)
+                                    {
+                                        var mm = new ProcessInfo(vv);
+                                        mPInfoCach.Add(mm.Name, mm);
+                                        mProcessInfo.Add(mm);
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
                 }
             }
             catch(Exception ex)
@@ -560,5 +608,124 @@ namespace DBRuntimeMonitor.ViewModel
 
 
     }
+
+    public class ProcessInfo : ViewModelBase
+    {
+        private ProcessInfoItem mMode;
+
+        private List<RemoteClientItem> mClients=new List<RemoteClientItem>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mode"></param>
+        public ProcessInfo(ProcessInfoItem mode)
+        {
+            Mode = mode;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ProcessInfo()
+        {
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ProcessInfoItem Mode
+        {
+            get
+            {
+                return mMode;
+            }
+            set
+            {
+                mMode = value;
+                InitClients();
+                OnPropertyChanged("Mode");
+                OnPropertyChanged("CPU");
+                OnPropertyChanged("TotalCPU");
+                OnPropertyChanged("Memory");
+                OnPropertyChanged("ThreadCount");
+                OnPropertyChanged("StartTime");
+            }
+        }
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public List<RemoteClientItem> Clients
+        {
+            get
+            {
+                return mClients;
+            }
+            set
+            {
+                if (mClients != value)
+                {
+                    mClients = value;
+                   
+                    OnPropertyChanged("Clients");
+                }
+            }
+        }
+
+        public string Name { get { return mMode.Name; } }
+
+        public double CPU
+        {
+            get { return mMode.CPU; }
+        }
+
+        public double TotalCPU
+        {
+            get { return mMode.TotalCPU;}
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double Memory
+        {
+            get { return mMode.Memory;}
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public double ThreadCount
+        {
+            get { return mMode.ThreadCount;}
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string StartTime
+        {
+            get { return mMode.StartTime;}
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void InitClients()
+        {
+            this.Clients.Clear();
+            foreach(var vv in mMode.RemoteClients)
+            {
+                this.Clients.Add(vv);
+            }
+            OnPropertyChanged("Clients");
+        }
+
+    }
+
+    
+
 
 }

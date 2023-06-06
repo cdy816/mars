@@ -529,6 +529,21 @@
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
 
+                <DataGridTemplateColumn Header="{local:ResMarker Unit}" MinWidth="60" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" Text="{Binding Unit}" >
+
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox  Padding="3,0"   Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding Unit,Mode=TwoWay,UpdateSourceTrigger=LostFocus}"  VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+                
                 <DataGridTemplateColumn Header="{local:ResMarker Record}" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -539,7 +554,21 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                
+
+               
+
+                <DataGridTemplateColumn Header="{local:ResMarker Area}" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Foreground="{DynamicResource Window.Forground}" Margin="5,0" Text="{Binding Area}" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox  Loaded="TextBox_Loaded"  CaretBrush="White" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Margin="0,0" Padding="3,0" BorderThickness="0" Text="{Binding Area,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
 
                 <DataGridTemplateColumn Header="{local:ResMarker Desc}" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
@@ -550,6 +579,21 @@
                     <DataGridTemplateColumn.CellEditingTemplate>
                         <DataTemplate>
                             <TextBox  Loaded="TextBox_Loaded"  CaretBrush="White" Background="#1FFFFFFF" Foreground="{DynamicResource Window.Forground}" Margin="0,0" Padding="3,0" BorderThickness="0" Text="{Binding Desc,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" VerticalAlignment="Stretch" VerticalContentAlignment="Center"  />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="{local:ResMarker ExtendField1}" Width="*" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" Text="{Binding ExtendField1}" >
+
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox  Padding="3,0"   Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding ExtendField1,Mode=TwoWay,UpdateSourceTrigger=LostFocus}"  VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>
                 </DataGridTemplateColumn>
@@ -579,7 +623,7 @@
                     </DataTemplate>
                 </Button.ContentTemplate>
             </Button>
-            <Button  BorderBrush="SkyBlue"  BorderThickness="0,0,0,2" Content="{local:ResMarker Import}" Command="{Binding ImportCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+            <Button Visibility="Collapsed" BorderBrush="SkyBlue"  BorderThickness="0,0,0,2" Content="{local:ResMarker Import}" Command="{Binding ImportCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
                 <Button.ContentTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Margin="0">
@@ -589,7 +633,7 @@
                     </DataTemplate>
                 </Button.ContentTemplate>
             </Button>
-            <Button  BorderBrush="Yellow"  BorderThickness="0,0,0,2" Content="{local:ResMarker Export}" Command="{Binding ExportCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
+            <Button  Visibility="Collapsed" BorderBrush="Yellow"  BorderThickness="0,0,0,2" Content="{local:ResMarker Export}" Command="{Binding ExportCommand}" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" Height="26" Margin="5,0" >
                 <Button.ContentTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal" Margin="0">

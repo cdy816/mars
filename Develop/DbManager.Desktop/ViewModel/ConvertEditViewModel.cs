@@ -1,4 +1,5 @@
 ﻿using Cdy.Tag;
+using Cdy.Tag.Real.ValueConvert;
 using Google.Protobuf.Reflection;
 using System;
 using System.Collections.Generic;
@@ -38,6 +39,7 @@ namespace DBInStudio.Desktop.ViewModel
         {
             DefaultWidth = 400;
             DefaultHeight = 200;
+            Title = Res.Get("Convert");
         }
 
         /// <summary>
@@ -77,8 +79,9 @@ namespace DBInStudio.Desktop.ViewModel
             mItems.Add(new LinearConvertViewModel() { Model = new LinerConvert() });
             mItems.Add(new BitConvertViewModel() { Model = new BitConvert() });
             mItems.Add(new StringFormatConvertViewModel() { Model = new StringFormatConvert() });
+            mItems.Add(new InvertConvertViewModel() { Model = new InvertConvert() });
 
-            foreach(var vv in mItems.ToArray())
+            foreach (var vv in mItems.ToArray())
             {
                 if(!vv.Model.SupportTag(tag))
                 {
@@ -217,6 +220,11 @@ namespace DBInStudio.Desktop.ViewModel
                 }
             }
         }
+
+    }
+
+    public class InvertConvertViewModel : ConvertViewModel
+    {
 
     }
 }

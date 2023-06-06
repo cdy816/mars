@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace DBRuntime.Proxy
 {
@@ -275,7 +276,10 @@ namespace DBRuntime.Proxy
             {
                 mHisClient.PropertyChanged -= MHisClient_PropertyChanged;
                 mHisClient.Close();
+                mHisClient.Dispose();
             }
+            dbClient.Dispose();
+
         }
 
         public bool CheckLogin()
@@ -318,6 +322,16 @@ namespace DBRuntime.Proxy
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="MemoryLen"></param>
+        /// <returns></returns>
+        public Dictionary<int, long> GetRealTagMemoryInfo(out int MemoryLen)
+        {
+            return dbClient.GetRealTagMemoryInfo(out MemoryLen);
+        }
+
+        /// <summary>
         /// 加载历史数据库
         /// </summary>
         /// <returns></returns>
@@ -357,6 +371,57 @@ namespace DBRuntime.Proxy
                 }
             }
             return null;
+        }
+
+        public List<short> GetTagState(List<int> ids)
+        {
+            if (IsConnected)
+            {
+                return this.dbClient.GetStateData(ids);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagState(Dictionary<int,short> value)
+        {
+            if (IsConnected)
+            {
+                return this.dbClient.SetTagStateValue(value);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <returns></returns>
+        public List<long> GetTagExtendField2(List<int> ids)
+        {
+            if (IsConnected)
+            {
+                return this.dbClient.GetExtendField2Data(ids);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public bool SetTagExtendField2(Dictionary<int, long> value)
+        {
+            if (IsConnected)
+            {
+                return this.dbClient.SetTagExtendField2Value(value);
+            }
+            return false;
         }
 
         //private unsafe Dictionary<DateTime,Tuple<object,byte>> ProcessHisResult<T>(IByteBuffer data, TagType tp)
@@ -562,7 +627,7 @@ namespace DBRuntime.Proxy
         //            break;
         //    }
 
-            
+
 
         //    return re;
         //}
@@ -610,7 +675,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                return this.mUsedHisClient.QueryAllHisValue(id, stime, etime);
+                return this.mUsedHisClient.QueryAllHisValue(id, stime, etime,60000);
             }
             return null;
         }
@@ -679,6 +744,23 @@ namespace DBRuntime.Proxy
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public object QueryHisValueBySql(string sql, int timeout = 5000)
+        {
+            if (IsConnected)
+            {
+                var res = this.mUsedHisClient.QueryValueBySql(sql,timeout);
+                return res;
+            }
+            return null;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="id"></param>
         /// <param name="stime"></param>
         /// <param name="etime"></param>
@@ -706,7 +788,25 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                return mUsedHisClient.QueryHisValueForTimeSpan(id, stime, etime, span, type);
+                return mUsedHisClient.QueryHisValueForTimeSpan(id, stime, etime, span, type, 120000);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <param name="span"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public ByteBuffer QueryHisDataByIgnorSystemExit(int id, DateTime stime, DateTime etime, TimeSpan span, Cdy.Tag.QueryValueMatchType type)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.QueryHisValueForTimeSpanByIgnorSystemExit(id, stime, etime, span, type, 120000);
             }
             return null;
         }
@@ -722,11 +822,27 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                return mUsedHisClient.QueryHisValueAtTimes(id, times, type);
+                return mUsedHisClient.QueryHisValueAtTimes(id, times, type, 120000);
             }
             return null;
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public ByteBuffer QueryHisDataByIgnorSystemExit(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType type)
+        {
+            if (IsConnected)
+            {
+                return mUsedHisClient.QueryHisValueAtTimesByIgnorSystemExit(id, times, type, 120000);
+            }
+            return null;
+        }
 
         /// <summary>
         /// 
@@ -777,7 +893,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                var res = this.mUsedHisClient.QueryAllHisValue(id, stime, etime);
+                var res = this.mUsedHisClient.QueryAllHisValue(id, stime, etime, 120000);
                 if (res == null || res.Handles == null || res.Handles.Count==0) return null;
                 TagType tp = (TagType)res.ReadByte();
                 switch (tp)
@@ -842,7 +958,72 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                var res = mUsedHisClient.QueryHisValueForTimeSpan(id, stime, etime, span, type);
+                var res = mUsedHisClient.QueryHisValueForTimeSpan(id, stime, etime, span, type, 120000);
+                if (res == null || res.Handles == null || res.Handles.Count == 0) return null;
+                TagType tp = (TagType)res.ReadByte();
+                switch (tp)
+                {
+                    case Cdy.Tag.TagType.Bool:
+                        return ProcessHisResultByMemory<bool>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Byte:
+                        return ProcessHisResultByMemory<byte>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.DateTime:
+                        return ProcessHisResultByMemory<DateTime>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Double:
+                        return ProcessHisResultByMemory<double>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Float:
+                        return ProcessHisResultByMemory<float>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Int:
+                        return ProcessHisResultByMemory<int>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Long:
+                        return ProcessHisResultByMemory<long>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Short:
+                        return ProcessHisResultByMemory<short>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.String:
+                        return ProcessHisResultByMemory<string>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.UInt:
+                        return ProcessHisResultByMemory<uint>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.ULong:
+                        return ProcessHisResultByMemory<ulong>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.UShort:
+                        return ProcessHisResultByMemory<ushort>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.IntPoint:
+                        return ProcessHisResultByMemory<int>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.UIntPoint:
+                        return ProcessHisResultByMemory<uint>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.IntPoint3:
+                        return ProcessHisResultByMemory<IntPoint3Data>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.UIntPoint3:
+                        return ProcessHisResultByMemory<UIntPoint3Data>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.LongPoint:
+                        return ProcessHisResultByMemory<LongPointData>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.ULongPoint:
+                        return ProcessHisResultByMemory<ULongPointTag>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.LongPoint3:
+                        return ProcessHisResultByMemory<LongPoint3Data>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.ULongPoint3:
+                        return ProcessHisResultByMemory<ULongPoint3Data>(res, tp) as HisQueryResult<T>;
+                }
+
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <param name="span"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public HisQueryResult<T> QueryHisDataByIgnorSystemExit<T>(int id, DateTime stime, DateTime etime, TimeSpan span, Cdy.Tag.QueryValueMatchType type)
+        {
+            if (IsConnected)
+            {
+                var res = mUsedHisClient.QueryHisValueForTimeSpanByIgnorSystemExit(id, stime, etime, span, type, 120000);
                 if (res == null || res.Handles == null || res.Handles.Count == 0) return null;
                 TagType tp = (TagType)res.ReadByte();
                 switch (tp)
@@ -905,7 +1086,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                var res = mUsedHisClient.QueryHisValueAtTimes(id, times, type);
+                var res = mUsedHisClient.QueryHisValueAtTimes(id, times, type, 120000);
                 if (res == null || res.Handles == null || res.Handles.Count == 0) return null;
                 TagType tp = (TagType)res.ReadByte();
                 switch (tp)
@@ -956,6 +1137,70 @@ namespace DBRuntime.Proxy
             return null;
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public HisQueryResult<T> QueryHisDataByIgnorSystemExit<T>(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType type)
+        {
+            if (IsConnected)
+            {
+                var res = mUsedHisClient.QueryHisValueAtTimesByIgnorSystemExit(id, times, type, 120000);
+                if (res == null || res.Handles == null || res.Handles.Count == 0) return null;
+                TagType tp = (TagType)res.ReadByte();
+                switch (tp)
+                {
+                    case Cdy.Tag.TagType.Bool:
+                        return ProcessHisResultByMemory<bool>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Byte:
+                        return ProcessHisResultByMemory<byte>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.DateTime:
+                        return ProcessHisResultByMemory<DateTime>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Double:
+                        return ProcessHisResultByMemory<double>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Float:
+                        return ProcessHisResultByMemory<float>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Int:
+                        return ProcessHisResultByMemory<int>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Long:
+                        return ProcessHisResultByMemory<long>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.Short:
+                        return ProcessHisResultByMemory<short>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.String:
+                        return ProcessHisResultByMemory<string>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.UInt:
+                        return ProcessHisResultByMemory<uint>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.ULong:
+                        return ProcessHisResultByMemory<ulong>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.UShort:
+                        return ProcessHisResultByMemory<ushort>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.IntPoint:
+                        return ProcessHisResultByMemory<IntPointData>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.UIntPoint:
+                        return ProcessHisResultByMemory<UIntPointData>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.IntPoint3:
+                        return ProcessHisResultByMemory<IntPoint3Data>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.UIntPoint3:
+                        return ProcessHisResultByMemory<UIntPoint3Data>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.LongPoint:
+                        return ProcessHisResultByMemory<LongPointData>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.ULongPoint:
+                        return ProcessHisResultByMemory<ULongPointTag>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.LongPoint3:
+                        return ProcessHisResultByMemory<LongPoint3Data>(res, tp) as HisQueryResult<T>;
+                    case Cdy.Tag.TagType.ULongPoint3:
+                        return ProcessHisResultByMemory<ULongPoint3Data>(res, tp) as HisQueryResult<T>;
+                }
+
+            }
+            return null;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -968,7 +1213,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-              return mUsedHisClient.FindNumberTagAvgValue(id, startTime, endTime);
+              return mUsedHisClient.FindNumberTagAvgValue(id, startTime, endTime, 120000);
             }
             return null;
         }
@@ -985,7 +1230,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                return mUsedHisClient.FindNumberTagMaxMinValue(id, startTime, endTime, type);
+                return mUsedHisClient.FindNumberTagMaxMinValue(id, startTime, endTime, type, 120000);
             }
             return null;
         }
@@ -1003,7 +1248,7 @@ namespace DBRuntime.Proxy
         {
             if(IsConnected)
             {
-                return mUsedHisClient.FindNumberTagValue(id, startTime, endTime,type,value,interval);
+                return mUsedHisClient.FindNumberTagValue(id, startTime, endTime,type,value,interval, 120000);
             }
             return null;
         }
@@ -1021,7 +1266,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                return mUsedHisClient.FindNumberTagValueDuration(id, startTime, endTime, type, value,interval);
+                return mUsedHisClient.FindNumberTagValueDuration(id, startTime, endTime, type, value,interval, 120000);
             }
             return null;
         }
@@ -1039,7 +1284,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                return mUsedHisClient.FindNumberTagValues(id, startTime, endTime, type, value,interval);
+                return mUsedHisClient.FindNumberTagValues(id, startTime, endTime, type, value,interval, 120000);
             }
             return null;
         }
@@ -1056,7 +1301,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                return mUsedHisClient.FindNoNumberTagValue(id, startTime, endTime, value);
+                return mUsedHisClient.FindNoNumberTagValue(id, startTime, endTime, value, 120000);
             }
             return null;
         }
@@ -1073,7 +1318,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                return mUsedHisClient.FindNoNumberTagValues(id, startTime, endTime, value);
+                return mUsedHisClient.FindNoNumberTagValues(id, startTime, endTime, value, 120000);
             }
             return null;
         }
@@ -1090,7 +1335,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                return mUsedHisClient.FindNoNumberTagValueDuration(id, startTime, endTime, value);
+                return mUsedHisClient.FindNoNumberTagValueDuration(id, startTime, endTime, value, 120000);
             }
             return null;
         }
@@ -1108,7 +1353,7 @@ namespace DBRuntime.Proxy
         {
             if(IsConnected)
             {
-                return mUsedHisClient.ModifyHisValue(id,type,user,msg,values);
+                return mUsedHisClient.ModifyHisValue(id,type,user,msg,values, 120000);
             }
             return false;
         }
@@ -1126,7 +1371,7 @@ namespace DBRuntime.Proxy
         {
             if (IsConnected)
             {
-                return mUsedHisClient.DeleteHisValue(id,user,msg,stime,etime);
+                return mUsedHisClient.DeleteHisValue(id,user,msg,stime,etime, 120000);
             }
             return false;
         }
@@ -1140,7 +1385,7 @@ namespace DBRuntime.Proxy
         {
             if(IsConnected)
             {
-                return dbClient.ResetTagToLastValue(id);
+                return dbClient.ResetTagToLastValue(id, 120000);
             }
             return false;
         }

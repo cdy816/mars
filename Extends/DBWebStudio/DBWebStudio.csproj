@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>mrdbws.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="wwwroot\InnerJS\**" />
+    <Content Remove="wwwroot\InnerJS\**" />
+    <EmbeddedResource Remove="wwwroot\InnerJS\**" />
+    <None Remove="wwwroot\InnerJS\**" />
+    <TypeScriptCompile Remove="wwwroot\InnerJS\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Output" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Remove="InnerJS\InnerHelper.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="mrdbws.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="InnerJS\InnerHelper.ts" />
+  </ItemGroup>
+
+
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.18.1" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.42.0" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Develop\DBDevelopClientApi\DBDevelopClientApi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Cdy.Tag">
+      <HintPath>ReferenceDlls\Cdy.Tag.dll</HintPath>
+    </Reference>
+    <Reference Include="Cdy.Tag.Common">
+      <HintPath>ReferenceDlls\Cdy.Tag.Common.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="mars.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

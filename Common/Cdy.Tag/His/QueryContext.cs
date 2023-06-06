@@ -4,10 +4,18 @@ using System.Text;
 
 namespace Cdy.Tag
 {
+    public class QueryContextBase : Dictionary<string, object>, IDisposable
+    {
+        public virtual void Dispose()
+        {
+            this.Clear();
+        }
+    }
+
     /// <summary>
     /// 
     /// </summary>
-    public  class QueryContext:Dictionary<string, object>,IDisposable
+    public class QueryContext: QueryContextBase
     {
         /// <summary>
         /// 
@@ -55,6 +63,22 @@ namespace Cdy.Tag
 
         public byte FirstQuality { get; set; }
 
+        /// <summary>
+        /// 忽略结束质量戳
+        /// </summary>
+        public bool IgnorCloseQuality { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool HasExitedQuality { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
         public void RegistorLastFileKeyHisValue<T>(string key,object value)
         {
             if(mFileCachKeyValues.ContainsKey(key))
@@ -264,7 +288,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             foreach(var key in mCachKeyValues)
             {

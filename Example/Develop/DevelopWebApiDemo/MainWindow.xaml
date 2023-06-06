@@ -26,7 +26,20 @@
         <Button x:Name="newitag" Content="新建Int变量" HorizontalAlignment="Left" Margin="109,0,0,0" Grid.Row="1" VerticalAlignment="Center" Click="newitag_Click"/>
         <TextBox x:Name="itagname" HorizontalAlignment="Left" Margin="299,0,0,0" Grid.Row="1" TextWrapping="Wrap" Text="itag1" VerticalAlignment="Center" Width="172"/>
         <Label Content="变量名称:" HorizontalAlignment="Left" Margin="219,0,0,0" Grid.Row="1" VerticalAlignment="Center"/>
-        <Button x:Name="saveb" Content="数据库保存" HorizontalAlignment="Left" Margin="109,264,0,0" Grid.Row="1" VerticalAlignment="Top" Click="saveb_Click" Height="39" Width="94"/>
+        <Button x:Name="saveb" Content="数据库保存" HorizontalAlignment="Left" Margin="109,317,0,0" Grid.Row="1" VerticalAlignment="Top" Click="saveb_Click" Height="39" Width="94"/>
+        <Button x:Name="startdb" Content="启动数据库" HorizontalAlignment="Left" Margin="238,322,0,0" Grid.Row="1" VerticalAlignment="Top" Height="20" Width="67" Click="startdb_Click"/>
+        <Button x:Name="newdbgroup" Content="新建变量组" HorizontalAlignment="Left" Margin="109,257,0,0" Grid.Row="1" VerticalAlignment="Top" Click="newdbgroup_Click"/>
+        <TextBox x:Name="groupname" HorizontalAlignment="Left" Margin="300,257,0,0" Grid.Row="1" TextWrapping="Wrap" Text="itag1" VerticalAlignment="Top" Width="172"/>
+        <Label Content="变量组名称:" HorizontalAlignment="Left" Margin="219,254,0,0" Grid.Row="1" VerticalAlignment="Top"/>
+        <Button x:Name="getdriversetting" Content="获取驱动配置" HorizontalAlignment="Left" Margin="334,322,0,0" Grid.Row="1" VerticalAlignment="Top" Height="20" Width="85" Click="getdriversetting_Click"/>
+        <Button x:Name="getproxyapisetting" Content="获取ProxyAPI配置" HorizontalAlignment="Left" Margin="436,322,0,0" Grid.Row="1" VerticalAlignment="Top" Height="20" Width="125" Click="getproxyapisetting_Click"/>
+        <Button x:Name="updatedriversetting" Content="更新驱动配置" HorizontalAlignment="Left" Margin="334,360,0,0" Grid.Row="1" VerticalAlignment="Top" Height="20" Width="85" Click="updatedriversetting_Click"/>
+        <Button x:Name="updateproxyapisetting" Content="更新ProxyAPI配置" HorizontalAlignment="Left" Margin="436,360,0,0" Grid.Row="1" VerticalAlignment="Top" Height="20" Width="125" Click="updateproxyapisetting_Click"/>
+        <Button x:Name="modifyUser" Content="修改密码" HorizontalAlignment="Left" Margin="589,257,0,0" Grid.Row="1" VerticalAlignment="Top" Height="19" Width="94" Click="modifyUser_Click"/>
+        <TextBox x:Name="pwd" HorizontalAlignment="Left" Margin="589,223,0,0" Grid.Row="1" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120"/>
+        <TextBlock HorizontalAlignment="Left" Margin="589,192,0,0" Grid.Row="1" TextWrapping="Wrap" Text="新密码:" VerticalAlignment="Top"/>
+        <Button x:Name="getpermission" Content="获取权限配置" HorizontalAlignment="Left" Margin="594,322,0,0" Grid.Row="1" VerticalAlignment="Top" Height="20" Width="125" Click="getpermission_Click"/>
+        <Button x:Name="getcurrentuserconfig" Content="获取当前用户的配置信息" HorizontalAlignment="Left" Margin="589,360,0,0" Grid.Row="1" VerticalAlignment="Top" Height="20" Width="125" Click="getcurrentuserconfig_Click"/>
 
     </Grid>
 </Window>

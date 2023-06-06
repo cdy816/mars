@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace Cdy.Tag
@@ -47,7 +48,11 @@ namespace Cdy.Tag
 
         static LoggerService()
         {
-            Name = System.Reflection.Assembly.GetEntryAssembly().GetName().Name;
+            Name = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name;
+            if (string.IsNullOrEmpty(Name))
+            {
+                Name = Assembly.GetExecutingAssembly()?.GetName().Name;
+            }
         }
 
         #endregion ...Constructor...

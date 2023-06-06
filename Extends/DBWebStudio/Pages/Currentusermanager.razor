@@ -1,0 +1,73 @@
+﻿@page "/currentusermanager"
+@inject MarsProxy mProxy;
+@inject IJSRuntime JS;
+
+<title>当前用户修改</title>
+<div class="d-flex h-100 flex-column">
+    <div class="card  text-light" style="background-color:rgba(100,100,100,0.2)">
+        <div class="card-header">
+            @mCurrentUser 修改
+        </div>
+    </div>
+    <div class="card text-light flex-fill mt-1" style="background-color:rgba(100,100,100,0.2);height:300px">
+        <div class="col-3 input-group mb-3 mx-1 my-1" style="width:300px">
+            <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon5">密码</span>
+            <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-1" placeholder="密码" @bind=@mCurrentPassword />
+        </div>
+
+        <div class="col-3 input-group mb-3 mx-1 my-1" style="width:300px">
+            <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon5">新密码</span>
+            <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-1" placeholder="新密码" @bind=@mNewPassword />
+        </div>
+
+        <div class="col-3 input-group mb-3 mx-1 my-1" style="width:300px">
+            <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon5">新密码确认</span>
+            <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-1" placeholder="新密码确认" @bind=@mNewPasswordConfirm />
+        </div>
+
+        <button type="button" class="btn btn-success ms-1 px-2" style="width:300px" onclick="@(()=>ModifyPassword())">修改</button>
+    </div>
+</div>
+@code {
+    private string mCurrentUser;
+
+    private string mCurrentPassword;
+
+    private string mNewPassword;
+
+    private string mNewPasswordConfirm;
+
+    private async void Alert(string msg)
+    {
+        if (helper == null)
+        {
+            helper = new InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+        helper.Alert(msg);
+    }
+
+    InnerJsHelper helper;
+
+    private void ModifyPassword()
+    {
+        if (mNewPassword != mNewPasswordConfirm)
+        {
+            Alert("密码确认不一致!");
+        }
+
+        if(mProxy.ModifyUserPassword(mCurrentPassword,mNewPassword))
+        {
+            Alert("修改成功!");
+        }
+        else
+        {
+            Alert("当前密码不正确,修改失败!");
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        mCurrentUser = mProxy.CurrentUser;
+    }
+}

@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "DirectAccessMqtt": {
+      "commandName": "Project"
+    },
+    "配置文件 1": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\cdy81\\Dev\\dpmars\\Output\\DirectAccessMqtt.exe"
+    }
+  }
+}

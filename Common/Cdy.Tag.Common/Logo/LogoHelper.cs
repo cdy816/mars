@@ -49,8 +49,7 @@ namespace Cdy.Tag
         public static void PrintAuthor()
         {
             Console.WriteLine(new StreamReader(typeof(LogoHelper).Assembly.GetManifestResourceStream("Cdy.Tag.Common.Logo.Author.txt")).ReadToEnd());
-            Console.WriteLine("Created by chongdaoyang.Powered by dotnet5.");
-            Console.WriteLine("cooperative partner: xulin .");
+            Console.WriteLine("Created by chongdaoyang.Powered by dotnet6.");
         }
 
         #endregion ...Methods...

@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -18,7 +19,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public unsafe class HisQueryResult<T>:IDisposable
+    public unsafe class HisQueryResult<T>:IDisposable, IHisQueryResult
     {
 
         #region ... Variables  ...
@@ -47,7 +48,7 @@ namespace Cdy.Tag
 
         private int mSize;
 
-        private List<string> mStringCach;
+        //private List<string> mStringCach;
 
         #endregion ...Variables...
 
@@ -122,7 +123,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public SortedDictionary<DateTime,int> TimeIndex { get; set; }
+        public IDictionary<DateTime,int> TimeIndex { get; set; }
 
 
         #endregion ...Properties...
@@ -248,7 +249,7 @@ namespace Cdy.Tag
                 case TypeCode.Object:
                 case TypeCode.DateTime:
                     return false;
-                case TypeCode.Byte:
+                default:
                     try
                     {
                         return Convert.ToBoolean(value);
@@ -276,7 +277,7 @@ namespace Cdy.Tag
                 case TypeCode.Object:
                 case TypeCode.DateTime:
                     return 0;
-                case TypeCode.Byte:
+                default:
                     try
                     {
                         return Convert.ToByte(value);
@@ -304,7 +305,7 @@ namespace Cdy.Tag
                 case TypeCode.Object:
                 case TypeCode.DateTime:
                     return 0;
-                case TypeCode.Byte:
+                default:
                     try
                     {
                         return Convert.ToInt16(value);
@@ -327,7 +328,7 @@ namespace Cdy.Tag
                 case TypeCode.Object:
                 case TypeCode.DateTime:
                     return 0;
-                case TypeCode.Byte:
+                default:
                     try
                     {
                         return Convert.ToUInt16(value);
@@ -351,7 +352,7 @@ namespace Cdy.Tag
                 case TypeCode.Object:
                 case TypeCode.DateTime:
                     return 0;
-                case TypeCode.Byte:
+                default:
                     try
                     {
                         return Convert.ToInt32(value);
@@ -374,7 +375,7 @@ namespace Cdy.Tag
                 case TypeCode.Object:
                 case TypeCode.DateTime:
                     return 0;
-                case TypeCode.Byte:
+                default:
                     try
                     {
                         return Convert.ToUInt32(value);
@@ -398,7 +399,7 @@ namespace Cdy.Tag
                     return 0;
                 case TypeCode.DateTime:
                     return ((DateTime)(value)).Ticks;
-                case TypeCode.Byte:
+                default:
                     try
                     {
                         return Convert.ToInt64(value);
@@ -427,7 +428,7 @@ namespace Cdy.Tag
                     return 0;
                 case TypeCode.DateTime:
                     return (ulong)((DateTime)(value)).Ticks;
-                case TypeCode.Byte:
+                default:
                     try
                     {
                         return Convert.ToUInt64(value);
@@ -455,7 +456,7 @@ namespace Cdy.Tag
                 case TypeCode.Object:
                 case TypeCode.DateTime:
                     return 0;
-                case TypeCode.Byte:
+                default:
                     try
                     {
                         return Convert.ToDouble(value);
@@ -478,7 +479,7 @@ namespace Cdy.Tag
                 case TypeCode.Object:
                 case TypeCode.DateTime:
                     return 0;
-                case TypeCode.Byte:
+                default:
                     try
                     {
                         return Convert.ToSingle(value);
@@ -792,12 +793,25 @@ namespace Cdy.Tag
             LastTime = LastTime < time ? time : LastTime;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void FillDatetime()
         {
             foreach(var vv in TimeIndex)
             {
                 MemoryHelper.WriteDateTime((void*)handle, vv.Value * 8 + mTimeAddr, vv.Key);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time"></param>
+        /// <param name="ind"></param>
+        public void FillDatetime(DateTime time,int ind)
+        {
+            MemoryHelper.WriteDateTime((void*)handle, ind * 8 + mTimeAddr, time);
         }
 
         /// <summary>
@@ -906,7 +920,6 @@ namespace Cdy.Tag
             }
         }
 
-
         public void Add(short value, DateTime time, byte qulity)
         {
             if (TimeIndex != null)
@@ -1000,7 +1013,6 @@ namespace Cdy.Tag
             }
         }
 
-
         public void Add(uint value, DateTime time, byte qulity)
         {
             if (TimeIndex != null)
@@ -1032,7 +1044,6 @@ namespace Cdy.Tag
             }
         }
 
-
         public void Add(long value, DateTime time, byte qulity)
         {
             if (TimeIndex != null)
@@ -1063,7 +1074,6 @@ namespace Cdy.Tag
                 LastTime = time;
             }
         }
-
 
         public void Add(ulong value, DateTime time, byte qulity)
         {
@@ -1888,7 +1898,13 @@ namespace Cdy.Tag
 
                     var pos = index * 256;
                     var len = MemoryHelper.ReadByte((void*)handle, pos);
-                    re = new string((sbyte*)handle, pos + 1, len, Encoding.Unicode);
+                    var vstr = new string((sbyte*)handle, pos + 1, len, Encoding.Unicode);
+                    var vid = vstr.IndexOf('\0');
+                    if (vstr.Length > 0 && vid > 0)
+                    {
+                        vstr = vstr.Substring(0, vid);
+                    }
+                    re = vstr;
                     //if (mStringCach != null)
                     //{
                     //     re = mStringCach[index];
@@ -1975,6 +1991,20 @@ namespace Cdy.Tag
                 {
                     yield return new TagHisValue<T>() { Value = val,Quality=qua,Time=time };
                 }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<object> ListAllValues()
+        {
+            int count = this.Count;
+            for (int i = 0; i < count; i++)
+            {
+                var val = GetValue(i, out DateTime time, out byte qua);
+                yield return val;
             }
         }
 
@@ -2198,6 +2228,17 @@ namespace Cdy.Tag
         public void Dispose()
         {
             Marshal.FreeHGlobal(handle);
+            this.TimeIndex = null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        object IHisQueryResult.GetValue(int index)
+        {
+            return (object)this.GetValue(index);
         }
 
         #endregion ...Methods...
@@ -2206,4 +2247,32 @@ namespace Cdy.Tag
 
         #endregion ...Interfaces...
     }
+
+
+    public interface IHisQueryResult
+    {
+        int Count { get; set; }
+
+        object GetValue(int index);
+        
+        DateTime GetTime(int index);
+
+        byte GetQuality(int index);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="qulity"></param>
+        void Add(object value, DateTime time, byte qulity);
+
+        IEnumerable<DateTime> ListAllTimes();
+
+        IEnumerable<object> ListAllValues();
+
+        IEnumerable<byte> ListAllQualitys();
+
+    }
+
 }

@@ -147,6 +147,12 @@
   <data name="EndTime" xml:space="preserve">
     <value>结束时间</value>
   </data>
+  <data name="Export" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="ExportQuality" xml:space="preserve">
+    <value>导出质量戳</value>
+  </data>
   <data name="good" xml:space="preserve">
     <value>好</value>
   </data>
@@ -158,6 +164,9 @@
   </data>
   <data name="Id" xml:space="preserve">
     <value>编号</value>
+  </data>
+  <data name="IgnorClosedQuality" xml:space="preserve">
+    <value>忽略系统退出对数据拟合的影响</value>
   </data>
   <data name="Init" xml:space="preserve">
     <value>初始态</value>

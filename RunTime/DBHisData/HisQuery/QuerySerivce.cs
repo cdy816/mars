@@ -11,13 +11,16 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Xml.Linq;
+using Cdy.Tag.Interface;
 
 namespace Cdy.Tag
 {
     /// <summary>
     /// 
     /// </summary>
-    public class QuerySerivce: IHisQuery
+    public class QuerySerivce : IHisQuery,IDisposable
     {
         IHisQueryFromMemory mMemoryService;
 
@@ -25,7 +28,7 @@ namespace Cdy.Tag
 
 
         //private Dictionary<string,object> mFileLastValueCach = new Dictionary<string,object>();
-        
+
         //private Dictionary<string, object> mFileFirstValueCach = new Dictionary<string, object>();
 
 
@@ -97,7 +100,7 @@ namespace Cdy.Tag
         //    //}
 
         //    //从当前文件文件中读取
-        //    string sfile = DataFileInfo5Extend.ListDataFile2(datetime, tmp);
+        //    string sfile = DataFileInfo6Extend.ListDataFile2(datetime, tmp);
         //    if(!string.IsNullOrEmpty(sfile))
         //    {
         //        var obj = context.GetLastFileKeyHisValueRegistor(sfile);
@@ -109,7 +112,7 @@ namespace Cdy.Tag
         //        }
         //        else
         //        {
-        //            DataFileInfo5 dfile = new DataFileInfo5() { FileName = sfile, IsZipFile = sfile.EndsWith(DataFileManager.ZipDataFile2Extends) };
+        //            DataFileInfo6 dfile = new DataFileInfo6() { FileName = sfile, IsZipFile = sfile.EndsWith(DataFileManager.ZipDataFile2Extends) };
         //            using (var dsf = dfile.GetFileSeriser())
         //            {
         //                for (int i = 47; i >= 0; i--)
@@ -138,7 +141,7 @@ namespace Cdy.Tag
         //    }
 
         //    //从之前的文件中读取
-        //    foreach (var vv in DataFileInfo5Extend.ListPreviewDataFiles2(datetime,tmp))
+        //    foreach (var vv in DataFileInfo6Extend.ListPreviewDataFiles2(datetime,tmp))
         //    {
         //        var obj = context.GetLastFileKeyHisValueRegistor(vv);
         //        if (obj != null)
@@ -155,7 +158,7 @@ namespace Cdy.Tag
         //        }
         //        else
         //        {
-        //            DataFileInfo5 dfile = new DataFileInfo5() { FileName = vv, IsZipFile = vv.EndsWith(DataFileManager.ZipDataFile2Extends) };
+        //            DataFileInfo6 dfile = new DataFileInfo6() { FileName = vv, IsZipFile = vv.EndsWith(DataFileManager.ZipDataFile2Extends) };
         //            using (var dsf = dfile.GetFileSeriser())
         //            {
         //                for (int i = 47; i >= 0; i--)
@@ -180,7 +183,7 @@ namespace Cdy.Tag
         //                context.RegistorLastFileKeyHisValue<T>(vv,TagHisValue<T>.Empty);
         //            }
         //        }
-                
+
 
         //    }
         //    return tobj;
@@ -196,7 +199,7 @@ namespace Cdy.Tag
         //{
         //    object tobj = null;
         //    string tmp = Database + ((int)(id / 100000)).ToString("X3") + "{0}{1}{2}04{3}.dbd2";
-        //    foreach (var vv in DataFileInfo5Extend.ListNextDataFiles2(datetime, tmp))
+        //    foreach (var vv in DataFileInfo6Extend.ListNextDataFiles2(datetime, tmp))
         //    {
         //        var obj = context.GetFirstFileKeyHisValueRegistor(vv);
         //        if (obj != null)
@@ -213,7 +216,7 @@ namespace Cdy.Tag
         //        }
         //        else
         //        {
-        //            DataFileInfo5 dfile = new DataFileInfo5() { FileName = vv, IsZipFile = vv.EndsWith(DataFileManager.ZipDataFile2Extends) };
+        //            DataFileInfo6 dfile = new DataFileInfo6() { FileName = vv, IsZipFile = vv.EndsWith(DataFileManager.ZipDataFile2Extends) };
         //            using (var dsf = dfile.GetFileSeriser())
         //            {
         //                for (int i = 0; i <= 47; i++)
@@ -252,8 +255,35 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValue<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
         {
-            ReadValueByUTCTime<T>(id, times.Select(e => e.ToUniversalTime()), type, result);
+            ReadValueByUTCTimeInner<T>(id, times.Select(e => e.ToUniversalTime()), type, result);
             result.ConvertUTCTimeToLocal();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        public void ReadValueIgnorClosedQuality<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
+        {
+            ReadValueByUTCTimeInner<T>(id, times.Select(e => e.ToUniversalTime()), type, result, true);
+            result.ConvertUTCTimeToLocal();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        public void ReadValueByUTCTimeIgnorClosedQuality<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
+        {
+            ReadValueByUTCTimeInner<T>(id, times, type, result, true);
         }
 
         /// <summary>
@@ -266,57 +296,204 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         public void ReadValueByUTCTime<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result)
         {
+            ReadValueByUTCTimeInner<T>(id, times, type, result);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        /// <param name="ignorClosedQuality"></param>
+        private void ReadValueByUTCTimeInner<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result,bool ignorClosedQuality=false)
+        {
             Stopwatch sw = Stopwatch.StartNew();
             sw.Start();
 
             QueryContext ctx = new QueryContext();
+            ctx.IgnorCloseQuality= ignorClosedQuality;
 
             ctx.Add("IHisQuery", this);
 
-            SortedDictionary<DateTime, int> mtimes = new SortedDictionary<DateTime, int>();
+            Dictionary<DateTime, int> mtimes = new Dictionary<DateTime, int>();
 
             int i = 0;
-            foreach (var item in times)
-            {
-                mtimes.Add(item, i);
-                i++;
-            }
+            //foreach (var item in times)
+            //{
+            //    mtimes.Add(item, i);
+            //    i++;
+            //}
 
             long ttmp0 = sw.ElapsedMilliseconds;
 
-            result.TimeIndex = mtimes;
-            result.FillDatetime();
-            result.FillQuality();
-
-            List<DateTime> ltmp = new List<DateTime>();
+            TimeValueDictionary mFileTimes = new TimeValueDictionary();
             List<DateTime> mMemoryTimes = new List<DateTime>();
+            List<DateTime> mEmptyTimes = new List<DateTime>();
+
+            List<DateTime> mAHeadTimes = new List<DateTime>();
+
+            var fm = GetFileManager();
+
+            string sname = Database + (id / fm.TagCountOneFile);
             //判断数据是否在内存中
             if (IsCanQueryFromMemory())
             {
+                mMemoryService.LockMemoryFile();
+                var vtime = mMemoryService.GetMemoryTimer(id);
+
                 foreach (var vv in times)
                 {
-                    if (!mMemoryService.CheckTime(id, vv))
+                    try
                     {
-                        ltmp.Add(vv);
+                        if (vtime != null)
+                        {
+                            if (vv >= vtime.Item1 && vv < vtime.Item2)
+                            {
+                                mMemoryTimes.Add(vv);
+                            }
+                            else
+                            {
+                                //if (vv >= vtime.Item2 || fm.CheckDataInLogFile(vv, sname))
+                                if (vv >= vtime.Item2)
+                                {
+                                    mAHeadTimes.Add(vv);
+                                   // mEmptyTimes.Add(vv);
+                                }
+                                else
+                                {
+                                    mFileTimes.AppendTime(vv);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (fm.CheckDataInLogFile(vv, sname))
+                            {
+                                mEmptyTimes.Add(vv);
+                            }
+                            else
+                            {
+                                mFileTimes.AppendTime(vv);
+                            }
+                        }
+                        //if (!mMemoryService.CheckTime(id, vv,out bool isgreat))
+                        //{
+                        //    //ltmp.AppendTime(vv);
+                        //    if (isgreat || fm.CheckDataInLogFile(vv, sname))
+                        //    {
+                        //        mLogTimes.Add(vv);
+                        //    }
+                        //    else
+                        //    {
+                        //        ltmp.AppendTime(vv);
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    mMemoryTimes.Add(vv);
+                        //}
                     }
-                    else
+                    catch
                     {
-                        mMemoryTimes.Add(vv);
+
                     }
+                    result.FillDatetime(vv, i);
+                    mtimes.Add(vv, i);
+                    i++;
                 }
             }
             else
             {
-                ltmp.AddRange(times);
+                foreach(var vv in times)
+                {
+                    try
+                    {
+                        if (fm.CheckDataInLogFile(vv, sname))
+                        {
+                            mEmptyTimes.Add(vv);
+                        }
+                        else
+                        {
+                            mFileTimes.AppendTime(vv);
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                    //mtimes.Add(vv, i);
+                    result.FillDatetime(vv,i);
+                    mtimes.Add(vv, i);
+                    i++;
+                }
             }
+
+            result.TimeIndex = mtimes;
+            //result.FillDatetime();
+            result.FillQuality();
 
             long ttmp1 = sw.ElapsedMilliseconds;
 
-            List<DateTime> mLogTimes = new List<DateTime>();
-            var vfiles = GetFileManager().GetDataFiles(ltmp, mLogTimes, id);
+            var vfiles = fm.GetDataFiles(mFileTimes, mEmptyTimes, id);
+
+            string msg = "";
+            if (mMemoryTimes.Count > 0)
+            {
+                msg = $"从内存读取数据个数 {mMemoryTimes.Count} 时间范围: {mMemoryTimes[0].ToLocalTime()}  -- {mMemoryTimes[mMemoryTimes.Count - 1].ToLocalTime()};";
+            }
+            else
+            {
+                msg = "从内存读取数据个数为空;";
+            }
+
+            if(mFileTimes.Count>0)
+            {
+                msg += $"从文件读取个数 {mFileTimes.Count} 时间范围:{mFileTimes.First().Value.First().Value.First().ToLocalTime()} -- {mFileTimes.Last().Value.Last().Value.Last().ToLocalTime()};";
+            }
+            else
+            {
+                msg += "从文件读取数据个数为空;";
+            }
+
+
+            if (mAHeadTimes.Count > 0)
+            {
+                msg += $"超出最新时间拟合个数 {mAHeadTimes.Count} 时间范围: {mAHeadTimes.First().ToLocalTime()} -- {mAHeadTimes.Last().ToLocalTime()};";
+            }
+            else
+            {
+                msg += "超出最新时间拟合个数为空;";
+            }
+
+            if(mEmptyTimes.Count > 0)
+            {
+                msg += $"空数据拟合个数:{mEmptyTimes.Count}";
+            }
+
+            LoggerService.Service.Info("QueryService", msg);
+
+            //var vfiles = GetFileManager().GetDataFiles(ltmp, mLogTimes, id);
+
+            ////介于内存时间和存盘的最后时间之间的时间
+            //List<DateTime> mMemoryDiskTimes = new List<DateTime>();
+
+            //if (IsCanQueryFromMemory() && vfiles.Count > 0 && mMemoryTimes.Count > 0)
+            //{
+            //    foreach (var vv in mLogTimes.Where(e => e < mMemoryTimes[0] && e > vfiles.First().Key))
+            //    {
+            //        mMemoryDiskTimes.Add(vv);
+            //    }
+            //    foreach (var vv in mMemoryDiskTimes)
+            //    {
+            //        mLogTimes.Remove(vv);
+            //    }
+            //}
 
             IDataFile mPreFile = null;
-
+            IDataFile mLastFile = null;
             List<DateTime> mtime = new List<DateTime>();
 
             //从历史文件中读取数据
@@ -334,16 +511,17 @@ namespace Cdy.Tag
                         }
                         else if (mPreFile is DataFileInfo4)
                             (mPreFile as DataFileInfo4).Read<T>(id, mtime, type, result);
-                        else if (mPreFile is DataFileInfo5)
+                        else if (mPreFile is DataFileInfo6)
                         {
-                            (mPreFile as DataFileInfo5).Read(id, mtime, type, result,ctx);
+                            (mPreFile as DataFileInfo6).Read(id, mtime, type, result,ctx);
                         }
+                        mLastFile = mPreFile;
                         mPreFile = null;
                         mtime.Clear();
                     }
                     result.Add(default(T), vv.Key, (byte)QualityConst.Null);
                 }
-                else if (vv.Value != mPreFile)
+                else if (!vv.Value.Equals(mPreFile))
                 {
                     if (mPreFile != null)
                     {
@@ -352,10 +530,11 @@ namespace Cdy.Tag
                         if (mPreFile is HisDataFileInfo4) (mPreFile as HisDataFileInfo4).Read(id, mtime, type, result);
                         else if (mPreFile is DataFileInfo4)
                             (mPreFile as DataFileInfo4).Read<T>(id, mtime, type, result);
-                        else if (mPreFile is DataFileInfo5)
+                        else if (mPreFile is DataFileInfo6)
                         {
-                            (mPreFile as DataFileInfo5).Read<T>(id, mtime, type, result, ctx);
+                            (mPreFile as DataFileInfo6).Read<T>(id, mtime, type, result, ctx);
                         }
+                        mLastFile = mPreFile;
                     }
                     mPreFile = vv.Value;
                     mtime.Clear();
@@ -373,28 +552,184 @@ namespace Cdy.Tag
                 if (mPreFile is HisDataFileInfo4) (mPreFile as HisDataFileInfo4).Read(id, mtime, type, result);
                 else if (mPreFile is DataFileInfo4)
                     (mPreFile as DataFileInfo4).Read<T>(id, mtime, type, result);
-                else if (mPreFile is DataFileInfo5)
+                else if (mPreFile is DataFileInfo6)
                 {
-                    (mPreFile as DataFileInfo5).Read<T>(id, mtime, type, result, ctx);
+                    (mPreFile as DataFileInfo6).Read<T>(id, mtime, type, result, ctx);
                 }
+                mLastFile = mPreFile;
             }
 
             long ttmp2 = sw.ElapsedMilliseconds;
 
             if (IsCanQueryFromMemory())
             {
+                //if (mMemoryDiskTimes.Count > 0 && mLastFile!=null)
+                //{
+                //    FillMemoryDiskTimeValue(id, mMemoryDiskTimes, result, mLastFile,ctx, type);
+                //}
+
                 //从内存中读取数据
                 ReadFromMemory(id, mMemoryTimes, type, result,ctx,out DateTime dnow);
 
-                //FillNoneValues(id,mLogTimes,type,result,ctx,dnow);
+                FillAHeadValue(id, mAHeadTimes, type,  ctx,result);
+
+                //填充空的数据
+                FillNoneValue<T>(id, mEmptyTimes, type, ctx, result, dnow);
+
+                mMemoryService.UnLockMemoryFile();
             }
-            //else
+            else
             {
                 //填充空的数据
-                FillNoneValue(id, mLogTimes, type, result);
+                FillNoneValue<T>(id, mEmptyTimes, type,ctx, result,null);
             }
+
+            ctx.Dispose();
+
+            result.TimeIndex = null;
             sw.Stop();
+#if DEBUG
+            Debug.Print($"ReadValueByUTCTime 读取 {times.Count()} 个历史数据耗时 初始化:{ttmp1} 从文件读取:{ttmp2 - ttmp1} 从内存读取,填充空值:{sw.ElapsedMilliseconds - ttmp2} 总耗时:{sw.ElapsedMilliseconds} ms ");
+#endif
             LoggerService.Service.Info("QueryService", $"ReadValueByUTCTime 读取 {times.Count()} 个历史数据耗时 初始化:{ttmp1} 从文件读取:{ ttmp2-ttmp1} 从内存读取,填充空值:{sw.ElapsedMilliseconds - ttmp2} 总耗时:{ sw.ElapsedMilliseconds} ms ");
+
+            //LogHisQueryResult(result);
+        }
+
+        //private void LogHisQueryResult<T>(HisQueryResult<T> result)
+        //{
+        //    var ss = new System.IO.StreamWriter(System.IO.File.OpenWrite(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location) + "\\" + DateTime.Now.Ticks.ToString() + ".txt"));
+        //    for(int i=0;i<result.Count;i++)
+        //    {
+        //        var val = result.GetValue(i, out DateTime time, out byte qua);
+        //        ss.WriteLine($"{i} = {time} {val} {qua}");
+        //    }
+        //    ss.Close();
+        //}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="times"></param>
+        private void FillMemoryDiskTimeValue<T>(int id,List<DateTime> times, HisQueryResult<T> result,IDataFile file,QueryContext ctx, QueryValueMatchType type)
+        {
+            TagHisValue<T>? val = null;
+            //object vtmp = ctx.GetLastFileKeyHisValueRegistor(file.FileName);
+            //if(vtmp == null)
+            //{
+                var vtmp = (file as DataFileInfo6).ReadFileLastAvaiableValue<T>(id, ctx);
+                if (vtmp != null)
+                {
+                    val = (TagHisValue<T>)vtmp;
+                }
+                else
+                {
+                    val = null;
+                }
+            //}
+            //else
+            //{
+            //    val = (TagHisValue<T>)vtmp;
+            //}
+
+            var memorylastValue = mMemoryService.GetStartValue<T>(id, out DateTime time, out byte qualiry);
+            foreach (var vtime in times)
+            {
+                switch (type)
+                {
+                    case QueryValueMatchType.Previous:
+                        if (val.HasValue)
+                        {
+                            result.Add(val.Value.Value, vtime, val.Value.Quality);
+                        }
+                        else
+                        {
+                            result.Add(default(T), vtime, (byte)QualityConst.Null);
+                        }
+                        break;
+                    case QueryValueMatchType.After:
+                        if (memorylastValue!=null)
+                        {
+                            result.Add(memorylastValue, vtime, qualiry);
+                        }
+                        else
+                        {
+                            result.Add(default(T), vtime, (byte)QualityConst.Null);
+                        }
+                        break;
+                    case QueryValueMatchType.Linear:
+                        if (val.HasValue && memorylastValue!=null)
+                        {
+                            if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
+                            {
+                                var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                                var ffval = (time - vtime).TotalMilliseconds;
+
+                                if (ppval < ffval)
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+
+                                    result.Add(memorylastValue, vtime, qualiry);
+                                }
+                            }
+                            else
+                            {
+                                if (!IsBadQuality(qualiry) && !IsBadQuality(val.Value.Quality))
+                                {
+                                    var pval1 = (vtime - val.Value.Time).TotalMilliseconds;
+                                    var tval1 = (time - val.Value.Time).TotalMilliseconds;
+                                    var sval1 = val.Value.Value;
+                                    var sval2 = memorylastValue;
+
+                                    var val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+
+                                    result.Add((object)val1, vtime, (pval1 / tval1)>0.5 ? qualiry : val.Value.Quality);
+                                }
+                                else if (!IsBadQuality(qualiry))
+                                {
+                                    result.Add(mMemoryService, vtime, qualiry);
+                                }
+                                else if (!IsBadQuality(val.Value.Quality))
+                                {
+                                    result.Add(val.Value.Value, vtime, val.Value.Quality);
+                                }
+                                else
+                                {
+                                    result.Add(default(T), vtime, (byte)QualityConst.Null);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            result.Add(default(T), vtime, (byte)QualityConst.Null);
+                        }
+                        break;
+                    case QueryValueMatchType.Closed:
+                        if (val.HasValue)
+                        {
+                            var ppval = (vtime - val.Value.Time).TotalMilliseconds;
+                            var fval = (time - vtime).TotalMilliseconds;
+
+                            if (ppval < fval)
+                            {
+                                result.Add(val.Value.Value, vtime, val.Value.Quality);
+                            }
+                            else
+                            {
+                                result.Add(memorylastValue, vtime, qualiry);
+                            }
+                        }
+                        else
+                        {
+                            result.Add(default(T), vtime, (byte)QualityConst.Null);
+                        }
+                        break;
+                }
+            }
+
         }
 
         ///// <summary>
@@ -719,6 +1054,56 @@ namespace Cdy.Tag
             timelimite = dt;
         }
 
+        private DateTime GetTimeKey(DateTime time)
+        {
+            return new DateTime(time.Year, time.Month, time.Day, ((int)(time.Hour / FileDuration))*FileDuration, 0, 0);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="mTimes"></param>
+        /// <param name="type"></param>
+        /// <param name="context"></param>
+        /// <param name="result"></param>
+        private void FillAHeadValue<T>(int id, List<DateTime> mTimes, QueryValueMatchType type, QueryContext context, HisQueryResult<T> result)
+        {
+            //if (type != QueryValueMatchType.Previous) return;
+            
+            if (mTimes.Count == 0) return;
+
+            object mlastvalue = context.ContainsKey("MemoryLastValue") ? context["MemoryLastValue"] : null;
+            byte mlastquality = context.ContainsKey("MemoryLastQuality") ? (byte)context["MemoryLastQuality"] : (byte)0;
+
+            if(mlastvalue==null)
+            {
+                var preval = this.ReadFileLastValue<T>(id, mTimes[0], context);
+                TagHisValue<T>? pval = null;
+                if (preval != null)
+                    pval = (TagHisValue<T>)preval;
+                if (mTimes.Count > 0)
+                {
+                    foreach (var vv in mTimes)
+                    {
+                        result.Add(pval.Value.Value, vv, pval.Value.Quality);
+                    }
+                }
+            }
+            else
+            {
+                if (mTimes.Count > 0)
+                {
+                    foreach (var vv in mTimes)
+                    {
+                        result.Add(mlastvalue, vv, mlastquality);
+                    }
+                }
+            }
+            
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -726,14 +1111,289 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         /// <param name="mLogTimes"></param>
         /// <param name="result"></param>
-        private void FillNoneValue<T>(int id, List<DateTime> mTimes, QueryValueMatchType type, HisQueryResult<T> result)
+        private void FillNoneValue<T>(int id, List<DateTime> mTimes, QueryValueMatchType type,QueryContext context, HisQueryResult<T> result,DateTime? nowtime)
         {
-            if (mTimes.Count > 0)
+            //if (!context.IgnorCloseQuality)
+            //{
+            //    if (mTimes.Count > 0)
+            //    {
+            //        foreach (var vv in mTimes)
+            //        {
+            //            result.Add(default(T), vv, (byte)QualityConst.Null);
+            //        }
+            //    }
+            //}
+            //else
             {
-                foreach (var vv in mTimes)
+
+                //将在一个文件内的规整在一起
+                SortedDictionary<DateTime, List<DateTime>> mtimecaches = new SortedDictionary<DateTime, List<DateTime>>();
+
+                foreach(var vv in mTimes)
                 {
-                    result.Add(default(T), vv, (byte)QualityConst.Null);
+                    var vkey = GetTimeKey(vv);
+                    if(mtimecaches.ContainsKey(vkey))
+                    {
+                        mtimecaches[vkey].Add(vv);
+                    }
+                    else
+                    {
+                        mtimecaches.Add(vkey, new List<DateTime>() { vv });
+                    }
                 }
+
+                object mlastvalue = context.ContainsKey("MemoryLastValue") ? context["MemoryLastValue"] : null;
+                byte mlastquality = context.ContainsKey("MemoryLastQuality") ?(byte)context["MemoryLastQuality"] : (byte)0;
+
+                foreach (var vv in mtimecaches)
+                {
+                    var preval = this.ReadFileLastValue<T>(id, vv.Key, context);
+                    var nxtval = this.ReadFileFirstValue<T>(id, vv.Key.AddHours(FileDuration), context);
+                    TagHisValue<T>? pval = null;
+                    if (preval != null)
+                        pval = (TagHisValue<T>)preval;
+                    TagHisValue<T>? nval = null;
+                    if (nxtval != null)
+                        nval = (TagHisValue<T>)nxtval;
+
+                    switch (type)
+                    {
+                        case QueryValueMatchType.Previous:
+
+                            if (pval.HasValue)
+                            {
+                                var squa = (pval.Value.Quality == (byte)QualityConst.Close || pval.Value.Quality == (byte)QualityConst.Start) ? (byte)0 : pval.Value.Quality;
+                                foreach (var vvv in vv.Value)
+                                {
+                                    if (nowtime != null && mlastvalue!=null && vvv>=nowtime)
+                                    {
+                                        result.Add(mlastvalue, vvv, mlastquality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(pval.Value.Value, vvv, squa);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (var vvv in vv.Value)
+                                {
+                                    if (nowtime != null && mlastvalue != null && vvv >= nowtime)
+                                    {
+                                        result.Add(mlastvalue, vvv, mlastquality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(default(T), vvv, (byte)QualityConst.Null);
+                                    }
+                                }
+
+                            }
+                            break;
+                        case QueryValueMatchType.After:
+                            if (nval.HasValue)
+                            {
+                                var squa = (nval.Value.Quality == (byte)QualityConst.Close || nval.Value.Quality == (byte)QualityConst.Start) ? (byte)0 : nval.Value.Quality;
+                                foreach (var vvv in vv.Value)
+                                {
+                                    result.Add(nval.Value.Value, vvv, squa);
+                                }
+                            }
+                            else
+                            {
+                                foreach (var vvv in vv.Value)
+                                {
+                                    result.Add(default(T), vvv, (byte)QualityConst.Null);
+                                }
+
+                            }
+                            break;
+                        case QueryValueMatchType.Linear:
+                            if (pval.HasValue && nval.HasValue)
+                            {
+                                var squa = (pval.Value.Quality == (byte)QualityConst.Close || pval.Value.Quality == (byte)QualityConst.Start) ? (byte)0 : pval.Value.Quality;
+                                var equa = (nval.Value.Quality == (byte)QualityConst.Close || nval.Value.Quality == (byte)QualityConst.Start) ? (byte)0 : nval.Value.Quality;
+
+                                if (typeof(T) == typeof(bool) || typeof(T) == typeof(string) || typeof(T) == typeof(DateTime))
+                                {
+
+                                    foreach (var vvv in vv.Value)
+                                    {
+                                        if (nowtime != null && mlastvalue != null && vvv >= nowtime)
+                                        {
+                                            result.Add(mlastvalue, vvv, mlastquality);
+                                        }
+                                        else
+                                        {
+                                            if ((vvv - pval.Value.Time) > (nval.Value.Time - vvv))
+                                            {
+                                                result.Add(nval.Value.Value, vvv, equa);
+                                            }
+                                            else
+                                            {
+                                                result.Add(pval.Value.Value, vvv, squa);
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    var sval1 = pval.Value.Value;
+                                    var sval2 = nval.Value.Value;
+
+                                    foreach (var vvv in vv.Value)
+                                    {
+                                        if (nowtime != null && mlastvalue != null && vvv >= nowtime)
+                                        {
+                                            result.Add(mlastvalue, vvv, mlastquality);
+                                        }
+                                        else
+                                        {
+                                            var pval1 = (vvv - pval.Value.Time).TotalMilliseconds;
+                                            var tval1 = (nval.Value.Time - pval.Value.Time).TotalMilliseconds;
+                                            double vval = Convert.ToDouble(sval2) - Convert.ToDouble(sval1);
+                                            double val1;
+                                            if (vval == 0)
+                                            {
+                                                val1 = Convert.ToDouble(sval2);
+                                            }
+                                            else
+                                            {
+                                                val1 = pval1 / tval1 * (Convert.ToDouble(sval2) - Convert.ToDouble(sval1)) + Convert.ToDouble(sval1);
+                                            }
+                                            if (pval1 <= 0)
+                                            {
+                                                //说明数据有异常，则取第一个值
+                                                result.Add((object)sval1, vvv, pval.Value.Quality);
+                                            }
+                                            else
+                                            {
+                                                result.Add((object)val1, vvv, (pval1 / tval1) < 0.5 ? squa : equa);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else if (pval.HasValue)
+                            {
+                                var squa = (pval.Value.Quality == (byte)QualityConst.Close || pval.Value.Quality == (byte)QualityConst.Start) ? (byte)0 : pval.Value.Quality;
+                                foreach (var vvv in vv.Value)
+                                {
+                                    if (nowtime != null && mlastvalue != null && vvv >= nowtime)
+                                    {
+                                        result.Add(mlastvalue, vvv, mlastquality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(pval.Value.Value, vvv, squa);
+                                    }
+                                }
+                            }
+                            else if (nval.HasValue)
+                            {
+                                var equa = (nval.Value.Quality == (byte)QualityConst.Close || nval.Value.Quality == (byte)QualityConst.Start) ? (byte)0 : nval.Value.Quality;
+                                foreach (var vvv in vv.Value)
+                                {
+                                    if (nowtime != null && mlastvalue != null && vvv >= nowtime)
+                                    {
+                                        result.Add(mlastvalue, vvv, mlastquality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(nval.Value.Value, vvv, equa);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (var vvv in vv.Value)
+                                {
+                                    if (nowtime != null && mlastvalue != null && vvv >= nowtime)
+                                    {
+                                        result.Add(mlastvalue, vvv, mlastquality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(default(T), vvv, (byte)QualityConst.Null);
+                                    }
+                                }
+                            }
+                            break;
+                        case QueryValueMatchType.Closed:
+                            if (pval.HasValue && nval.HasValue)
+                            {
+                                var squa = (pval.Value.Quality == (byte)QualityConst.Close || pval.Value.Quality == (byte)QualityConst.Start) ? (byte)0 : pval.Value.Quality;
+                                var equa = (nval.Value.Quality == (byte)QualityConst.Close || nval.Value.Quality == (byte)QualityConst.Start) ? (byte)0 : nval.Value.Quality;
+                                foreach (var vvv in vv.Value)
+                                {
+                                    if (nowtime != null && mlastvalue != null && vvv >= nowtime)
+                                    {
+                                        result.Add(mlastvalue, vvv, mlastquality);
+                                    }
+                                    else
+                                    {
+                                        if ((vvv - pval.Value.Time) > (nval.Value.Time - vvv))
+                                        {
+                                            result.Add(nval.Value.Value, vvv, equa);
+                                        }
+                                        else
+                                        {
+                                            result.Add(pval.Value.Value, vvv, squa);
+                                        }
+                                    }
+                                }
+                            }
+                            else if (pval.HasValue)
+                            {
+                                var squa = (pval.Value.Quality == (byte)QualityConst.Close || pval.Value.Quality == (byte)QualityConst.Start) ? (byte)0 : pval.Value.Quality;
+                                foreach (var vvv in vv.Value)
+                                {
+                                    if (nowtime != null && mlastvalue != null && vvv >= nowtime)
+                                    {
+                                        result.Add(mlastvalue, vvv, mlastquality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(pval.Value.Value, vvv, squa);
+                                    }
+                                }
+                            }
+                            else if (nval.HasValue)
+                            {
+                                var equa = (nval.Value.Quality == (byte)QualityConst.Close || nval.Value.Quality == (byte)QualityConst.Start) ? (byte)0 : nval.Value.Quality;
+                                foreach (var vvv in vv.Value)
+                                {
+                                    if (nowtime != null && mlastvalue != null && vvv >= nowtime)
+                                    {
+                                        result.Add(mlastvalue, vvv, mlastquality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(nval.Value.Value, vvv, equa);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (var vvv in vv.Value)
+                                {
+                                    if (nowtime != null && mlastvalue != null && vvv >= nowtime)
+                                    {
+                                        result.Add(mlastvalue, vvv, mlastquality);
+                                    }
+                                    else
+                                    {
+                                        result.Add(default(T), vvv, (byte)QualityConst.Null);
+                                    }
+                                }
+                            }
+                            break;
+                    }
+
+                }
+
+                
             }
         }
 
@@ -886,7 +1546,7 @@ namespace Cdy.Tag
                             (e as HisDataFileInfo4).ReadAllValue(id, startTime, endTime, result);
                         }
                         else if (e is DataFileInfo4) { (e as DataFileInfo4).ReadAllValue(id, sstart, eend, result); }
-                        else if (e is DataFileInfo5) { (e as DataFileInfo5).ReadAllValue(id, sstart, eend, result); }
+                        else if (e is DataFileInfo6) { (e as DataFileInfo6).ReadAllValue(id, sstart, eend, result); }
                     }
 
                     //从日志文件中读取数据
@@ -913,6 +1573,163 @@ namespace Cdy.Tag
                 LoggerService.Service.Erro("QueryService", ex.StackTrace);
             }
         }
+
+        /// <summary>
+        /// 原始值过滤查询
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="filter"></param>
+        /// <param name="tagtypes"></param>
+        /// <returns></returns>
+        public HisQueryTableResult ReadAllValueAndFilter(List<int> ids, DateTime startTime, DateTime endTime, ExpressFilter filter, Dictionary<int, byte> tagtypes)
+        {
+            var result = ReadAllValueByUTCTimeAndFilter(ids, startTime.ToUniversalTime(), endTime.ToUniversalTime(), filter, tagtypes);
+            return result.ConvertUTCTimeToLocal();
+        }
+
+        /// <summary>
+        /// 原始值过滤查询
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="result"></param>
+        public HisQueryTableResult ReadAllValueByUTCTimeAndFilter(List<int> ids, DateTime startTime, DateTime endTime,ExpressFilter filter,Dictionary<int,byte> tagtypes)
+        {
+            try
+            {
+                DateTime dt = new DateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour, 0, 0);
+                dt.AddMinutes((startTime.Minute/BlockDuration)*BlockDuration);
+
+                List<Tuple<DateTime, DateTime>> timespans = new List<Tuple<DateTime, DateTime>>();
+                DateTime dts = startTime;
+                DateTime dtt = dt.AddMinutes(BlockDuration);
+                dtt = dtt>endTime?endTime:dtt;
+                timespans.Add(new Tuple<DateTime, DateTime>(dts, dtt));
+
+                while (dtt<endTime)
+                {
+                    dts = dtt;
+                    dtt = dtt.AddMinutes(BlockDuration);
+                    dtt = dtt > endTime ? endTime : dtt;
+                    timespans.Add(new Tuple<DateTime, DateTime>(dts, dtt));
+                }
+
+                HisQueryTableResult result = new HisQueryTableResult();
+                foreach(var id in ids)
+                {
+                    result.AddColumn(id.ToString(), (TagType)tagtypes[id]);
+                }
+                result.Init((int)((endTime - startTime).TotalSeconds));
+
+                foreach (var vv in timespans)
+                {
+                    ReadAllValueByUTCTimeAndFilterInner(ids, vv.Item1, vv.Item2, filter, tagtypes, result);
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Service.Erro("QueryService", ex.StackTrace);
+            }
+            return null;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="filter"></param>
+        /// <param name="tagtypes"></param>
+        private void ReadAllValueByUTCTimeAndFilterInner(List<int> ids, DateTime startTime, DateTime endTime, ExpressFilter filter, Dictionary<int, byte> tagtypes, HisQueryTableResult result)
+        {
+            MultiHisQueryResult htr = new MultiHisQueryResult();
+            using (QueryContextBase ctx = new QueryContextBase())
+            {
+                foreach (var vv in tagtypes)
+                {
+                    switch(vv.Value)
+                    {
+                        case (byte)TagType.Bool:
+                            htr.AddColumn(vv.Key.ToString(),ReadAllValueByUTCTime<bool>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.Byte:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<byte>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.Short:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<Int16>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.UShort:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<UInt16>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.Int:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<Int32>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.UInt:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<UInt32>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.Long:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<Int64>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.ULong:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<UInt64>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.Double:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<double>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.Float:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<float>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.String:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<string>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.DateTime:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<DateTime>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.IntPoint:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<IntPointData>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.UIntPoint:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<UIntPointData>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.IntPoint3:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<IntPoint3Data>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.UIntPoint3:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<UIntPoint3Data>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.LongPoint:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<LongPointData>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.ULongPoint:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<ULongPointData>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.LongPoint3:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<LongPoint3Data>(vv.Key, startTime, endTime));
+                            break;
+                        case (byte)TagType.ULongPoint3:
+                            htr.AddColumn(vv.Key.ToString(), ReadAllValueByUTCTime<ULongPoint3Data>(vv.Key, startTime, endTime));
+                            break;
+                    }
+                }
+            }
+            foreach(var vvv in htr.ListVallValues())
+            {
+                if (vvv == null) break;
+                if(filter.IsFit(vvv))
+                {
+                    result.CheckAndResize();
+                    result.Add((DateTime)vvv.First().Value, vvv.Skip(1).Select(e => e.Value).ToArray());
+                }
+            }
+            htr.Dispose();
+        }
+
+
 
         /// <summary>
         /// 
@@ -954,6 +1771,20 @@ namespace Cdy.Tag
         {
             return ReadValueByUTCTime<T>(id, times.Select(e => e.ToUniversalTime()), type).ConvertUTCTimeToLocal();
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public HisQueryResult<T> ReadValueIgnorClosedQuality<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type)
+        {
+            return ReadValueByUTCTimeIgnorClosedQuality<T>(id, times.Select(e => e.ToUniversalTime()), type).ConvertUTCTimeToLocal();
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -969,6 +1800,24 @@ namespace Cdy.Tag
             var result = new HisQueryResult<T>(valueCount);
             ReadValueByUTCTime(id, times, type, result);
             return result; 
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public HisQueryResult<T> ReadValueByUTCTimeIgnorClosedQuality<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type)
+        {
+            int valueCount = times.Count();
+
+            var result = new HisQueryResult<T>(valueCount);
+            ReadValueByUTCTimeIgnorClosedQuality(id, times, type, result);
+            return result;
         }
 
         /// <summary>
@@ -1726,7 +2575,7 @@ namespace Cdy.Tag
         /// <exception cref="NotImplementedException"></exception>
         public void ModifyHisData<T>(int id, HisQueryResult<T> values, string user, string msg)
         {
-            Dictionary<DataFileInfo5,List<DateTime>> dic = new Dictionary<DataFileInfo5,List<DateTime>>();
+            Dictionary<DataFileInfo6,List<DateTime>> dic = new Dictionary<DataFileInfo6,List<DateTime>>();
             Dictionary<DateTime,List<DateTime>> dic2 = new Dictionary<DateTime, List<DateTime>>();
 
             DateTime stime=DateTime.MinValue, etime=DateTime.MinValue;
@@ -1766,7 +2615,7 @@ namespace Cdy.Tag
                 }
 
                 var vdd = new DateTime(vdata.Key.Year, vdata.Key.Month, vdata.Key.Day, ((int)(vdata.Key.Hour / FileDuration)) * FileDuration, 0, 0);
-                dic.Add(new DataFileInfo5() { FileName = vfile,Duration = new TimeSpan(this.FileDuration,0,0),FileDuration = FileDuration,BlockDuration = BlockDuration, StartTime= vdd, IsZipFile = System.IO.Path.GetExtension(vfile) == DataFileManager.ZipDataFile2Extends },vdata.Value);
+                dic.Add(new DataFileInfo6() { FileName = vfile,Duration = new TimeSpan(this.FileDuration,0,0),FileDuration = FileDuration,BlockDuration = BlockDuration, StartTime= vdd, IsZipFile = System.IO.Path.GetExtension(vfile) == DataFileManager.ZipDataFile2Extends },vdata.Value);
             }
 
             foreach(var vdata in dic)
@@ -1786,7 +2635,7 @@ namespace Cdy.Tag
         /// <exception cref="NotImplementedException"></exception>
         public void DeleteHisData<T>(int id, DateTime starttime, DateTime endtime, string user, string msg)
         {
-            Dictionary<DataFileInfo5, Tuple<DateTime,DateTime>> dic = new Dictionary<DataFileInfo5, Tuple<DateTime, DateTime>>();
+            Dictionary<DataFileInfo6, Tuple<DateTime,DateTime>> dic = new Dictionary<DataFileInfo6, Tuple<DateTime, DateTime>>();
 
             Dictionary<DateTime, DateTime> dic2 = new Dictionary<DateTime, DateTime>();
             DateTime dtmp = starttime;
@@ -1822,7 +2671,7 @@ namespace Cdy.Tag
                 if (System.IO.File.Exists(vfile))
                 {
                     var vdd = new DateTime(vdata.Key.Year, vdata.Key.Month, vdata.Key.Day, ((int)(vdata.Key.Hour / FileDuration)) * FileDuration, 0, 0);
-                    dic.Add(new DataFileInfo5() { FileName = vfile, Duration = new TimeSpan(this.FileDuration, 0, 0), StartTime = vdd, IsZipFile = System.IO.Path.GetExtension(vfile) == DataFileManager.ZipDataFile2Extends }, new Tuple<DateTime, DateTime>(vdata.Key,vdata.Value));
+                    dic.Add(new DataFileInfo6() { FileName = vfile, Duration = new TimeSpan(this.FileDuration, 0, 0), StartTime = vdd, IsZipFile = System.IO.Path.GetExtension(vfile) == DataFileManager.ZipDataFile2Extends }, new Tuple<DateTime, DateTime>(vdata.Key,vdata.Value));
                 }
             }
 
@@ -1832,26 +2681,145 @@ namespace Cdy.Tag
             }
         }
 
+        ///// <summary>
+        ///// 读取文件的第一个值
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="id"></param>
+        ///// <param name="time"></param>
+        ///// <param name="context"></param>
+        ///// <returns></returns>
+        //public object ReadFileFirstValue2<T>(int id,DateTime time,QueryContext context)
+        //{
+        //    if (context.IgnorCloseQuality)
+        //    {
+        //        var vtime = time;
+        //        var fmanager = GetFileManager();
+        //        while (true)
+        //        {
+        //            var vfile = fmanager.GetDataFileWithoutCheck(vtime, id);
+        //            if (vfile != null && vfile is DataFileInfo6)
+        //            {
+        //                var val = (vfile as DataFileInfo6).ReadFileFirstAvaiableValue<T>(id, context);
+        //                if(val==null)
+        //                {
+        //                    return (vfile as DataFileInfo6).ReadNextFileFirstAvaiableValue<T>(id, context);
+        //                }
+        //                return val;
+        //            }
+        //            vtime = vtime.AddHours(FileDuration);
+        //            if ((vtime - time).TotalDays > 30 && vtime> fmanager.LastValueTime)
+        //            {
+        //                break;
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        var vfile = GetFileManager().GetDataFile(time, id);
+        //        if (vfile != null && vfile is DataFileInfo6)
+        //        {
+        //            return (vfile as DataFileInfo6).ReadFileFirstAvaiableValue<T>(id, context);
+        //        }
+        //    }
+        //    return null;
+        //}
+
+
         /// <summary>
-        /// 读取文件的第一个值
+        /// 读取文件的第一个值,遇到无记录文件一直往后找
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="id"></param>
         /// <param name="time"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public object ReadFileFirstValue<T>(int id,DateTime time,QueryContext context)
+        public object ReadFileFirstValue<T>(int id, DateTime time, QueryContext context)
         {
-            var vfile = GetFileManager().GetDataFile(time, id);
-            if(vfile!=null && vfile is DataFileInfo5)
+            var vtime = time;
+            var fmanager = GetFileManager();
+            context.HasExitedQuality = false;
+            while (true)
             {
-                return (vfile as DataFileInfo5).ReadFileFirstAvaiableValue<T>(id, context);
+                var vfile = fmanager.GetDataFileWithoutCheck(vtime, id);
+                if (vfile != null && vfile is DataFileInfo6)
+                {
+                    var val = (vfile as DataFileInfo6).ReadFileFirstAvaiableValue<T>(id, context);
+                    if (val == null)
+                    {
+                        if (!context.IgnorCloseQuality && context.HasExitedQuality)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            return (vfile as DataFileInfo6).ReadNextFileFirstAvaiableValue<T>(id, context);
+                        }
+                    }
+                    return val;
+                }
+                vtime = vtime.AddHours(FileDuration);
+                if ((vtime - time).TotalDays > 30 && vtime > fmanager.LastValueTime)
+                {
+                    break;
+                }
             }
             return null;
         }
 
+        ///// <summary>
+        ///// 读取文件的最后一个记录值
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="id"></param>
+        ///// <param name="time"></param>
+        ///// <param name="context"></param>
+        ///// <returns></returns>
+        //public object ReadFileLastValue2<T>(int id, DateTime time, QueryContext context)
+        //{
+        //    if (context.IgnorCloseQuality)
+        //    {
+        //        var fmanager = GetFileManager();
+        //        var vtime = time;
+        //        while (true)
+        //        {
+        //            var vfile = fmanager.GetDataFileWithoutCheck(vtime, id);
+        //            if (vfile != null && vfile is DataFileInfo6)
+        //            {
+        //                var val = (vfile as DataFileInfo6).ReadFileLastAvaiableValue<T>(id, context);
+        //                if (val == null)
+        //                {
+        //                   return (vfile as DataFileInfo6).ReadPreFileLastAvaiableValue<T>(id, context);
+        //                }
+        //                return val;
+        //            }
+        //            else
+        //            {
+        //                vtime = vtime.AddHours(-FileDuration);
+        //            }
+        //            if(vtime< fmanager.FirstValueTime)
+        //            {
+        //                break;
+        //            }
+        //            //if ((time - vtime).TotalDays > 30)
+        //            //{
+        //            //    break;
+        //            //}
+        //        }
+        //    }
+        //    else
+        //    {
+        //        var vfile = GetFileManager().GetDataFile(time, id);
+        //        if (vfile != null && vfile is DataFileInfo6)
+        //        {
+        //            return (vfile as DataFileInfo6).ReadFileLastAvaiableValue<T>(id, context);
+        //        }
+        //    }
+        //    return null;
+        //}
+
         /// <summary>
-        /// 读取文件的最后一个记录值
+        /// 读取文件的最后一个记录值,遇到无记录文件一直往前找
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="id"></param>
@@ -1860,14 +2828,87 @@ namespace Cdy.Tag
         /// <returns></returns>
         public object ReadFileLastValue<T>(int id, DateTime time, QueryContext context)
         {
-            var vfile = GetFileManager().GetDataFile(time, id);
-            if (vfile != null && vfile is DataFileInfo5)
+            var fmanager = GetFileManager();
+            var vtime = time;
+            context.HasExitedQuality = false;
+            while (true)
             {
-                return (vfile as DataFileInfo5).ReadFileLastAvaiableValue<T>(id, context);
+                var vfile = fmanager.GetDataFileWithoutCheck(vtime, id);
+                if (vfile != null && vfile is DataFileInfo6)
+                {
+                    var val = (vfile as DataFileInfo6).ReadFileLastAvaiableValue<T>(id, context);
+                    if (val == null)
+                    {
+                        if (!context.IgnorCloseQuality && context.HasExitedQuality)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            return (vfile as DataFileInfo6).ReadPreFileLastAvaiableValue<T>(id, context);
+                        }
+                    }
+                    return val;
+                }
+                else
+                {
+                    if(vtime>DateTime.MinValue)
+                    vtime = vtime.AddHours(-FileDuration);
+                }
+                if (vtime < fmanager.FirstValueTime)
+                {
+                    break;
+                }
             }
+
             return null;
         }
 
         #endregion
+
+        /// <summary>
+        /// 读取变量最后更新的时间
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public DateTime ReadTagLastAvaiableValueTime<T>(int id)
+        {
+            var fileMananger = GetFileManager();
+            if(fileMananger.LastValueTime == DateTime.MinValue) 
+                return DateTime.MinValue;
+
+            var stime = fileMananger.LastValueTime.AddDays(-5);
+            var etime = new TimeSpan(5,0, 0, 0);
+            while(true)
+            {
+                var vfile = fileMananger.GetDataFiles(stime, etime, id);
+                if(vfile!=null && vfile.Count> 0)
+                {
+                    vfile.Reverse();
+                    foreach (var vv in vfile)
+                    {
+                        var obj = (vv as DataFileInfo6).ReadFileLastAvaiableValue<T>(id, new QueryContext() { IgnorCloseQuality = true });
+                        if (obj != null)
+                        {
+                            return ((TagHisValue<T>)obj).Time;
+                        }
+                    }
+                }
+                stime = stime.AddDays(-5);
+                if(stime<fileMananger.FirstValueTime)
+                {
+                    break;
+                }
+            }
+           
+            return DateTime.MinValue;
+        }
+
+        public void Dispose()
+        {
+            mMemoryService=null;
+            statisticsHelper?.Dispose();
+            statisticsHelper = null;
+        }
     }
 }

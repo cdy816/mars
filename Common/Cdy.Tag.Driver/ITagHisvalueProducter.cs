@@ -104,20 +104,30 @@ namespace Cdy.Tag.Driver
         /// <returns></returns>
         bool SetTagHisValue<T>(int id, T value,byte quality);
 
-        /// <summary>
-        /// 设置一组变量的一组历史值
-        /// </summary>
-        /// <param name="values">值</param>
-        /// <returns></returns>
-        bool SetTagHisValues(Dictionary<int, List<TagValue>> values);
-
 
         /// <summary>
-        /// 设置一组变量的历史值
+        /// 设置区域相关的一组变量的历史值
         /// </summary>
+        /// <param name="time"></param>
         /// <param name="values"></param>
         /// <returns></returns>
-        bool SetTagHisValues(Dictionary<int, TagValue> values);
+        bool SetAreaTagHisValue(DateTime time, Dictionary<int, Tuple<object, byte>> values);
+
+
+        ///// <summary>
+        ///// 设置一组变量的一组历史值
+        ///// </summary>
+        ///// <param name="values">值</param>
+        ///// <returns></returns>
+        //bool SetTagHisValues(Dictionary<int, List<TagValue>> values);
+
+
+        ///// <summary>
+        ///// 设置一组变量的历史值
+        ///// </summary>
+        ///// <param name="values"></param>
+        ///// <returns></returns>
+        //bool SetTagHisValues(Dictionary<int, TagValue> values);
 
         ///// <summary>
         ///// 
@@ -126,6 +136,8 @@ namespace Cdy.Tag.Driver
         ///// <param name="timeUnit"></param>
         ///// <returns></returns>
         //bool SetTagHisValue(Dictionary<int, TagValue> values);
+
+        void SubmitCach();
 
         #endregion ...Methods...
 

@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <None Remove="Image\add.png" />
+    <None Remove="Image\alarm.png" />
     <None Remove="Image\cancel.png" />
     <None Remove="Image\close.png" />
     <None Remove="Image\database.png" />
@@ -53,11 +54,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AntRuntime.GrpcApi.Client" Version="1.0.0" />
     <PackageReference Include="ScottPlot.WPF" Version="4.1.45" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Image\add.png" />
+    <Resource Include="Image\alarm.png" />
     <Resource Include="Image\cancel.png" />
     <Resource Include="Image\close.png" />
     <Resource Include="Image\database.png" />
@@ -99,7 +102,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).exe&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).runtimeconfig.json&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).XML&quot; copy &quot;$(TargetDir)$(TargetName).XML&quot; &quot;$(SolutionDir)\Output\Xml&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).pdb&quot;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)zh-CN&quot;  copy &quot;$(TargetDir)zh-CN\*.dll&quot; &quot;$(SolutionDir)\Output\zh-CN&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)ScottPlot*.dll&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;" />
+    <Exec Command="copy &quot;$(TargetPath)&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).exe&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)$(TargetName).runtimeconfig.json&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).XML&quot; copy &quot;$(TargetDir)$(TargetName).XML&quot; &quot;$(SolutionDir)\Output\Xml&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)$(TargetName).pdb&quot;  copy &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;if exist  &quot;$(TargetDir)zh-CN&quot;  copy &quot;$(TargetDir)zh-CN\*.dll&quot; &quot;$(SolutionDir)\Output\zh-CN&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)ScottPlot*.dll&quot; &quot;$(SolutionDir)\Output&quot; /y&#xD;&#xA;copy &quot;$(TargetDir)AntRuntime.GrpcApi.Client.dll&quot; &quot;$(SolutionDir)\Output&quot; /y" />
   </Target>
 
 </Project>

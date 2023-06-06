@@ -1,0 +1,571 @@
+﻿@page "/main"
+@using System.Timers;
+@using Blazor.ECharts.Options;
+@using DBRuntimeServer;
+@inject RuntimeClient client;
+@inject MarsProxy mProxy;
+@using G = Blazor.ECharts.Options.Series.Gauge
+@inject NavigationManager Navigation;
+
+<div class="vstack" style="width:100%;height:100%" >
+    <div class="hstack m-1">
+        <div class="card  text-light  m-1" style="background-color:rgba(100,100,100,0.2);height:234px">
+            <div class="card-header">
+                服务器概况
+            </div>
+            <div class="card-body text-light">
+                <h4 class="text-light">@machineName</h4>
+                <h6 class="text-light">@mOperator</h6>
+                @*<h6 class="text-light">@mDotNet</h6>*@
+                <h4 class="text-light">@mProcessCount 核</h4>
+            </div>
+        </div>
+        <div class="card  text-light  m-1" style="background-color:rgba(100,100,100,0.2);min-width:300px;height:234px">
+            <div class="card-header">
+                CPU
+            </div>
+            <div class="card-body py-1  px-0">
+                <Blazor.ECharts.Components.EGauge @ref=mCpuChart Class="chart-origin">
+
+                </Blazor.ECharts.Components.EGauge>
+            </div>
+        </div>
+        <div class="card  text-light  m-1" style="background-color:rgba(100,100,100,0.2);min-width:300px;min-height:200px">
+            <div class="card-header">
+                内存
+            </div>
+            <div class="card-body">
+                <Blazor.ECharts.Components.EPie Class="chart-fill" @ref=mMemoryChart Style="min-width:200px;min-height:160px">
+
+                </Blazor.ECharts.Components.EPie>
+            </div>
+        </div>
+        
+        <div class="card  text-light  m-1" style="background-color:rgba(100,100,100,0.2);min-width:600px;height:234px">
+            <div class="card-header">
+                网络
+            </div>
+            <div class="card-body px-0">
+                <div class="hstack px-0">
+                    <Blazor.ECharts.Components.EGauge Class="chart-origin" @ref=mNetSendChart>
+
+                    </Blazor.ECharts.Components.EGauge>
+
+                    <Blazor.ECharts.Components.EGauge Class="chart-origin" @ref=mNetReceiveChart>
+
+                    </Blazor.ECharts.Components.EGauge>
+                </div>
+            </div>
+        </div>
+   </div>
+    <div class="hstack m-1">
+        <div class="card  text-light  m-1" style="background-color:rgba(100,100,100,0.2);min-width:460px;min-height:300px">
+            <div class="card-header">
+                变量概况
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap">
+                    <h1 class="text-light m-1 me-3">@mProxy.CurrentDatabase</h1>
+                    
+                    <div class="hstack  m-1">
+                        <h1 class="text-light">@mTotalTags</h1>
+                        <span>个变量</span>
+                    </div>
+                    <div class="hstack  m-1">
+                        <h1 class="text-light">@mTotalGroups</h1>
+                        <span>个变量组</span>
+                    </div>
+                    <div class="hstack  m-1">
+                        <h1 class="text-light">@mTotalArea</h1>
+                        <span>个区域</span>
+                    </div>
+                    @foreach (var vv in mTagInfos)
+                    {
+                        <div class="hstack">
+                            <h1 class="text-light"> @vv.count </h1>
+                            <span>个 @vv.name 变量 </span>
+                        </div>
+                    }
+                </div>
+               
+            </div>
+        </div>
+        <div class="card  text-light  m-1" style="background-color:rgba(100,100,100,0.2);min-width:300px;min-height:300px">
+            <div class="card-header">
+                主磁盘 @mPrimaryDiskName
+            </div>
+            <div class="card-body">
+                <div class="hstack px-0">
+                    <Blazor.ECharts.Components.EPie Class="chart-fill" @ref=mUsedDiskChart Style="width:200px;height:200px">
+
+                    </Blazor.ECharts.Components.EPie>
+
+                </div>
+            </div>
+        </div>
+        @if (mDiskInfos.Count > 1 && mDiskInfos[1].Total>0)
+        {
+            <div class="card  text-light  m-1" style="background-color:rgba(100,100,100,0.2);min-width:300px;min-height:300px">
+                <div class="card-header">
+                备份磁盘 @mBackDiskName
+            </div>
+            <div class="card-body">
+                <div class="hstack px-0">
+                    <Blazor.ECharts.Components.EPie Class="chart-fill" @ref=mBackupUsedDiskChart Style="min-width:200px;">
+
+                    </Blazor.ECharts.Components.EPie>
+                </div>
+            </div>
+            </div>
+        }
+    </div>
+    <div class="hstack  m-1">
+        <div class="card  text-light h-100 m-1" style="background-color:rgba(100,100,100,0.2);min-height:200px;width:100%">
+            <div class="card-header">
+                API 接口概况
+            </div>
+            <div class="card-body">
+                 <div style="height:100%;overflow-y:auto">
+            <table class="table text-light">
+                        <thead>
+                            <tr>
+                                <th scope="col">序号</th>
+                                <th scope="col">进程名称</th>
+                                <th scope="col">CPU百分比</th>
+                                <th scope="col">占用内存</th>
+                                <th scope="col">线程</th>
+                                <th scope="col">CPU累计时间</th>
+                                <th scope="col">启动时间</th>
+                               
+                            </tr>
+                        </thead>
+                <tbody>
+                            @{
+                                int i = 1;
+                                foreach (var vv in mProcesses)
+                                {
+                                    if (vv.ThreadCount > 0)
+                                    {
+                                        <tr class="tr"  @key=@vv.Name>
+                                            <td scope="row" style="width:48px">
+                                                <span>@(
+                                                          (i++).ToString()
+                                                          )</span>
+                                            </td>
+                                            <td scope="row">
+                                                <span>@vv.Name</span>
+                                            </td>
+                                            <td scope="row">
+                                                <span>@Math.Round(vv.CPU,2) %</span>
+                                            </td>
+                                            <td scope="row">
+                                                <span>@Math.Round(vv.TotalMemory,2) kb</span>
+                                            </td>
+
+                                            <td scope="row">
+                                                <span>@vv.ThreadCount</span>
+                                            </td>
+                                            <td scope="row">
+                                                <span>@(
+                                                          vv.TotalTime / 1000
+                                                          ) s</span>
+                                            </td>
+
+                                            <td scope="row">
+                                                <span>@vv.StartTime</span>
+                                            </td>
+
+                                        </tr>
+                                    }
+                                }
+                    }
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@code {
+    private string mOperator = "";
+    private string machineName = "";
+    private string mDotNet = "";
+    private int mProcessCount = 0;
+
+    private double mCupPercent = 0;
+    private double mMemoryTotal = 1;
+    private double mMemoryUsed = 0;
+
+    private double mSendBytes = 0;
+    private double mReceiveBytes = 0;
+
+    private double mTotalDisk = 1;
+    private double mUsedDisk = 0;
+
+    private double mBackTotalDisk = 1;
+    private double mBackUsedDisk = 0;
+
+    private int mTotalTags = 1;
+    private int mTotalGroups = 1;
+    private int mTotalArea = 1;
+
+    private List<processInfo> mProcesses = new List<processInfo>();
+
+    private List<DiskInfoItem> mDiskInfos = new List<DiskInfoItem>();
+
+    private Blazor.ECharts.Components.EGauge mCpuChart;
+    private Blazor.ECharts.Components.EPie mMemoryChart;
+
+    private Blazor.ECharts.Components.EPie mUsedDiskChart;
+
+    private Blazor.ECharts.Components.EPie mBackupUsedDiskChart;
+
+    Blazor.ECharts.Components.EGauge mNetSendChart;
+    Blazor.ECharts.Components.EGauge mNetReceiveChart;
+
+    private System.Timers.Timer mscan;
+
+    private List<tagInfo> mTagInfos = new List<tagInfo>();
+
+    private string mPrimaryDiskName = "";
+    private string mBackDiskName = "";
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        var vinfos = client.GetMachineInfo();
+        if(vinfos!=null)
+        {
+            mDotNet = vinfos.DotnetVersion;
+            mOperator = vinfos.OSVersion;
+            machineName = vinfos.MachineName;
+            mProcessCount = vinfos.ProcessCount;
+        }
+        Navigation.LocationChanged += locationChanged;
+        mscan = new System.Timers.Timer(1000);
+        mscan.Elapsed += mScanElapsed;
+        mscan.Start();
+    }
+
+
+
+    private void mScanElapsed(object? sender, ElapsedEventArgs e)
+    {
+        mscan.Elapsed -= mScanElapsed;
+        RefreshValue();
+        mscan.Elapsed += mScanElapsed;
+    }
+
+    private void locationChanged(object sender, LocationChangedEventArgs e)
+    {
+        if (!e.Location.Contains("main"))
+        {
+            if (mscan != null)
+            {
+                mscan.Elapsed -= mScanElapsed;
+                mscan.Stop();
+                mscan.Dispose();
+            }
+        }
+    }
+
+    private async void UpdateCPUChart()
+    {
+        var Option1 = new Blazor.ECharts.Options.EChartsOption<G.Gauge>()
+            {
+                Tooltip = new()
+                {
+                    Formatter = "{a} <br/>{b} : {c}%"
+                },
+                Series = new()
+                {
+                    new G.Gauge()
+                    {
+                        Name = "",
+                        Detail = new()
+                        {
+                            Formatter = "{value}%",
+                            fontSize=24,
+                        },
+                        Data = new[] { new { Value = mCupPercent, Name = "CPU" } },
+                        axisTick=new G.axisTick(){distance=-25,splitNumber=5,show=true,lineStyle=new Blazor.ECharts.Options.LineStyle(){Width=1,Color = "#999"}},
+                        splitLine=new G.SplitLine(){distance=-32,show=true,lineStyle=new Blazor.ECharts.Options.LineStyle(){Width=3,Color="#999"}},
+                        axisLabel=new G.axisLabel(){distance=-15,show=true},
+                        startAngle=180,
+                        endAngle=0,
+                        progress = new G.Progress(){show=true,width=10,roundCap=true}
+
+                    }
+                },
+                Grid = new List<Blazor.ECharts.Options.Grid>()
+                {
+                    new Blazor.ECharts.Options.Grid()
+                    {
+                        Left=1,
+                        Top=1,
+                        Right=1,
+                        Bottom=1
+                    }
+                }
+
+            };
+        await mCpuChart.SetupOptionAsync(Option1);
+    }
+
+    private async void UpdateMemoryChart()
+    {
+        var Option1 = new Blazor.ECharts.Options.EChartsOption<Blazor.ECharts.Options.Series.Pie.Pie>()
+            {
+                Tooltip = new()
+                {
+                    Formatter = "{a} <br/>{b} : {c}Gb"
+                },
+
+                Series = new()
+                {
+                    new Blazor.ECharts.Options.Series.Pie.Pie()
+                    {
+                        Name = "Memory",
+                        Data = new[] { new { Value = mMemoryUsed, Name = "使用" },new { Value = mMemoryTotal-mMemoryUsed, Name = "剩余" } },
+                        Radius = new object[]{"50%","80%"},
+                        Center=new object[]{"50%","50%"},
+                        startAngle=180,
+                        Label = new Blazor.ECharts.Options.Series.Label(){Show=true,Formatter = new JFunc("function (params) { return (params.name + params.value ); }")  ,Color="white"},
+                    }
+                }
+
+            };
+        await mMemoryChart.SetupOptionAsync(Option1);
+    }
+
+    private async void UpdatSendNetChart()
+    {
+        var Option1 = new Blazor.ECharts.Options.EChartsOption<G.Gauge>()
+            {
+                Tooltip = new()
+                {
+                    Formatter = "{a} <br/>{b} : {c}%"
+                },
+                Series = new()
+                {
+                    new G.Gauge()
+                    {
+                        Name = "",
+                        Detail = new()
+                        {
+                            Formatter = "{value}kb",
+                            fontSize=24,
+                        },
+                        max=1024*4,
+                        Data = new[] { new { Value = mSendBytes, Name = "发送(kb)" } },
+                        axisTick=new G.axisTick(){distance=-25,splitNumber=5,show=true,lineStyle=new Blazor.ECharts.Options.LineStyle(){Width=1,Color = "#999"}},
+                        splitLine=new G.SplitLine(){distance=-32,show=true,lineStyle=new Blazor.ECharts.Options.LineStyle(){Width=3,Color="#999"}},
+                        axisLabel=new G.axisLabel(){distance=-15,show=false},
+                        startAngle=180,
+                        endAngle=0,
+                        progress = new G.Progress(){show=true,width=10,roundCap=true},
+                        center = new string[2] { "50%", "45%" }
+
+                    }
+                }
+
+            };
+        await this.mNetSendChart.SetupOptionAsync(Option1);
+    }
+
+    private async void UpdatReceiveNetChart()
+    {
+        var Option1 = new Blazor.ECharts.Options.EChartsOption<G.Gauge>()
+            {
+                Tooltip = new()
+                {
+                    Formatter = "{a} <br/>{b} : {c}%"
+                },
+                Series = new()
+                {
+                    new G.Gauge()
+                    {
+                        Name = "",
+                        Detail = new()
+                        {
+                            Formatter = "{value}kb",
+                            fontSize=24,
+                        },
+                        max=1024*4,
+                        Data = new[] { new { Value = mReceiveBytes, Name = "接收(kb)" } },
+                        axisTick=new G.axisTick(){distance=-25,splitNumber=5,show=true,lineStyle=new Blazor.ECharts.Options.LineStyle(){Width=1,Color = "#999"}},
+                        splitLine=new G.SplitLine(){distance=-32,show=true,lineStyle=new Blazor.ECharts.Options.LineStyle(){Width=3,Color="#999"}},
+                        axisLabel=new G.axisLabel(){distance=-15,show=false},
+                        startAngle=180,
+                        endAngle=0,
+                        progress = new G.Progress(){show=true,width=10,roundCap=true},
+                        center = new string[2] { "50%", "45%" }
+
+                    }
+                },
+                Grid = new List<Blazor.ECharts.Options.Grid>()
+                {
+                    new Blazor.ECharts.Options.Grid()
+                    {
+                        Left=1,
+                        Top=1,
+                        Right=1,
+                        Bottom=1
+                    }
+                }
+
+            };
+        await this.mNetReceiveChart.SetupOptionAsync(Option1);
+    }
+
+    private async void UpdatePrimaryDiskChart(double used,double total)
+    {
+        var Option1 = new Blazor.ECharts.Options.EChartsOption<Blazor.ECharts.Options.Series.Pie.Pie>()
+            {
+                Tooltip = new()
+                {
+                    Formatter = "{a} <br/>{b} : {c}Gb"
+                },
+
+                Series = new()
+                {
+                    new Blazor.ECharts.Options.Series.Pie.Pie()
+                    {
+                        Name = "Memory",
+                        Data = new[] { new { Value = used, Name = "使用" },new { Value = Math.Round(total-used,2), Name = "剩余" } },
+                        Radius = new object[]{"50%","80%"},
+                        Center=new object[]{"50%","50%"},
+                        startAngle=180,
+                        Label = new Blazor.ECharts.Options.Series.Label(){Show=true,Formatter = new JFunc("function (params) { return (params.name + params.value ); }"),Color="white",Width="120px"},
+                    }
+                }
+
+            };
+        await mUsedDiskChart.SetupOptionAsync(Option1);
+    }
+
+    private async void UpdateBackupDiskChart(double used, double total)
+    {
+        if (mBackupUsedDiskChart == null) return;
+        var Option1 = new Blazor.ECharts.Options.EChartsOption<Blazor.ECharts.Options.Series.Pie.Pie>()
+            {
+                Tooltip = new()
+                {
+                    Formatter = "{a} <br/>{b} : {c}Gb"
+                },
+
+                Series = new()
+                {
+                    new Blazor.ECharts.Options.Series.Pie.Pie()
+                    {
+                        Name = "Memory",
+                        Data = new[] { new { Value = used, Name = "使用" },new { Value = Math.Round(total-used), Name = "剩余" } },
+                        Radius = new object[]{"50%","80%"},
+                        Center=new object[]{"50%","50%"},
+                        startAngle=180,
+                        Label = new Blazor.ECharts.Options.Series.Label(){Show=true,Formatter = new JFunc("function (params) { return (params.name + params.value ); }") ,Color="white" },
+                    }
+                }
+
+            };
+        await mBackupUsedDiskChart.SetupOptionAsync(Option1);
+    }
+
+    private bool mIsFirst = true;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    private void  RefreshValue()
+    {
+        var vinfo= client.GetHostResource();
+        mCupPercent = Math.Round(vinfo.CPU,2);
+        mMemoryUsed = Math.Round(vinfo.MemoryUsed,2);
+        mMemoryTotal = Math.Round(vinfo.MemoryTotal,2);
+        if (vinfo.Network != null)
+        {
+            mSendBytes = Math.Round(double.Parse(vinfo.Network.Send), 2);
+            mReceiveBytes = Math.Round(double.Parse(vinfo.Network.Receive), 2);
+        }
+
+        UpdateCPUChart();
+        UpdateMemoryChart();
+
+        UpdatSendNetChart();
+        UpdatReceiveNetChart();
+
+        mDiskInfos = client.GetDiskInfo();
+
+        if (mDiskInfos!=null && mDiskInfos.Count > 0)
+        {
+            mPrimaryDiskName = mDiskInfos[0].Label + "  " + mDiskInfos[0].UsedFor;
+            UpdatePrimaryDiskChart(Math.Round(mDiskInfos[0].Used,2),Math.Round(mDiskInfos[0].Total,2));
+        }
+        if (mDiskInfos != null && mDiskInfos.Count > 1)
+        {
+            mBackDiskName = mDiskInfos[1].Label + "  " + mDiskInfos[1].UsedFor;
+            UpdateBackupDiskChart(Math.Round(mDiskInfos[1].Used, 2), Math.Round(mDiskInfos[1].Total,2));
+        }
+
+        var pinfos = client.GetProcessInfo();
+        if (pinfos != null)
+        {
+            mProcesses.Clear();
+            foreach (var vv in pinfos)
+            {
+                mProcesses.Add(new processInfo() { Name = vv.Name, ThreadCount = vv.ThreadCount, CPU = vv.CPU, StartTime = vv.StartTime, TotalMemory = vv.Memory, TotalTime = vv.TotalCPU });
+            }
+
+        }
+
+        if(mIsFirst)
+        {
+            mIsFirst = false;
+            mTagInfos.Clear();
+            var vtaginfo = mProxy.GetTagStatisticsInfos();
+            if (vtaginfo != null)
+            {
+                foreach (var vv in vtaginfo)
+                {
+                    if (vv.Key == "total")
+                    {
+                        mTotalTags = vv.Value;
+                    }
+                    else if (vv.Key == "group")
+                    {
+                        mTotalGroups = vv.Value;
+                    }
+                    else if (vv.Key == "area")
+                    {
+                        mTotalArea = vv.Value;
+                    }
+                    else
+                    {
+                        if(vv.Value>0)
+                        mTagInfos.Add(new tagInfo() { name = vv.Key, count = vv.Value });
+                    }
+                }
+            }
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    public class processInfo
+    {
+        public string Name{ get; set; }
+        public double CPU{ get; set; }
+        public double TotalTime{ get; set; }
+        public double TotalMemory{ get; set; }
+        public double ThreadCount{ get; set; }
+        public string StartTime{ get; set; }
+    }
+
+    public class tagInfo
+    {
+        public string name{ get; set; }
+        public int count{ get; set; }
+    }
+}

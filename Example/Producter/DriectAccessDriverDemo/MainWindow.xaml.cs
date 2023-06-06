@@ -102,5 +102,19 @@ namespace DriectAccessDriverDemo
                 }
             });
         }
+
+        private void ReadHisVal_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void readRealValue_Click(object sender, RoutedEventArgs e)
+        {
+            var vals = mClient.GetTagRealValue(new List<string>() { tagt.Text });
+            if(vals != null)
+            {
+                MessageBox.Show(vals.Values.First().Value.ToString());
+            }
+        }
     }
 }

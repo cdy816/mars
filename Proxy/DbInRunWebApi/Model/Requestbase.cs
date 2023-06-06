@@ -626,6 +626,15 @@ namespace DbInRunWebApi.Model
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    public class SqlDataRequest : Requestbase
+    {
+        public string Sql { get; set; }
+    }
+
+
+    /// <summary>
     /// 获取多个变量在一段时间内历史记录的原始值
     /// </summary>
     public class AllMutiTagHisDataRequest : Requestbase

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static DbInRunWebApi.Model.SqlQueryReponse;
 
 namespace DbInRunWebApi.Model
 {
@@ -168,6 +169,70 @@ namespace DbInRunWebApi.Model
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
+    }
+
+    public class PropertyValueCollection<T> 
+    {
+
+        #region ... Variables  ...
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<T> SubValues { get; set; }
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class PropetyValue<T>
+    {
+        public string Name { get; set; }
+        public T Value { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class TableValue
+    {
+        public string[] Columns { get; set; }
+        public List<IEnumerable<object>> Datas { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class CollectionValue
+    {
+        public IEnumerable<object> Datas { get; set; }
     }
 
     /// <summary>
@@ -482,6 +547,14 @@ namespace DbInRunWebApi.Model
         #endregion ...Interfaces...
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public class SqlQueryReponse : ResponseBase
+    {
+        public byte ValueType { get; set; }
+        public object Value { get; set; }
+    }
 
     /// <summary>
     /// 请求返回结果基类

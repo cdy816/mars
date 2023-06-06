@@ -10,4 +10,8 @@
     <ProjectReference Include="..\..\..\Driver\DirectAccess\DirectAccessDriver.ClientApi\DirectAccessDriver.ClientApi.csproj" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="md &quot;$(SolutionDir)Output\APIExample\DirectAccessDriverDemo&quot;&#xD;&#xA;xcopy &quot;$(TargetDir)*.*&quot; &quot;$(SolutionDir)Output\APIExample\DirectAccessDriverDemo&quot; /y /S" />
+  </Target>
+
 </Project>

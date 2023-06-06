@@ -1,0 +1,483 @@
+﻿@page "/datamonitor"
+@page "/datamonitor/{taggroup}"
+@using System.Text;
+@using System.Timers;
+@inject MarsProxy mProxy;
+@inject NavigationManager Navigation;
+@inject IJSRuntime JS;
+<PageTitle>数据监视</PageTitle>
+
+<div class="d-flex h-100 flex-column">
+    <div class="card  text-light" style="background-color:rgba(100,100,100,0.2)">
+        <div class="card-header" >
+           过滤条件
+        </div>
+        <div class="card-body">
+            <div class="row gap-2" >
+                <div class="col-3 input-group mb-0 p-0"  style="width:auto">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0" id="basic-addon1">关键字</span>
+                    <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-0" placeholder="关键字" aria-label="KeyFilter" aria-describedby="basic-addon1" @bind=mKeyFilter @onkeyup="@OnEnterKeyUp">
+                </div>
+
+                <div class="col-3 input-group mb-0 p-0" style="width:auto">
+                    <div class="input-group-text   bg-white bg-opacity-25  text-light">
+                    <span class="me-4">类型</span>
+                    <input class="form-check-input mt-0 " type="checkbox" @bind=mTypeFilterEnable aria-label="mTypeFilter">
+                  </div>
+                    <select style="width:100px" class="form-select  text-light  bg-white bg-opacity-25" aria-label="type filter" @bind=mTypeFilter disabled="@(!mTypeFilterEnable)">
+                        @foreach (var vv in mTypes)
+                        {
+                            <option value="@vv" class="text-dark">@vv</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-3 input-group mb-0 p-0"  style="width:auto">
+                    <div class="input-group-text bg-white bg-opacity-25  text-light">
+                        <span class="me-4">读写模式</span>
+                        <input class="form-check-input mt-0" type="checkbox" @bind=mReadModeEnable aria-label="mReadModeFilter">
+                    </div>
+                    <select style="width:100px" class="form-select  bg-white bg-opacity-25  text-light" aria-label="type filter" @bind=mReadModeFilter disabled="@(!mReadModeEnable)">
+                        <option value="0" class="text-dark">读写</option>
+                        <option value="1" class="text-dark">写</option>
+                        <option value="2" class="text-dark">读</option>
+                    </select>
+                </div>
+
+                <div class="col-3 input-group mb-0 p-0" style="width:auto">
+                    <div class="input-group-text bg-white bg-opacity-25">
+                        <span class="me-4  text-light">驱动</span>
+                        <input class="form-check-input mt-0" type="checkbox" @bind=mDriverEnable aria-label="mDriverFilter">
+                    </div>
+                    <select style="width:120px" contenteditable="false" class="form-select text-light  bg-white bg-opacity-25" aria-label="driver filter" @bind=mDriverText disabled="@(!mDriverEnable)">
+                        <option value="0" class="text-dark">Sim</option>
+                        <option value="1" class="text-dark">Spider</option>
+                        <option value="2" class="text-dark">DirectAccess</option>
+                        <option value="3" class="text-dark">Calculate</option>
+                    </select>
+                </div>
+
+                <div class="col-3 input-group mb-0 p-0" style="width:auto">
+                    <div class="input-group-text bg-white bg-opacity-25">
+                        <span class="me-4  text-light">区域</span>
+                        <input class="form-check-input mt-0" type="checkbox" @bind=mAreaEnable aria-label="mAeraFilter">
+                    </div>
+                    <input type="text" style="width:150px" class="form-control  bg-white bg-opacity-25  text-light" placeholder="区域" aria-label="AreaFilter" aria-describedby="basic-addon1" @bind=mAreaText disabled="@(!mAreaEnable)" @onkeyup="@OnEnterKeyUp">
+                </div>
+
+
+                <button type="button" class="col-1 btn btn-success me-2" onclick="@(()=>{mIsFirst=true; RefreshTag();})">检索</button>
+            </div>
+        </div>
+    </div>
+    <div class="card text-light flex-fill mt-1" style="background-color:rgba(100,100,100,0.2);height:300px">
+        <div style="height:100%;overflow-y:auto">
+            <table class="table text-light">
+                <thead>
+                    <tr>
+                        <th scope="col">序号</th>
+                        <th scope="col">ID</th>
+                        <th scope="col">名称</th>
+                        <th scope="col">类型</th>
+                        <th scope="col">读写模式</th>
+                        <th scope="col">单位</th>
+                        <th scope="col">驱动</th>
+                        <th scope="col">寄存器</th>
+                        <th scope="col">区域</th>
+                        <th scope="col">描述</th>
+                        <th scope="col">扩展属性</th>
+                        <th scope="col">实时值</th>
+                        <th scope="col">质量戳</th>
+                        <th scope="col">更新时间</th>
+                        <th scope="col">历史值</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int i = 1;
+                        foreach (var vv in mTags.Values)
+                        {
+                            <tr class="tr" onclick="@(()=>SelectRow(vv))" @key=@vv.UName>
+                                <td scope="row" style="width:48px">
+                                    <span>@((i++).ToString())</span>
+                                </td>
+                                <td scope="row" style="width:48px">
+                                    <span>@(vv.Id.ToString())</span>
+                                </td>
+                                <td scope="row">
+                                    <span>@vv.Name</span>
+                                </td>
+                                <td scope="row">
+                                    <span>@vv.TypeString</span>
+                                </td>
+                                <td scope="row">
+                                    <span>@vv.ReadWriteModeString</span>
+                                </td>
+                                
+                                <td scope="row">
+                                    <span>@vv.Unit</span>
+                                </td>
+                                <td scope="row">
+                                    <span>@vv.DriverName</span>
+                                </td>
+                                <td scope="row">
+                                    <span>@vv.RegistorName</span>
+                                </td>
+                                <td scope="row">
+                                    <span>@vv.Area</span>
+                                </td>
+                                <td scope="row">
+                                    <span>@vv.Desc</span>
+                                </td>
+                                <td scope="row">
+                                    <span>@vv.ExtendField1</span>
+                                </td>
+                                <td scope="row">
+                                    <MonitorString UpdateValue="@(()=>vv.Value.ToString())" Target="@vv" PropertyName="Value"/>
+                                </td>
+                                 <td scope="row">
+                                    <MonitorString UpdateValue="@(()=>vv.Quality.ToString())" Target="@vv" PropertyName="Quality" />
+                                </td>
+                                <td scope="row">
+                                    <MonitorString UpdateValue="@(()=>vv.UpdateTime.ToString())" Target="@vv" PropertyName="UpdateTime" />
+                                </td>
+                                <td scope="row">
+                                    <button class="btn btn-secondary py-0" style="font-size:small" onclick="@(()=>{ mHisModelTag = vv;mIsShowDialog=true;mLastSelectTime=DateTime.Now.Ticks; StateHasChanged();})">历史</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="d-flex mt-2 justify-content-between">
+        <span class="text-light mt-1" >总共 @(mTotalTagCount) 条记录</span>
+        <PageNotifier @bind-CurrentPage=CurrentPage @bind-CurrentPage:event="CurrentPageChanged" TotalPage=@mTotalPage />
+    </div>
+    <AntDesign.Modal title="历史数据查询" Visible=@mIsShowDialog Footer="@AntDesign.ModalFooter.DefaultOkFooter" OnCancel="@(()=>mIsShowDialog=false)" OnOk="@(()=>mIsShowDialog=false)" Width="880" >
+        <div>
+            <HisValueViewer id="@mLastSelectTime" TagId="@GetHisId()" TagType="@GetTagType()" />
+        </div>
+    </AntDesign.Modal>
+   
+</div>
+@code {
+    private string mKeyFilter = "";
+
+    private bool mTypeFilterEnable = false;
+
+    private string mTypeFilter = "";
+
+    private List<string> mTypes;
+
+    private bool mReadModeEnable = false;
+    private int mReadModeFilter = 0;
+
+    private bool mRecordModeEnable = false;
+
+    private bool mAreaEnable = false;
+    private string mAreaText = "";
+
+    private bool mDriverEnable = false;
+    private string mDriverText = "";
+
+    private bool mRegisterEnable = false;
+    private string mRegisterText = "";
+
+    private bool mCompressEnable = false;
+    private int mCompressText = 0;
+
+    private bool mDriverRecordFilterEnable = false;
+    private bool mTimerRecordFilterEnable = false;
+    private bool mValueChangedRecordFilterEnable = false;
+
+    private int mCurrentPage = 0;
+    private int mTotalPage = 1;
+    private int mTotalTagCount = 0;
+
+    private const int TagCountPerPage = 1000;
+
+    public int CurrentPage
+    {
+        get
+        {
+            return mCurrentPage;
+        }
+        set
+        {
+            mCurrentPage = value;
+            RefreshTag();
+        }
+    }
+
+    private Dictionary<int, RowTagViewModel> mTags = new Dictionary<int, RowTagViewModel>();
+
+    [Parameter]
+    public string taggroup { get; set; } = "";
+
+    private System.Timers.Timer mscan;
+
+    private bool mIsShowDialog;
+
+    private RowTagViewModel mHisModelTag;
+
+    private long mLastSelectTime = 0;
+
+    private int GetHisId()
+    {
+        return mHisModelTag != null ? mHisModelTag.Id : -1;
+    }
+
+    private Cdy.Tag.TagType GetTagType()
+    {
+        return mHisModelTag != null && mHisModelTag.RealTagMode!=null ? mHisModelTag.RealTagMode.Type : Cdy.Tag.TagType.Bool;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        mTypes = TagViewModel.mTagTypeList.ToList();
+        Navigation.LocationChanged += locationChanged;
+        mscan = new System.Timers.Timer(1000);
+        mscan.Elapsed += mScanElapsed;
+        mscan.Start();
+    }
+
+    private void mScanElapsed(object? sender, ElapsedEventArgs e)
+    {
+        RefreshValue();
+    }
+
+    private void  locationChanged(object sender, LocationChangedEventArgs e)
+    {
+        if (!e.Location.Contains("datamonitor"))
+        {
+            if (mLastSelect != null)
+            {
+                mLastSelect.Proxy = mProxy;
+                mLastSelect.IsSelected = false;
+            }
+            Navigation.LocationChanged -= locationChanged;
+            DisposeTags();
+            if (mscan!=null)
+            {
+                mscan.Elapsed -= mScanElapsed;
+                mscan.Stop();
+                mscan.Dispose();
+            }
+        }
+    }
+
+    private RowTagViewModel mLastSelect;
+
+
+    private void SelectRow(RowTagViewModel model)
+    {
+        if (mLastSelect != model)
+        {
+            if (mLastSelect != null)
+            {
+                //mLastSelect.Proxy = mProxy;
+                mLastSelect.IsSelected = false;
+            }
+            mLastSelect = model;
+            if (mLastSelect != null)
+            {
+                mLastSelect.Proxy = mProxy;
+                mLastSelect.IsSelected = true;
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void RefreshStatue()
+    {
+        if (mLastSelect != null)
+        {
+            mLastSelect.IsSelected = false;
+            Task.Run(() =>
+            {
+                InvokeAsync(() =>
+                {
+                    mLastSelect.IsSelected = true;
+                });
+            });
+        }
+        //StateHasChanged();
+    }
+
+
+    private ElementReference mExpEdit;
+
+
+    private void OnEnterKeyUp(KeyboardEventArgs arg)
+    {
+        if(arg.Code=="Enter" || arg.Code=="NumpadEnter")
+        {
+            mIsFirst = true;
+            RefreshTag();
+        }
+    }
+
+    #region Query
+
+    private List<string> mRegistors = new List<string>();
+
+    private bool mIsFirst = true;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    private void RefreshTag()
+    {
+        DisposeTags();
+        BuildFilters();
+        if(mIsFirst)
+        {
+            var vv = mProxy.QueryTags(mFilters, out int tagcount, 0, TagCountPerPage);
+
+            mTotalPage = tagcount / TagCountPerPage;
+            mTotalPage = tagcount % TagCountPerPage > 0 ? mTotalPage+1 : mTotalPage;
+            mTotalTagCount = tagcount;
+            int lid = (int)(DateTime.Now.Ticks);
+            foreach (var vvv in vv)
+            {
+                RowTagViewModel model = new RowTagViewModel(vvv.Value.Item1, vvv.Value.Item2) { Database = mProxy.CurrentDatabase, UID = lid };
+                lock(mTags)
+                    mTags.Add(model.Id,model);
+            }
+            mIsFirst = false;
+        }
+        else
+        {
+            if (mTotalPage > mCurrentPage + 1)
+            {
+                var vv = mProxy.QueryTags(mFilters, out int tagcount, mCurrentPage * TagCountPerPage, TagCountPerPage);
+
+                int lid = (int)(DateTime.Now.Ticks);
+                foreach (var vvv in vv)
+                {
+                    RowTagViewModel model = new RowTagViewModel(vvv.Value.Item1, vvv.Value.Item2) { Database = mProxy.CurrentDatabase, UID = lid };
+                    lock (mTags)
+                        mTags.Add(model.Id,model);
+                }
+            }
+        }
+    }
+
+    private Dictionary<string, string> mFilters = new Dictionary<string, string>();
+    private void BuildFilters()
+    {
+        mFilters.Clear();
+        if (!string.IsNullOrEmpty(this.mKeyFilter))
+        {
+            mFilters.Add("keyword", mKeyFilter);
+        }
+        if (this.mTypeFilterEnable)
+        {
+            mFilters.Add("type", mTypes.IndexOf(this.mTypeFilter).ToString());
+        }
+        if (this.mReadModeEnable)
+        {
+            mFilters.Add("readwritetype", mReadModeFilter.ToString());
+        }
+
+        if (this.mAreaEnable)
+        {
+            mFilters.Add("area", mAreaText);
+        }
+
+        if (this.mRecordModeEnable)
+        {
+            if (this.mTimerRecordFilterEnable && this.mValueChangedRecordFilterEnable)
+            {
+                mFilters.Add("recordtype", "3");
+            }
+            else if (this.mTimerRecordFilterEnable)
+            {
+                mFilters.Add("recordtype", "0");
+            }
+            else if (this.mValueChangedRecordFilterEnable)
+            {
+                mFilters.Add("recordtype", "1");
+            }
+            else if(this.mDriverRecordFilterEnable)
+            {
+                mFilters.Add("recordtype", "4");
+            }
+            else
+            {
+                mFilters.Add("recordtype", "3");
+            }
+        }
+
+        if (this.mCompressEnable)
+        {
+            mFilters.Add("compresstype", (mCompressText+1).ToString());
+        }
+
+        string stmp = "";
+        if (this.mDriverEnable)
+        {
+            stmp = this.mDriverText;
+        }
+        if (!string.IsNullOrEmpty(stmp))
+        {
+            mFilters.Add("linkaddress", stmp);
+        }
+
+        if (!string.IsNullOrEmpty(taggroup))
+        {
+            mFilters.Add("group", taggroup);
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        RefreshTag();
+        mProxy.RefreshAction = RefreshStatue;
+    }
+
+
+    private bool mIsBusy = false;
+    private void RefreshValue()
+    {
+        if (mIsBusy) return;
+
+        mIsBusy = true;
+        var vids = mTags.Select(e => e.Key).ToList();
+        var vals = mProxy.ReadRealValue(vids);
+        lock (mTags)
+            foreach (var vv in mTags)
+            {
+                if (vals!=null && vals.ContainsKey(vv.Key))
+                {
+                    var vtag = vals[vv.Key];
+                    vv.Value.Value = vtag.Item1;
+                    vv.Value.Quality = vtag.Item3;
+                    vv.Value.UpdateTime = vtag.Item2.ToString("yyyy-MM-dd HH:mm:ss");
+                    
+                }
+            }
+        mIsBusy = false;
+    }
+
+    #endregion
+
+    private void DisposeTags()
+    {
+        foreach (var vv in mTags.Values)
+        {
+            vv.Dispose();
+        }
+        mTags.Clear();
+    }
+}

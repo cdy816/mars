@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "CalculateDriver": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:54100;http://localhost:54101"
+    }
+  }
+}

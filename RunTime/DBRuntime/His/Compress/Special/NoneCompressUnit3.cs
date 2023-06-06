@@ -503,6 +503,23 @@ namespace Cdy.Tag
         /// <param name="size"></param>
         /// <param name="statisticTarget"></param>
         /// <param name="statisticAddr"></param>
+        /// <param name="timeAddr"></param>
+        /// <returns></returns>
+        public override long CompressByArea(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, IMemoryBlock statisticTarget, long statisticAddr, ref long timeAddr)
+        {
+            return Compress(source, sourceAddr, target, targetAddr, size, statisticTarget, statisticAddr);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="target"></param>
+        /// <param name="targetAddr"></param>
+        /// <param name="size"></param>
+        /// <param name="statisticTarget"></param>
+        /// <param name="statisticAddr"></param>
         /// <returns></returns>
         public override long Compress(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, IMemoryBlock statisticTarget, long statisticAddr)
         {
@@ -913,7 +930,7 @@ namespace Cdy.Tag
         /// <param name="timeTick"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public override int DeCompressAllValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result)
+        public override int DeCompressAllValue<T>(MarshalMemoryBlock source, int sourceAddr, DateTime startTime, DateTime endTime, int timeTick, HisQueryResult<T> result,QueryContextBase ctx)
         {
             int count = 0;
             var timers = GetTimers(source, sourceAddr,  out count,out byte timelen);
@@ -1004,7 +1021,7 @@ namespace Cdy.Tag
                         for (int i = count - 1; i >= 0; i--)
                         {
                        
-                            if (qualitys[i] == (byte)QualityConst.Close)
+                            if (!context.IgnorCloseQuality &&(qualitys[i] == (byte)QualityConst.Close))
                             {
                                 return TagHisValue<T>.MinValue;
                             }
@@ -1030,7 +1047,7 @@ namespace Cdy.Tag
                         for (int i = 0; i < count; i++)
                         {
                            
-                            if (qualitys[i] == (byte)QualityConst.Close)
+                            if (!context.IgnorCloseQuality &&(qualitys[i] == (byte)QualityConst.Close))
                             {
                                 return TagHisValue<T>.MinValue;
                             }
@@ -2033,7 +2050,7 @@ namespace Cdy.Tag
             bool islasthase = false;
             for (int i = count - 1; i >= 0; i--)
             {
-                if (timers.ContainsKey(i) && qulityes[i] == (byte)QualityConst.Close)
+                if (!context.IgnorCloseQuality &&(timers.ContainsKey(i) && qulityes[i] == (byte)QualityConst.Close))
                 {
                     context.LastValue = null;
                     context.LastTime = timers[i];
@@ -2072,7 +2089,7 @@ namespace Cdy.Tag
             //读取第一个非辅助记录点
             for (int i = 0; i < count; i++)
             {
-                if (timers.ContainsKey(i) && qulityes[i] == (byte)QualityConst.Close)
+                if (!context.IgnorCloseQuality &&(timers.ContainsKey(i) && qulityes[i] == (byte)QualityConst.Close))
                 {
                     context.FirstValue = null;
                     context.FirstTime = timers[i];

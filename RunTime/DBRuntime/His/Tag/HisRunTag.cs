@@ -193,6 +193,11 @@ namespace Cdy.Tag
         /// </summary>
         public DateTime LastUpdateTime { get; set; }
 
+        /// <summary>
+        /// 区域
+        /// </summary>
+        public string Area { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

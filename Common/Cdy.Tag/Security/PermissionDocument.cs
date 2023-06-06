@@ -86,7 +86,7 @@ namespace Cdy.Tag
         /// <param name="name"></param>
         public void Remove(string name)
         {
-            if(!Permissions.ContainsKey(name))
+            if(Permissions.ContainsKey(name))
             {
                 Permissions.Remove(name);
             }

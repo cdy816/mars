@@ -36,7 +36,12 @@ public class Program
         WindowConsolHelper.DisbleQuickEditMode();
         Console.WriteLine("准备启动....");
         Port = ReadServerPort();
-        Console.Title = "DBGuardian";
+
+        if (!Console.IsInputRedirected)
+        {
+            Console.Title = "DBGuardian";
+        }
+       
         if (args.Contains("/m"))
         {
             WindowConsolHelper.MinWindow("DBGuardian");
@@ -45,7 +50,7 @@ public class Program
         DBWebRunner.Instance.Start(Port);
         while(true)
         {
-           string cmd = Console.ReadLine();
+           string cmd = Console.In.ReadLine();
             if(cmd=="exit")
             {
                 break;
@@ -54,5 +59,4 @@ public class Program
         //Console.WriteLine("启动完成....");
     }
 
-   
 }

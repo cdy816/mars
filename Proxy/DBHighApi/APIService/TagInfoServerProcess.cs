@@ -39,7 +39,11 @@ namespace DBHighApi.Api
 
         public const byte Login = 1;
 
-        public const byte Hart = 5;
+        public const byte Heart = 5;
+
+        public const byte GetRunnerDatabase = 33;
+
+        public const byte TagStatisticsInfos = 7;
 
         #endregion ...Variables...
 
@@ -285,18 +289,92 @@ namespace DBHighApi.Api
                         }
                     }
                     break;
-                case Hart:
+                case Heart:
                     loginId = data.ReadLong();
                     Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().FreshUserId(loginId);
+                    break;
+                case GetRunnerDatabase:
+                    loginId = data.ReadLong();
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    {
+                        string sname= mm.Name;
+                        var re = Parent.Allocate(ApiFunConst.TagInfoRequest, (int)sname.Length + 8);
+                        re.Write(sname);
+                        Parent.AsyncCallback(client, re);
+                    }
                     break;
                 case Login:
                     string user = data.ReadString();
                     string pass = data.ReadString();
-                    long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass,client);
-                    Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, result));
+                    string apphash = "";
+                    if(data.ReadableCount > 0)
+                    apphash = data.ReadString();
+
+                    string sip = client.Substring(0, client.IndexOf(":"));
+                    if (Cdy.Tag.Common.ClientAuthorization.Instance.CheckIp(sip) && Cdy.Tag.Common.ClientAuthorization.Instance.CheckApplication(apphash))
+                    {
+                        long result = Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().Login(user, pass, client);
+                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, result));
+                        LoggerService.Service.Info("TagInfo", $"客户端 {client} 的用户 {user} 登录成功!");
+                        try
+                        {
+                            var vss = client.Split(":");
+                            Cdy.Tag.Common.ProcessMemoryInfo.Instances.AddClient(vss[0], int.Parse(vss[1]));
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                    else
+                    {
+                        Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, -1));
+                        LoggerService.Service.Info("TagInfo", $"客户端 {client} 的用户 {user} 登录失败!");
+                    }
+
+                    
+
                     //Debug.Print("处理登录并返回:"+result);
                     break;
+                case TagStatisticsInfos:
+                    loginId = data.ReadLong();
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    {
+                        StatisticsTags(client);
+                    }
+                    break;
             }
+        }
+
+        /// <summary>
+        /// 统计变量信息
+        /// </summary>
+        private void StatisticsTags(string client)
+        {
+            Dictionary<string,int> res = new Dictionary<string,int>();
+
+            var mm = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.ITagManager>();
+            var vtags = mm.ListAllTags();
+            res.Add("total",vtags.Count());
+            res.Add("group",mm.ListTagGroups().Count());
+            var areas = vtags.Select(e=>e.Area).Distinct();
+            res.Add("area",areas.Count());
+
+            foreach(TagType gg in Enum.GetValues(typeof(TagType)))
+            {
+                var count = vtags.Where(e=>e.Type == gg).Count();
+                res.Add(gg.ToString(),count);
+            }
+
+            var re = Parent.Allocate(ApiFunConst.TagInfoRequest, (int)res.Count*300 + 4);
+            re.WriteByte(TagStatisticsInfos);
+            re.Write(res.Count);
+            foreach(var vv in res)
+            {
+                re.Write(vv.Key);
+                re.Write(vv.Value);
+            }
+            Parent.AsyncCallback(client, re);
         }
 
         /// <summary>
@@ -322,7 +400,7 @@ namespace DBHighApi.Api
                             string[] ss = vv.Value.Split(" ", StringSplitOptions.RemoveEmptyEntries);
                             foreach (var vvv in ss)
                             {
-                                btmp |= (tag.Name.Contains(vvv) || tag.Desc.Contains(vvv));
+                                btmp |= (tag.FullName.Contains(vvv) || tag.Desc.Contains(vvv));
                             }
                             re = re && btmp;
                             break;
@@ -387,6 +465,25 @@ namespace DBHighApi.Api
 
             });
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        public override void OnClientDisconnected(string id)
+        {
+            base.OnClientDisconnected(id);
+            try
+            {
+                var vss = id.Split(":");
+                Cdy.Tag.Common.ProcessMemoryInfo.Instances.RemoveClient(vss[0], int.Parse(vss[1]));
+            }
+            catch
+            {
+
+            }
+        }
+
         #endregion ...Methods...
 
         #region ... Interfaces ...

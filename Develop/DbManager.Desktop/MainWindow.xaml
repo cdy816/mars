@@ -7,7 +7,7 @@
        ResizeMode="CanResizeWithGrip"
         
         mc:Ignorable="d"  Foreground="{DynamicResource Window.Forground}" Background="Transparent" AllowsTransparency="True" WindowStyle="None" 
-        Title="{Binding MainwindowTitle}" Height="620" Width="1024" WindowState="Normal" WindowStartupLocation="CenterScreen" Icon="/Image/mrdbd.ico">
+        Title="{Binding MainwindowTitle}" Height="768" Width="1200" WindowState="Normal" WindowStartupLocation="CenterScreen" Icon="/Image/mrdbd.ico">
     <Window.Resources>
         <local:IndexConverter x:Key="ic" />
         <BooleanToVisibilityConverter x:Key="btv" />
@@ -310,6 +310,17 @@
                                     <StackPanel Orientation="Horizontal">
                                         <Image Source="/Image/alarm.png" Height="24" RenderOptions.BitmapScalingMode="HighQuality" />
                                         <TextBlock Text="{local:ResMarker Alarm}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </Button.ContentTemplate>
+                        </Button>
+
+                        <Button BorderThickness="0"  ToolTip="{local:ResMarker Spider}" Visibility="{Binding HasSpiderStudioConfig,Converter={StaticResource btv}}"  Command="{Binding SpiderConfigCommand}" HorizontalAlignment="Left"  Margin="10,0,0,0" Height="32"  VerticalAlignment="Center" Width="80" >
+                            <Button.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="/Image/spider.png" Height="24" RenderOptions.BitmapScalingMode="HighQuality" />
+                                        <TextBlock Text="{local:ResMarker Spider}"  FontWeight="Bold" VerticalAlignment="Center" Margin="5,0"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </Button.ContentTemplate>

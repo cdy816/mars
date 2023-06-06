@@ -250,7 +250,9 @@ namespace SimDriver
                     {
                         mTagHisValueService.SetTagHisValue(vvv, tv);
                     }
+                    mTagHisValueService.SubmitCach();
                 }
+             
 
                 //mCosStopwatch.Stop();
 
@@ -295,7 +297,7 @@ namespace SimDriver
                 double fval = Math.Sin(mNumber / 180.0 * Math.PI);
                 if (vv != null)
                 {
-                    var dnow=DateTime.Now;
+                    var dnow=DateTime.UtcNow;
                     foreach (var vvv in vv)
                     {
                         mTagService.SetTagValue(vvv, ref fval, dnow, 0);
@@ -311,7 +313,9 @@ namespace SimDriver
                     {
                         mTagHisValueService.SetTagHisValue(vvv, tv);
                     }
+                    mTagHisValueService.SubmitCach();
                 }
+               
                 //mSinStopwatch.Stop();
                 var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;
                 lock (mLockObj)
@@ -353,7 +357,7 @@ namespace SimDriver
                 {
                     //mTagService.SetTagValue(vv,ref mNumber, 0);
 
-                    var dnow = DateTime.Now;
+                    var dnow = DateTime.UtcNow;
                     foreach (var vvv in vv)
                     {
                         mTagService.SetTagValue(vvv, ref mNumber, dnow, 0);
@@ -369,7 +373,9 @@ namespace SimDriver
                     {
                         mTagHisValueService.SetTagHisValue(vvv, tv);
                     }
+                    mTagHisValueService.SubmitCach();
                 }
+                
                 //mStepStopwatch.Stop();
                 var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;
                 lock (mLockObj)
@@ -419,6 +425,7 @@ namespace SimDriver
                     {
                         mTagHisValueService.SetTagHisValue(vvv, tv);
                     }
+                    mTagHisValueService.SubmitCach();
                 }
 
                 var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;
@@ -467,6 +474,7 @@ namespace SimDriver
                     {
                         mTagHisValueService.SetTagHisValue(vvv, tv);
                     }
+                    mTagHisValueService.SubmitCach();
                 }
 
                 var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;
@@ -501,7 +509,7 @@ namespace SimDriver
 
                 if (vv != null)
                 {
-                    DateTime dnow = DateTime.Now;
+                    DateTime dnow = DateTime.UtcNow;
                     mTagService.SetTagValue(vv,ref dnow, 0);
                     //mTagService.SubmiteNotifyChanged();
                 }
@@ -513,6 +521,7 @@ namespace SimDriver
                     {
                         mTagHisValueService.SetTagHisValue(vvv, tv);
                     }
+                    mTagHisValueService.SubmitCach();
                 }
 
                 var ts = (DateTime.Now - mLastProcessTime).TotalMilliseconds;

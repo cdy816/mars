@@ -85,10 +85,16 @@ namespace Cdy.Tag
         /// </summary>
         public static void MinWindow(string windowTitle)
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                IntPtr ParenthWnd = IntPtr.Zero;
+                ParenthWnd = FindWindow(null, windowTitle);
+                ShowWindow(ParenthWnd, 2);//隐藏本dos窗体, 0: 后台执行；1:正常启动；2:最小化到任务栏；3:最大化
+            }
+            else
+            {
 
-            IntPtr ParenthWnd = IntPtr.Zero;
-            ParenthWnd = FindWindow(null, windowTitle);
-            ShowWindow(ParenthWnd, 2);//隐藏本dos窗体, 0: 后台执行；1:正常启动；2:最小化到任务栏；3:最大化
+            }
         }
     }
 }

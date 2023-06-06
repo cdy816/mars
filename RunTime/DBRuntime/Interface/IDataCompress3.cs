@@ -50,11 +50,21 @@ namespace Cdy.Tag
         void RequestManualToCompress(ManualHisDataMemoryBlock data);
 
         /// <summary>
+        /// 请求手动压缩某个区域
+        /// </summary>
+        /// <param name="data"></param>
+        void RequestManualToCompress(ManualHisDataMemoryBlockArea data);
+
+        /// <summary>
         /// 
         /// </summary>
         void SubmitManualToCompress();
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        bool IsBlocked();
         #endregion ...Methods...
 
         #region ... Interfaces ...

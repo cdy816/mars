@@ -2,8 +2,7 @@
   "profiles": {
     "DBInStudio.Desktop": {
       "commandName": "Executable",
-      "executablePath": "C:\\Users\\cdy81\\Dev\\Gitee\\Output\\DBInStudio.exe",
-      "commandLineArgs": "127.0.0.1 Test Admin Admin"
+      "executablePath": "C:\\Users\\cdy81\\Dev\\dpmars\\Output\\DBInStudio.exe"
     }
   }
 }

@@ -152,11 +152,14 @@ namespace DBRuntime.His.Compress
         {
             if (mCanCompress && index > 2)
             {
-                MemoryBlock.Write((byte)this.Precision);
+                MemoryBlock.Write((byte)(this.Precision+100));
                 MemoryBlock.Write(mBuffer[0]);
+                long pval = 0;
                 for (int i = 1; i < index; i++)
                 {
-                    VarintMemory.WriteSInt64(TranslateData(mBuffer[i]));
+                    var vval = TranslateData(mBuffer[i]);
+                    VarintMemory.WriteSInt64(vval - pval);
+                    pval = vval;
                 }
                 MemoryBlock.WriteBytes(9, VarintMemory.DataBuffer,0,(int)VarintMemory.WritePosition);
             }
@@ -184,29 +187,58 @@ namespace DBRuntime.His.Compress
         /// </summary>
         public static List<double> Decompress(byte[] values)
         {
-            var memory = new MemorySpan(values);
-            var type = memory.ReadByte();
             List<double> re = new List<double>(300);
-            var dval = Math.Pow(10, type);
-            if(type == byte.MaxValue)
+            try
             {
-                while(memory.Position<memory.Length)
+                var memory = new MemorySpan(values);
+                var type = memory.ReadByte();
+              
+                if (type == byte.MaxValue)
                 {
-                    re.Add(memory.ReadDouble());
-                }
-            }
-            else
-            {
-                var val = memory.ReadDouble();
-                re.Add(val);
-                using (ProtoMemory vmemory = new ProtoMemory(values,9))
-                {
-                    while (vmemory.ReadPosition < vmemory.DataBuffer.Length)
+                    while (memory.Position < memory.Length)
                     {
-                        val += (vmemory.ReadSInt64() / dval);
-                        re.Add(val);
+                        re.Add(memory.ReadDouble());
                     }
                 }
+                else
+                {
+                    if(type >= 100)
+                    {
+                        var dval = Math.Pow(10, type-100);
+                        var val = memory.ReadDouble();
+                        re.Add(val);
+                        long pval = 0;
+                        using (ProtoMemory vmemory = new ProtoMemory(values, 9))
+                        {
+                            while (vmemory.ReadPosition < vmemory.DataBuffer.Length)
+                            {
+                                var vval = vmemory.ReadSInt64();
+                                val += ((pval + vval) / dval);
+                                re.Add(val);
+                                pval += vval;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var dval = Math.Pow(10, type);
+                        var val = memory.ReadDouble();
+                        re.Add(val);
+                        using (ProtoMemory vmemory = new ProtoMemory(values, 9))
+                        {
+                            while (vmemory.ReadPosition < vmemory.DataBuffer.Length)
+                            {
+                                val += (vmemory.ReadSInt64() / dval);
+                                re.Add(val);
+                            }
+                        }
+                    }
+                    
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("",$"{ex.Message} {ex.StackTrace}");
             }
             return re;
         }

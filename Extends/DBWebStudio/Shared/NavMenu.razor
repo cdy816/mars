@@ -1,0 +1,458 @@
+﻿@using DBWebStudio.Data;
+@inject MarsProxy mProxy;
+@inject NavigationManager Navigation;
+@inject IJSRuntime JS;
+@inject MenuServiceManager Manager;
+@implements IMenuService;
+
+<div class="d-flex flex-column h-100 pb-1" style="width:240px;border-color:gray;border-right-width:1px;border-right-style:solid;">
+    <div class="flex-fill">
+        @foreach (var vv in mTreeItems)
+        {
+            if (vv is Data.TreeItemCollection)
+            {
+                <TreeGroupView Data="@(vv as Data.TreeItemCollection)" />
+            }
+            else
+            {
+                <TreeItemView Data="@vv" />
+            }
+        }
+    </div>
+    <div class="mb-1 mt-1" style="width:240px;border-color:gray;border-top-width:1px;border-top-style:solid;">
+        <div class="d-flex justify-content-between mt-2">
+            <div class="btn-group">
+                <button class="btn btn-primary ms-2" style="width:80px" disabled="@(!CanAdd())" onclick="@(()=>AddCommand())">添加</button>
+                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <button class="btn btn-secondary dropdown-item py-0" style="width:80px" disabled="@(!CanReName())" onclick="@(()=>ReNameCommand())">重命名</button>
+                    </li>
+                </ul>
+            </div>
+            
+            <button class="btn btn-secondary me-2" style="width:80px;" disabled="@(!CanRemove())">删除</button>
+        </div>
+    </div>
+
+    <div class="modal modal-static" id="newDlg" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="importModelLabel" aria-hidden="true">
+            <div class="modal-dialog  modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="importModelLabel">@mDialogTitle</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                    <div class="mt-3 form-floating">
+                        <input type="text" class="form-control bg-transparent " id="formGroupExampleInput" placeholder="名称" @bind=@mEditName>
+                        <label for="formGroupExampleInput" class="form-label">名称</label>
+                    </div>
+                    </div>
+                    <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="@(()=>DialogOK())">确定</button>
+                    </div>
+               </div>
+            </div>
+    </div>
+
+    
+
+</div>
+
+
+@code {
+    private Data.TreeItem mCurrent;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public Data.TreeItem CurrentSelect
+    {
+        get
+        {
+            return mCurrent;
+        }
+        set
+        {
+            if(mCurrent!=null)
+            {
+                mCurrent.IsSelected = false;
+            }
+            mCurrent = value;
+            StateHasChanged();
+        }
+    }
+
+    private List<Data.TreeItem> mTreeItems = new List<Data.TreeItem>();
+
+    private List<Tuple<string, string, string>> mTagGroups = new List<Tuple<string, string, string>>();
+
+    private List<Tuple<string, string>> mClasses = new List<Tuple<string, string>>();
+
+    private string mCurrentDatabase = "";
+
+    private string mEditName = "";
+    private string mDialogTitle = "新建";
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        mCurrentDatabase = mProxy.CurrentDatabase;
+        mTagGroups = mProxy.ListTagGroup();
+        mClasses = mProxy.ListClass();
+        InitTreeItem();
+        Manager.Service = this;
+
+        if (TagViewModel.Drivers ==null)
+        {
+            TagViewModel.Drivers = mProxy.GetRegistorDrivers();
+        }
+
+    }
+
+    public void RefreshMenu()
+    {
+        InitTreeItem();
+        InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    private void AddCommand()
+    {
+        if(CurrentSelect.CanAdd)
+        {
+            CurrentSelect.AddAction.Invoke();
+        }
+    }
+
+    private void ReNameCommand()
+    {
+        if (CurrentSelect.CanReName)
+        {
+            CurrentSelect.ReNameAction.Invoke();
+        }
+    }
+
+    private Action<string> mDialogAction;
+
+    InnerJsHelper helper;
+
+    private void DialogOK()
+    {
+        mDialogAction?.Invoke(mEditName);
+    }
+
+    private async void DialogProcess()
+    {
+        if (helper == null)
+        {
+            helper = new InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+        helper.Dialog("newDlg", null);
+    }
+
+    private async void Alert(string msg)
+    {
+        if (helper == null)
+        {
+            helper = new InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+        helper.Alert(msg);
+    }
+
+    private bool CanAdd()
+    {
+        return CurrentSelect != null && CurrentSelect.CanAdd ? true : false;
+    }
+
+    private bool CanRemove()
+    {
+        return CurrentSelect != null && CurrentSelect.CanRemove ? true : false;
+    }
+
+    private bool CanReName()
+    {
+        return CurrentSelect != null && CurrentSelect.CanReName ? true : false;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    private void AddTagGroup(string name)
+    {
+        string cname = "";
+        if(CurrentSelect is Data.RootTagGroupItem)
+        {
+            cname = mProxy.AddTagGroup(mCurrentDatabase, name, "");
+        }
+        else
+        {
+            cname = mProxy.AddTagGroup(mCurrentDatabase, name, (CurrentSelect as Data.TagGroupItem).FullName);
+        }
+        Data.TagGroupItem groupViewModel = new Data.TagGroupItem()
+            {
+                Name = cname,
+                Description = cname,
+                Icon = "./css/Image/Folder.png",
+                SelectChangedAction = (e, val) =>
+                {
+                    if (val)
+                    {
+                        CurrentSelect = e;
+                        Navigation.NavigateTo("/taggroupdetail/" + e.Name);
+                    }
+                },
+                AddAction = () =>
+                {
+                    mDialogTitle = "新建变量组";
+                    mDialogAction = AddTagGroup;
+                    DialogProcess();
+                },
+                ReNameAction=()=>
+                {
+                    mDialogTitle = cname + " 重命名";
+                    mDialogAction = RenameTagGroup;
+                    DialogProcess();
+                }
+            };
+        (CurrentSelect as Data.TagGroupItem).Add(groupViewModel);
+    }
+
+    private void RenameTagGroup(string name)
+    {
+        if (CurrentSelect is Data.TagGroupItem)
+        {
+            var sname = (CurrentSelect as Data.TagGroupItem).FullName;
+            if(!mProxy.ReNameTagGroup(sname, name))
+            {
+                Alert("修改失败!");
+            }
+        }
+    }
+
+    private void AddClass(string name)
+    {
+        string sname = mProxy.AddTagClass(name);
+        if (!string.IsNullOrEmpty(sname))
+        {
+            Data.ComplexTagClassItem groupViewModel = new Data.ComplexTagClassItem()
+                {
+                    Name = sname,
+                    Description = sname,
+                    Icon = "./css/Image/codetags.png",
+                    SelectChangedAction = (e, val) =>
+                    {
+                        if (val)
+                        {
+                            CurrentSelect = e;
+                            Navigation.NavigateTo("/classdetail/" + e.Name);
+                        }
+                    },
+                    AddAction = () =>
+                        {
+                            mDialogTitle = "新建对象模版";
+                            mDialogAction = AddClass;
+                            DialogProcess();
+                        },
+                    ReNameAction = () =>
+                    {
+                        mDialogTitle = sname + " 重命名";
+                        mDialogAction = RenameClass;
+                        DialogProcess();
+
+                    }
+                };
+            (CurrentSelect as Data.TreeItemCollection).Add(groupViewModel);
+            mClasses.Add(new Tuple<string, string>(sname, sname));
+            TagViewModel.UpdateTagType(mClasses.Select(e => e.Item1).ToList());
+        }
+
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    private void RenameClass(string name)
+    {
+        if (CurrentSelect is Data.ComplexTagClassItem)
+        {
+            var sname = (CurrentSelect as Data.ComplexTagClassItem).Name;
+            if(!mProxy.RenameTagClass(sname, name))
+            {
+                Alert("修改失败!");
+            }
+            (CurrentSelect as Data.ComplexTagClassItem).Name = name;
+            var vvs = mClasses.Where(e => e.Item1 == sname);
+            string sdes = name;
+            if(vvs.Count()>0)
+            {
+                foreach(var vv in vvs)
+                {
+                    mClasses.Remove(vv);
+                    sdes = vv.Item2;
+                }
+            }
+            mClasses.Add(new Tuple<string, string>(name, sdes));
+            TagViewModel.UpdateTagType(mClasses.Select(e => e.Item1).ToList());
+        }
+    }
+
+    private void InitTreeItem()
+    {
+        mTreeItems.Clear();
+        Data.TreeItemCollection mdatabase = new Data.TreeItemCollection() { Name = mCurrentDatabase, SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; }, Icon = "./css/Image/database.png" };
+        mTreeItems.Add(mdatabase);
+
+        var tagtree = new Data.RootTagGroupItem()
+            {
+                Name = "变量",
+                Url = "/taggroupdetail",
+                Icon = "./css/Image/tag.png",
+                SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; },
+                AddAction = () =>
+                    {
+                        mDialogTitle = "新建变量组";
+                        mDialogAction = AddTagGroup;
+                        DialogProcess();
+                    }
+            };
+        InitTagGroup(tagtree);
+        mdatabase.Items.Add(tagtree);
+
+        var classtree = new Data.TreeItemCollection()
+            {
+                Name = "对象模版",
+                Icon = "./css/Image/class.png",
+                SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; },
+                AddAction = () =>
+                    {
+                        mDialogTitle = "新建对象模版";
+                        mDialogAction = AddClass;
+                        DialogProcess();
+                    }
+            };
+        InitClass(classtree);
+        mdatabase.Items.Add(classtree);
+
+        //权限
+        var security = new Data.TreeItemCollection() { Name = "安全", Icon = "./css/Image/Security.png", SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; } };
+        mdatabase.Items.Add(security);
+        var user = new Data.TreeItem() { Name = "用户", Url = "/databaseusermanager", Icon = "./css/Image/user.png", SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; } };
+        security.Items.Add(user);
+        var permission = new Data.TreeItem() { Name = "权限", Url = "/databasepermission", Icon = "./css/Image/permissions.png", SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; } };
+        security.Items.Add(permission);
+
+        var setting = new Data.TreeItem() { Name = "设置", Url = "/databasesetting", Icon = "./css/Image/setting.png", SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; } };
+        mdatabase.Items.Add(setting);
+
+        Data.TreeItemCollection mServerSecurity = new Data.TreeItemCollection() { Name = "服务器安全", Icon = "./css/Image/server-security.png", SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; } };
+        mTreeItems.Add(mServerSecurity);
+        var mper = new Data.TreeItem() { Name = mProxy.CurrentUser, Url = "/currentusermanager", Icon = "./css/Image/UserSettings.png", SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; } };
+        mServerSecurity.Items.Add(mper);
+
+        var suc = new Data.TreeItem() { Name = "用户", Url = "/serverusermanager", Icon = "./css/Image/user.png", SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; } };
+        mServerSecurity.Items.Add(suc);
+    }
+
+    private void InitTagGroup(Data.RootTagGroupItem parent)
+    {
+        foreach (var vvv in mTagGroups.Where(e => string.IsNullOrEmpty(e.Item3)))
+        {
+            Data.TagGroupItem groupViewModel = new Data.TagGroupItem()
+                {
+                    Name = vvv.Item1,
+                    Description = vvv.Item2,
+                    Icon = "./css/Image/Folder.png",
+                    SelectChangedAction = (e, val) =>
+                    {
+                        if (val)
+                        {
+                            CurrentSelect = e;
+                            Navigation.NavigateTo("/taggroupdetail/" + e.Name);
+                        }
+                    },
+                    AddAction = () =>
+                    {
+                        mDialogTitle = "新建变量组";
+                        mDialogAction = AddTagGroup;
+                        DialogProcess();
+                    },
+                    ReNameAction = () =>
+                    {
+                        mDialogTitle = vvv.Item1 + " 重命名";
+                        mDialogAction = RenameClass;
+                        DialogProcess();
+                    }
+                };
+            parent.Add(groupViewModel);
+            groupViewModel.InitData(mTagGroups,() =>
+                    {
+                        mDialogTitle = "新建变量组";
+                        mDialogAction = AddTagGroup;
+                        DialogProcess();
+                    }, () =>
+                    {
+                        mDialogTitle = vvv.Item1 + " 重命名";
+                        mDialogAction = RenameClass;
+                        DialogProcess();
+                    }, (e, val) =>
+                    {
+                        if (val)
+                        {
+                            CurrentSelect = e;
+                            Navigation.NavigateTo("/taggroupdetail/" + (e as TagGroupItem).FullName);
+                        }
+                    });
+        }
+    }
+
+    private void InitClass(Data.TreeItemCollection parent)
+    {
+        foreach (var vv in mClasses)
+        {
+            Data.ComplexTagClassItem groupViewModel = new Data.ComplexTagClassItem()
+                {
+                    Name = vv.Item1,
+                    Description = vv.Item2,
+                    Icon = "./css/Image/codetags.png",
+                    SelectChangedAction = (e, val) =>
+                    {
+                        if (val)
+                        {
+                            CurrentSelect = e;
+                            Navigation.NavigateTo("/classdetail/" + e.Name);
+                        }
+                    },
+                    AddAction = () =>
+                        {
+                            mDialogTitle = "新建对象模版";
+                            mDialogAction = AddClass;
+                            DialogProcess();
+                        },
+                    ReNameAction = () =>
+                   {
+                       mDialogTitle = vv.Item1 + " 重命名";
+                       mDialogAction = RenameClass;
+                       DialogProcess();
+
+                   }
+                };
+            parent.Add(groupViewModel);
+        }
+
+        TagViewModel.UpdateTagType(mClasses.Select(e=>e.Item1).ToList());
+    }
+
+    
+
+}

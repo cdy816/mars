@@ -16,6 +16,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Cheetah;
 using System.Linq;
+using Cdy.Tag.Driver;
 
 namespace DBRuntime.Api
 {
@@ -64,6 +65,22 @@ namespace DBRuntime.Api
         /// </summary>
         public const byte DeleteHisData = 7;
 
+
+        /// <summary>
+        /// 根据时间间隔查询数据的历史记录，忽略系统退出的影响
+        /// </summary>
+        public const byte RequestHisDataByTimeSpanByIgnorClosedQuality = 11;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestHisDatasByTimePointByIgnorClosedQuality = 10;
+
+        /// <summary>
+        /// 通过SQL查询历史
+        /// </summary>
+        public const byte ReadHisValueBySQL = 140;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -109,11 +126,24 @@ namespace DBRuntime.Api
                                 data.UnlockAndReturn();
                             });
                             break;
+                        case ReadHisValueBySQL:
+                            Task.Run(() =>
+                            {
+                                ProcessQueryBySQL(client, data);
+                                data.UnlockAndReturn();
+                            });
+                            break;
                         case RequestHisDatasByTimePoint:
-                            Task.Run(() => { ProcessRequestHisDatasByTimePointByMemory(client, data); data.UnlockAndReturn(); });
+                            Task.Run(() => { ProcessRequestHisDatasByTimePoint(client, data); data.UnlockAndReturn(); });
+                            break;
+                        case RequestHisDatasByTimePointByIgnorClosedQuality:
+                            Task.Run(() => { ProcessRequestHisDatasByTimePointByIgnoreClosedQualtiy(client, data); data.UnlockAndReturn(); });
                             break;
                         case RequestHisDataByTimeSpan:
                             Task.Run(() => { ProcessRequestHisDataByTimeSpanByMemory(client, data); data.UnlockAndReturn(); });
+                            break;
+                        case RequestHisDataByTimeSpanByIgnorClosedQuality:
+                            Task.Run(() => { ProcessRequestHisDataByTimeSpanByMemoryByIgnorClosedQuality(client, data); data.UnlockAndReturn(); });
                             break;
                         case RequestNumberStatistics:
                             Task.Run(() => { ProcessRequestNumberStatistics(client, data); data.UnlockAndReturn(); });
@@ -530,14 +560,15 @@ namespace DBRuntime.Api
         private unsafe ByteBuffer WriteDataToBufferByMemory<T>(int cid,byte type, HisQueryResult<T> resb)
         {
             var vdata = resb.Contracts();
+            //var vdata = resb;
             var re = Parent.Allocate(FunId, 5 + vdata.Size+4);
             re.Write(cid);
             re.Write(type);
             re.Write(resb.Count);
             re.Write(vdata.Address, vdata.Size);
-            //Marshal.Copy(vdata.Address, re.Array, re.ArrayOffset + re.WriterIndex, vdata.Size);
-            //re.SetWriterIndex(re.WriterIndex + vdata.Size);
 
+            resb.Dispose();
+            vdata.Dispose();
             return re;
         }
 
@@ -558,6 +589,8 @@ namespace DBRuntime.Api
             re.Write(vdata.MemoryHandle, vdata.Position);
             //Marshal.Copy(vdata.MemoryHandle, re.Array, re.ArrayOffset+ re.WriterIndex, vdata.Position);
             //re.SetWriterIndex(re.WriterIndex + vdata.Position);
+
+            resb.Dispose();
 
             return re;
         }
@@ -676,6 +709,406 @@ namespace DBRuntime.Api
             }
         }
 
+        private SqlExpress ParseSql(string sql, out List<int> selecttag, out Dictionary<int, byte> tagtps)
+        {
+            var sqlexp = new SqlExpress().FromString(sql);
+            List<string> ls = new List<string>();
+            var serice = ServiceLocator.Locator.Resolve<ITagManager>();
+
+            if (sqlexp.Select.Selects.Count > 0 && sqlexp.Select.Selects[0].TagName == "*" && !string.IsNullOrEmpty(sqlexp.From))
+            {
+                var tags = serice.GetTagByArea(sqlexp.From);
+                if (tags != null && tags.Count > 0)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    foreach (var vv in tags.Select(e => e.FullName))
+                    {
+                        sb.Append(vv.ToString() + ",");
+                    }
+                    sb.Length = sb.Length > 0 ? sb.Length - 1 : sb.Length;
+                    sql = sql.Replace("*", sb.ToString());
+
+                    sqlexp = new SqlExpress().FromString(sql);
+                }
+                else
+                {
+                    string sgroup=sqlexp.From;
+                    if(sgroup=="_root")
+                    {
+                        sgroup = "";
+                    }
+                    tags = serice.GetTagsByGroup(sgroup);
+                    if(tags != null && tags.Count > 0)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        foreach (var vv in tags.Select(e => e.FullName))
+                        {
+                            sb.Append(vv.ToString() + ",");
+                        }
+                        sb.Length = sb.Length > 0 ? sb.Length - 1 : sb.Length;
+                        sql = sql.Replace("*", sb.ToString());
+
+                        sqlexp = new SqlExpress().FromString(sql);
+                    }
+                }
+            }
+            Dictionary<int, byte> tps = new Dictionary<int, byte>();
+            List<int> selids = new List<int>();
+            if (sqlexp.Select != null)
+            {
+                foreach (var vv in sqlexp.Select.Selects)
+                {
+                    var tag = serice.GetTagByName(vv.TagName);
+                    if (!tps.ContainsKey(tag.Id))
+                    {
+                        tps.Add(tag.Id, (byte)tag.Type);
+                    }
+                    selids.Add(tag.Id);
+                }
+            }
+
+            if (sqlexp.Where != null)
+            {
+                FillTagIds(sqlexp.Where, tps);
+            }
+            selecttag = selids;
+            tagtps = tps;
+            return sqlexp;
+        }
+
+        private void FillTagIds(ExpressFilter filter, Dictionary<int, byte> tps)
+        {
+            var serice = ServiceLocator.Locator.Resolve<ITagManager>();
+            foreach (var vv in filter.Filters)
+            {
+                if (vv is ExpressFilter)
+                {
+                    FillTagIds(vv as ExpressFilter, tps);
+                }
+                else
+                {
+                    var fa = (vv as FilterAction);
+                    if (fa.TagName.ToLower() == "time")
+                    {
+                        continue;
+                    }
+                    var tag = serice.GetTagByName(fa.TagName);
+                    if (tag != null)
+                    {
+                        fa.TagId = tag.Id;
+                        if (!tps.ContainsKey(tag.Id))
+                        {
+                            tps.Add(tag.Id, (byte)tag.Type);
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception($"tag {fa.TagName} 不存在!");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="cc"></param>
+        /// <param name="re"></param>
+        private void ProcessRealData(List<int> cc, int len, ByteBuffer re)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+            re.Write(len);
+            DateTime tmp = DateTime.UtcNow;
+            //foreach (var vv in cc)
+            for (int i = 0; i < len; i++)
+            {
+                var vv = cc[i];
+
+                re.Write(vv);
+
+                byte qu, type;
+                DateTime time;
+                object value;
+
+                if (service.IsComplexTag(vv))
+                {
+                    List<RealTagValueWithTimer> vals = new List<RealTagValueWithTimer>();
+                    re.WriteByte((byte)TagType.Complex);
+
+                    service.GetComplexTagValue(vv, vals);
+
+                    re.Write(vals.Count);
+                    foreach (var vtmp in vals)
+                    {
+                        re.Write(vtmp.Id);
+                        re.Write((byte)vtmp.ValueType);
+                        switch ((byte)vtmp.ValueType)
+                        {
+                            case (byte)TagType.Bool:
+                                re.Write(Convert.ToByte(vtmp.Value));
+                                break;
+                            case (byte)TagType.Byte:
+                                re.Write(Convert.ToByte(vtmp.Value));
+                                break;
+                            case (byte)TagType.Short:
+                                re.Write(Convert.ToInt16(vtmp.Value));
+                                break;
+                            case (byte)TagType.UShort:
+                                re.Write(Convert.ToUInt16(vtmp.Value));
+                                break;
+                            case (byte)TagType.Int:
+                                re.Write(Convert.ToInt32(vtmp.Value));
+                                break;
+                            case (byte)TagType.UInt:
+                                re.Write(Convert.ToUInt32(vtmp.Value));
+                                break;
+                            case (byte)TagType.Long:
+                            case (byte)TagType.ULong:
+                                re.Write(Convert.ToInt64(vtmp.Value));
+                                break;
+                            case (byte)TagType.Float:
+                                re.Write(Convert.ToSingle(vtmp.Value));
+                                break;
+                            case (byte)TagType.Double:
+                                re.Write(Convert.ToDouble(vtmp.Value));
+                                break;
+                            case (byte)TagType.String:
+                                string sval = vtmp.Value.ToString();
+                                re.Write(sval);
+                                //re.Write(sval.Length);
+                                //re.Write(sval, Encoding.Unicode);
+                                break;
+                            case (byte)TagType.DateTime:
+                                re.Write(((DateTime)vtmp.Value).Ticks);
+                                break;
+                            case (byte)TagType.IntPoint:
+                                re.Write(((IntPointData)vtmp.Value).X);
+                                re.Write(((IntPointData)vtmp.Value).Y);
+                                break;
+                            case (byte)TagType.UIntPoint:
+                                re.Write((int)((UIntPointData)vtmp.Value).X);
+                                re.Write((int)((UIntPointData)vtmp.Value).Y);
+                                break;
+                            case (byte)TagType.IntPoint3:
+                                re.Write(((IntPoint3Data)vtmp.Value).X);
+                                re.Write(((IntPoint3Data)vtmp.Value).Y);
+                                re.Write(((IntPoint3Data)vtmp.Value).Z);
+                                break;
+                            case (byte)TagType.UIntPoint3:
+                                re.Write((int)((UIntPoint3Data)vtmp.Value).X);
+                                re.Write((int)((UIntPoint3Data)vtmp.Value).Y);
+                                re.Write((int)((UIntPoint3Data)vtmp.Value).Z);
+                                break;
+                            case (byte)TagType.LongPoint:
+                                re.Write(((LongPointData)vtmp.Value).X);
+                                re.Write(((LongPointData)vtmp.Value).Y);
+                                break;
+                            case (byte)TagType.ULongPoint:
+                                re.Write((long)((ULongPointData)vtmp.Value).X);
+                                re.Write((long)((ULongPointData)vtmp.Value).Y);
+                                break;
+                            case (byte)TagType.LongPoint3:
+                                re.Write(((LongPoint3Data)vtmp.Value).X);
+                                re.Write(((LongPoint3Data)vtmp.Value).Y);
+                                re.Write(((LongPoint3Data)vtmp.Value).Z);
+                                break;
+                            case (byte)TagType.ULongPoint3:
+                                re.Write((long)((ULongPoint3Data)vtmp.Value).X);
+                                re.Write((long)((ULongPoint3Data)vtmp.Value).Y);
+                                re.Write((long)((ULongPoint3Data)vtmp.Value).Z);
+                                break;
+                        }
+                        re.Write(vtmp.Time.Ticks);
+                        re.Write(vtmp.Quality);
+                    }
+
+                    re.Write(tmp.Ticks);
+                    re.WriteByte((byte)QualityConst.Null);
+                }
+                else
+                {
+                    value = service.GetTagValue(vv, out qu, out time, out type);
+
+                    if (value != null)
+                    {
+                        re.WriteByte(type);
+                        switch (type)
+                        {
+                            case (byte)TagType.Bool:
+                                re.Write(Convert.ToByte(value));
+                                break;
+                            case (byte)TagType.Byte:
+                                re.Write(Convert.ToByte(value));
+                                break;
+                            case (byte)TagType.Short:
+                                re.Write(Convert.ToInt16(value));
+                                break;
+                            case (byte)TagType.UShort:
+                                re.Write(Convert.ToUInt16(value));
+                                break;
+                            case (byte)TagType.Int:
+                                re.Write(Convert.ToInt32(value));
+                                break;
+                            case (byte)TagType.UInt:
+                                re.Write(Convert.ToUInt32(value));
+                                break;
+                            case (byte)TagType.Long:
+                            case (byte)TagType.ULong:
+                                re.Write(Convert.ToInt64(value));
+                                break;
+                            case (byte)TagType.Float:
+                                re.Write(Convert.ToSingle(value));
+                                break;
+                            case (byte)TagType.Double:
+                                re.Write(Convert.ToDouble(value));
+                                break;
+                            case (byte)TagType.String:
+                                string sval = value.ToString();
+                                re.Write(sval);
+                                //re.Write(sval.Length);
+                                //re.Write(sval, Encoding.Unicode);
+                                break;
+                            case (byte)TagType.DateTime:
+                                re.Write(((DateTime)value).Ticks);
+                                break;
+                            case (byte)TagType.IntPoint:
+                                re.Write(((IntPointData)value).X);
+                                re.Write(((IntPointData)value).Y);
+                                break;
+                            case (byte)TagType.UIntPoint:
+                                re.Write((int)((UIntPointData)value).X);
+                                re.Write((int)((UIntPointData)value).Y);
+                                break;
+                            case (byte)TagType.IntPoint3:
+                                re.Write(((IntPoint3Data)value).X);
+                                re.Write(((IntPoint3Data)value).Y);
+                                re.Write(((IntPoint3Data)value).Z);
+                                break;
+                            case (byte)TagType.UIntPoint3:
+                                re.Write((int)((UIntPoint3Data)value).X);
+                                re.Write((int)((UIntPoint3Data)value).Y);
+                                re.Write((int)((UIntPoint3Data)value).Z);
+                                break;
+                            case (byte)TagType.LongPoint:
+                                re.Write(((LongPointData)value).X);
+                                re.Write(((LongPointData)value).Y);
+                                break;
+                            case (byte)TagType.ULongPoint:
+                                re.Write((long)((ULongPointData)value).X);
+                                re.Write((long)((ULongPointData)value).Y);
+                                break;
+                            case (byte)TagType.LongPoint3:
+                                re.Write(((LongPoint3Data)value).X);
+                                re.Write(((LongPoint3Data)value).Y);
+                                re.Write(((LongPoint3Data)value).Z);
+                                break;
+                            case (byte)TagType.ULongPoint3:
+                                re.Write((long)((ULongPoint3Data)value).X);
+                                re.Write((long)((ULongPoint3Data)value).Y);
+                                re.Write((long)((ULongPoint3Data)value).Z);
+                                break;
+                            case (byte)TagType.Complex:
+                                break;
+                        }
+
+                        re.Write(time.Ticks);
+                        re.WriteByte(qu);
+                    }
+                    else
+                    {
+                        re.WriteByte((byte)TagType.Byte);
+                        re.WriteByte(0);
+                        re.Write(tmp.Ticks);
+                        re.WriteByte((byte)QualityConst.Null);
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// 查询实时值
+        /// </summary>
+        /// <param name="selids"></param>
+        /// <param name="id"></param>
+        private ByteBuffer ProcessQueryRealValueBySql(List<int> selids, int id)
+        {
+            var service = ServiceLocator.Locator.Resolve<IRealTagProduct>();
+            var re = Parent.Allocate(FunId, 10 + 8 * selids.Count);
+            re.Write(id);
+            re.Write((byte)ReadHisValueBySQL);
+            re.Write((byte)2);
+            ProcessRealData(selids, selids.Count, re);
+            return re;
+        }
+        private void ProcessQueryBySQL(string clientid, ByteBuffer block)
+        {
+            try
+            {
+                string sql = block.ReadString();
+                int id = block.ReadInt();
+                if (!string.IsNullOrEmpty(sql))
+                {
+                    var sqlexp = ParseSql(sql, out List<int> selids, out Dictionary<int, byte> tps);
+                    if (sqlexp.Where == null || (sqlexp.Where.LowerTime == null && sqlexp.Where.UpperTime == null))
+                    {
+                        var re = ProcessQueryRealValueBySql(selids, id);
+                        Parent.AsyncCallback(clientid, re);
+                        return;
+                    }
+                    else if (sqlexp.Where.UpperTime == null)
+                    {
+                        sqlexp.Where.UpperTime = new LowerEqualAction() { IgnorFit = true, Target = DateTime.Now.ToString() };
+                    }
+                    else if (sqlexp.Where.LowerTime == null)
+                    {
+                        LoggerService.Service.Warn("DirectAccess", $"Sql 语句格式不支持.");
+                        return;
+                    }
+                    var qq = ServiceLocator.Locator.Resolve<IHisQuery>().ReadAllValueAndFilter(selids, DateTime.Parse(sqlexp.Where.LowerTime.Target.ToString()), DateTime.Parse(sqlexp.Where.UpperTime.Target.ToString()), sqlexp.Where, tps);
+                    if (qq != null)
+                    {
+                        if (sqlexp.Select.IsAllNone())
+                        {
+                            var smetas = qq.SeriseMeta();
+                            var re = Parent.Allocate(FunId, 12 + qq.AvaiableSize + smetas.Length * 2);
+                            re.Write(id);
+                            re.Write((byte)ReadHisValueBySQL);
+                            re.Write((byte)0);
+                            re.Write(smetas);
+                            re.Write(qq.AvaiableSize);
+                            re.Write(qq.Address, qq.AvaiableSize);
+                            Parent.AsyncCallback(clientid, re);
+                            //直接返回表格内容
+                        }
+                        else
+                        {
+                            //做二次计算值
+                            List<object> vals = new List<object>();
+                            foreach (var vv in sqlexp.Select.Selects)
+                            {
+                                vals.Add(vv.Cal(qq));
+                            }
+
+                            var re = Parent.Allocate(FunId, 10 + 8 * vals.Count);
+                            re.Write(id);
+                            re.Write((byte)ReadHisValueBySQL);
+                            re.Write((byte)1);
+                            re.Write(vals.Count);
+                            foreach (var vv in vals)
+                            {
+                                re.Write(Convert.ToDouble(vv));
+                            }
+                            Parent.AsyncCallback(clientid, re);
+                        }
+                        qq.Dispose();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Service.Erro("DirectAccess", ex.Message);
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -709,7 +1142,7 @@ namespace DBRuntime.Api
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="data"></param>
-        private void ProcessRequestHisDatasByTimePointByMemory(string clientId, ByteBuffer data)
+        private void ProcessRequestHisDatasByTimePoint(string clientId, ByteBuffer data)
         {
             int id = data.ReadInt();
             Cdy.Tag.QueryValueMatchType type = (QueryValueMatchType)data.ReadByte();
@@ -756,7 +1189,7 @@ namespace DBRuntime.Api
                         re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<string>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.UInt:
-                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<bool>(id, times, type));
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<uint>(id, times, type));
                         break;
                     case Cdy.Tag.TagType.ULong:
                         re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ulong>(id, times, type));
@@ -787,6 +1220,104 @@ namespace DBRuntime.Api
                         break;
                     case Cdy.Tag.TagType.ULongPoint3:
                         re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ULongPoint3Data>(id, times, type));
+                        break;
+                }
+                Parent.AsyncCallback(clientId, re);
+            }
+            else
+            {
+                //Parent.AsyncCallback(clientId, FunId, new byte[1], 0);
+                re = Parent.Allocate(FunId, 5 + 4);
+                re.Write(cid);
+                re.Write(0);
+                re.Write(0);
+                Parent.AsyncCallback(clientId, re);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        private void ProcessRequestHisDatasByTimePointByIgnoreClosedQualtiy(string clientId, ByteBuffer data)
+        {
+            int id = data.ReadInt();
+            Cdy.Tag.QueryValueMatchType type = (QueryValueMatchType)data.ReadByte();
+            int count = data.ReadInt();
+            List<DateTime> times = new List<DateTime>();
+            for (int i = 0; i < count; i++)
+            {
+                times.Add(new DateTime(data.ReadLong()));
+            }
+            int cid = data.ReadInt();
+            var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
+
+            ByteBuffer re = null;
+
+            if (tags != null)
+            {
+                switch (tags.Type)
+                {
+                    case Cdy.Tag.TagType.Bool:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<bool>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Byte:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<byte>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.DateTime:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<DateTime>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Double:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<double>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Float:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<float>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Int:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<int>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Long:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<long>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Short:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<short>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.String:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<string>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.UInt:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<uint>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.ULong:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<ulong>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.UShort:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<ushort>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.IntPoint:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<IntPointData>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.UIntPoint:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<UIntPointData>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.IntPoint3:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<IntPoint3Data>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.UIntPoint3:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<UIntPoint3Data>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.LongPoint:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<LongPointData>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.ULongPoint:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<ULongPointData>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.LongPoint3:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<LongPoint3Data>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.ULongPoint3:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<ULongPoint3Data>(id, times, type));
                         break;
                 }
                 Parent.AsyncCallback(clientId, re);
@@ -889,6 +1420,107 @@ namespace DBRuntime.Api
                         break;
                     case Cdy.Tag.TagType.ULongPoint3:
                         re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQuery<ULongPoint3Data>(id, times, type));
+                        break;
+                }
+                Parent.AsyncCallback(clientId, re);
+            }
+            else
+            {
+                re = Parent.Allocate(FunId, 5 + 4);
+                re.Write(cid);
+                re.Write(0);
+                re.Write(0);
+                Parent.AsyncCallback(clientId, re);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="data"></param>
+        private void ProcessRequestHisDataByTimeSpanByMemoryByIgnorClosedQuality(string clientId, ByteBuffer data)
+        {
+            int id = data.ReadInt();
+            Cdy.Tag.QueryValueMatchType type = (QueryValueMatchType)data.ReadByte();
+            DateTime stime = new DateTime(data.ReadLong());
+            DateTime etime = new DateTime(data.ReadLong());
+            TimeSpan ts = new TimeSpan(data.ReadLong());
+            List<DateTime> times = new List<DateTime>();
+            DateTime tmp = stime;
+            while (tmp <= etime)
+            {
+                times.Add(tmp);
+                tmp += ts;
+            }
+            int cid = data.ReadInt();
+            var tags = ServiceLocator.Locator.Resolve<ITagManager>().GetTagById(id);
+
+            ByteBuffer re = null;
+
+            if (tags != null)
+            {
+                switch (tags.Type)
+                {
+                    case Cdy.Tag.TagType.Bool:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<bool>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Byte:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<byte>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.DateTime:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<DateTime>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Double:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<double>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Float:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<float>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Int:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<int>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Long:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<long>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.Short:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<short>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.String:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<string>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.UInt:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<uint>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.ULong:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<ulong>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.UShort:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<ushort>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.IntPoint:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<IntPointData>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.UIntPoint:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<UIntPointData>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.IntPoint3:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<IntPoint3Data>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.UIntPoint3:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<UIntPoint3Data>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.LongPoint:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<LongPointData>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.ULongPoint:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<ULongPointData>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.LongPoint3:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<LongPoint3Data>(id, times, type));
+                        break;
+                    case Cdy.Tag.TagType.ULongPoint3:
+                        re = WriteDataToBufferByMemory(cid, (byte)tags.Type, ProcessDataQueryByIgnorClosedQuality<ULongPoint3Data>(id, times, type));
                         break;
                 }
                 Parent.AsyncCallback(clientId, re);
@@ -1243,7 +1875,7 @@ namespace DBRuntime.Api
                 case Cdy.Tag.TagType.String:
                     return ProcessDataQuery<string>(id, sTime, eTime).GetLastValue(out quality);
                 case Cdy.Tag.TagType.UInt:
-                    return ProcessDataQuery<bool>(id, sTime, eTime).GetLastValue(out quality);
+                    return ProcessDataQuery<uint>(id, sTime, eTime).GetLastValue(out quality);
                 case Cdy.Tag.TagType.ULong:
                     return ProcessDataQuery<ulong>(id, sTime, eTime).GetLastValue(out quality);
                 case Cdy.Tag.TagType.UShort:
@@ -1454,6 +2086,18 @@ namespace DBRuntime.Api
             return ServiceLocator.Locator.Resolve<IHisQuery>().ReadValue<T>(id, times, type);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private HisQueryResult<T> ProcessDataQueryByIgnorClosedQuality<T>(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType type)
+        {
+            return ServiceLocator.Locator.Resolve<IHisQuery>().ReadValueIgnorClosedQuality<T>(id, times, type);
+        }
 
         private void ProcessRequestValueStatistics(string clientId, ByteBuffer data)
         {

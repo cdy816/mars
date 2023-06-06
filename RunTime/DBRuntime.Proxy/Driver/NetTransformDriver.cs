@@ -115,13 +115,23 @@ namespace DBRuntime.Proxy
                     resetEvent.Reset();
                     if (mCachDatas != null)
                     {
+                        if (mCachDatas.Count > 100)
+                        {
+                            LoggerService.Service.Info("RemoteDataUpdate", $"堆积大量的数据包未处理:{mCachDatas.Count}");
+                        }
+
                         int icount = mCachDatas.Count;
+                        ByteBuffer data = null;
                         while (mCachDatas.Count > 0)
                         {
                             // ProcessSingleBufferData(mCachDatas.Dequeue());
-                            ProcessBufferData(mCachDatas.Dequeue());
+                            lock (mCachDatas)
+                                data = mCachDatas.Dequeue();
+                            ProcessBufferData(data);
+                            data=null;
                         }
                         ValueUpdateEvent?.Invoke(this, null);
+                       
                     }
                 }
                 else
@@ -159,7 +169,8 @@ namespace DBRuntime.Proxy
             }
             catch
             {
-                block.UnlockAndReturn();
+                RelaseBlock(block);
+                //block.UnlockAndReturn();
             }
         }
 
@@ -375,6 +386,7 @@ namespace DBRuntime.Proxy
                 Client.ProcessDataPush = new ApiClient.ProcessDataPushDelegate((block) => {
                     try
                     {
+                        lock(mCachDatas)
                         mCachDatas.Enqueue(block);
                     }
                     catch

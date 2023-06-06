@@ -7,6 +7,7 @@
 //  种道洋
 //==============================================================
 
+using Cdy.Tag.Real.ValueConvert;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,6 +96,7 @@ namespace Cdy.Tag
             //注册线性转换器
             ValueConvertManager.manager.Registor(new LinerConvert());
             ValueConvertManager.manager.Registor(new BitConvert());
+            ValueConvertManager.manager.Registor(new InvertConvert());
             ValueConvertManager.manager.Registor(new StringFormatConvert());
         }
 

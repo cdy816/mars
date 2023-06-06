@@ -125,7 +125,14 @@ namespace DBRuntime.His
                 var stime = new DateTime(startTime.Year, startTime.Month, startTime.Day, startTime.Hour, startTime.Minute, startTime.Second);
                 if (mHisMemorys.ContainsKey(stime))
                 {
-                    mHisMemorys.Remove(stime);
+                    if (mLocked)
+                    {
+                        mRemoveCached.Add(stime);
+                    }
+                    else
+                    {
+                        mHisMemorys.Remove(stime);
+                    }
                 }
             }
         }
@@ -164,6 +171,57 @@ namespace DBRuntime.His
             }
         }
 
+        private bool mLocked = false;
+
+        /// <summary>
+        /// 对内存文件加锁，防止内存文件释放
+        /// </summary>
+        public void LockMemoryFile()
+        {
+            lock (mManualHisMemorys)
+                lock (mHisMemorys)
+                    mLocked = true;
+        }
+
+        /// <summary>
+        /// 对内存文件解锁
+        /// </summary>
+
+        public void UnLockMemoryFile()
+        {
+            lock (mManualHisMemorys)
+            {
+                lock (mHisMemorys)
+                {
+                    mLocked = false;
+                    try
+                    {
+                        foreach (var vv in mRemoveManualCached)
+                        {
+                            if (mManualHisMemorys.ContainsKey(vv.Key) && mManualHisMemorys[vv.Key].ContainsKey(vv.Value))
+                                mManualHisMemorys[vv.Key].Remove(vv.Value);
+                        }
+                        foreach (var vv in mRemoveCached)
+                        {
+                            if (mHisMemorys.ContainsKey(vv))
+                                mHisMemorys.Remove(vv);
+                        }
+                        mRemoveManualCached.Clear();
+                        mRemoveCached.Clear();
+                    }
+                    catch(Exception ex)
+                    {
+                        LoggerService.Service.Warn("UnLockMemoryFile", $"{ex.Message} { ex.StackTrace}");
+                    }
+                   
+                }
+            }
+        }
+
+        private Dictionary<int, DateTime> mRemoveManualCached = new Dictionary<int, DateTime>();
+
+        private List<DateTime> mRemoveCached = new List<DateTime>();
+
         /// <summary>
         /// 
         /// </summary>
@@ -176,7 +234,17 @@ namespace DBRuntime.His
                 {
                     if (mManualHisMemorys[id].ContainsKey(startTime))
                     {
-                        mManualHisMemorys[id].Remove(startTime);
+                        if (mLocked)
+                        {
+                            if (!mRemoveManualCached.ContainsKey(id))
+                            {
+                                mRemoveManualCached.Add(id, startTime);
+                            }
+                        }
+                        else
+                        {
+                            mManualHisMemorys[id].Remove(startTime);
+                        }
                     }
                 }
             }
@@ -201,12 +269,44 @@ namespace DBRuntime.His
             return false;
         }
 
+        public Tuple<DateTime,DateTime> GetMemoryTimer(long id)
+        {
+            lock (mManualHisMemorys)
+            {
+                DateTime stime = DateTime.MaxValue;
+                DateTime etime = DateTime.MinValue;
+                if (mManualHisMemorys.ContainsKey(id))
+                {
+                    foreach (var vv in mManualHisMemorys[id])
+                    {
+                        if (vv.Value.Start < stime)
+                        {
+                            stime = vv.Value.Start;
+                        }
+                        if(vv.Value.End>etime)
+                        {
+                            etime = vv.Value.End;
+                        }
+                    }
+                }
+                if (etime > stime)
+                {
+                    return new Tuple<DateTime, DateTime>(stime, etime);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            
+        }
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="id"></param>
         /// <param name="time"></param>
-        public bool CheckTime(long id, DateTime time)
+        public bool CheckTime(long id, DateTime time,out bool isgreat)
         {
             if (IsManualRecord(id))
             {
@@ -216,9 +316,14 @@ namespace DBRuntime.His
                     {
                         foreach (var vv in mManualHisMemorys[id])
                         {
-                            if (vv.Value.Contains(time)) return true;
+                            if (vv.Value.Contains(time))
+                            {
+                                isgreat = false;
+                                return true;
+                            }
                         }
                     }
+                    isgreat = time> mManualHisMemorys[id].Last().Value.End;
                 }
                 return false;
             }
@@ -228,8 +333,13 @@ namespace DBRuntime.His
                 {
                     foreach (var vv in mHisMemorys)
                     {
-                        if (vv.Value.Contains(time)) return true;
+                        if (vv.Value.Contains(time))
+                        {
+                            isgreat=false;
+                            return true;
+                        }
                     }
+                    isgreat = time > mHisMemorys.Last().Value.End;
                 }
                 return false;
             }
@@ -278,7 +388,7 @@ namespace DBRuntime.His
             {
                 lock (mManualHisMemorys)
                 {
-                    if (mManualHisMemorys.ContainsKey(id))
+                    if (mManualHisMemorys.ContainsKey(id)&& mManualHisMemorys[id].Count>0)
                     {
                         return mManualHisMemorys[id].First().Key;
                     }
@@ -491,56 +601,56 @@ namespace DBRuntime.His
             return re;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="time"></param>
-        /// <param name="block"></param>
-        private Tuple<int, int> ReadTimeToFit(int time, HisDataMemoryBlock block)
-        {
-            var vcount = block.ValueAddress / 2;
-            short prev = block.ReadShort(0);
-            if (prev == time) return new Tuple<int, int>(0, 0);
-            else if (time < prev) return new Tuple<int, int>(-1, -1);
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="time"></param>
+        ///// <param name="block"></param>
+        //private Tuple<int, int> ReadTimeToFit(int time, HisDataMemoryBlock block)
+        //{
+        //    var vcount = block.ValueAddress / 2;
+        //    short prev = block.ReadShort(0);
+        //    if (prev == time) return new Tuple<int, int>(0, 0);
+        //    else if (time < prev) return new Tuple<int, int>(-1, -1);
 
-            for (int i = 1; i < vcount; i++)
-            {
-                var after = block.ReadShort(i * 2);
-                if (time == after)
-                {
-                    return new Tuple<int, int>(after, after);
-                }
-                else if (time < after)
-                {
-                    return new Tuple<int, int>(i - 1, i);
-                }
-                prev = after;
-            }
-            return new Tuple<int, int>(-1, -1);
-        }
+        //    for (int i = 1; i < vcount; i++)
+        //    {
+        //        var after = block.ReadShort(i * 2);
+        //        if (time == after)
+        //        {
+        //            return new Tuple<int, int>(after, after);
+        //        }
+        //        else if (time < after)
+        //        {
+        //            return new Tuple<int, int>(i - 1, i);
+        //        }
+        //        prev = after;
+        //    }
+        //    return new Tuple<int, int>(-1, -1);
+        //}
 
-        private Tuple<int, int> ReadTimeToFit(int time, Dictionary<int,int> block)
-        {
+        //private Tuple<int, int> ReadTimeToFit(int time, Dictionary<int,int> block)
+        //{
             
-            short prev = (short)block.First().Value;
-            if (prev == time) return new Tuple<int, int>(0, 0);
-            else if (time < prev) return new Tuple<int, int>(-1, -1);
+        //    short prev = (short)block.First().Value;
+        //    if (prev == time) return new Tuple<int, int>(0, 0);
+        //    else if (time < prev) return new Tuple<int, int>(-1, -1);
 
-            foreach(var vv in block)
-            {
-                var after = (short)(vv.Value);
-                if (time == after)
-                {
-                    return new Tuple<int, int>(vv.Key, vv.Key);
-                }
-                else if (time < after)
-                {
-                    return new Tuple<int, int>(vv.Key-1, vv.Key);
-                }
-                prev = after;
-            }
-            return new Tuple<int, int>(-1, -1);
-        }
+        //    foreach(var vv in block)
+        //    {
+        //        var after = (short)(vv.Value);
+        //        if (time == after)
+        //        {
+        //            return new Tuple<int, int>(vv.Key, vv.Key);
+        //        }
+        //        else if (time < after)
+        //        {
+        //            return new Tuple<int, int>(vv.Key-1, vv.Key);
+        //        }
+        //        prev = after;
+        //    }
+        //    return new Tuple<int, int>(-1, -1);
+        //}
 
         /// <summary>
         /// 
@@ -610,7 +720,7 @@ namespace DBRuntime.His
                 var after = block.ReadInt(i * 4);
                 if (time == after)
                 {
-                    return new Tuple<int, int>(after, after);
+                    return new Tuple<int, int>(i, i);
                 }
                 else if (time < after)
                 {
@@ -976,8 +1086,15 @@ namespace DBRuntime.His
                                 var tval1 = (ntime - time).TotalMilliseconds;
                                 var sval1 = (double)ppval;
                                 var sval2 = (double)nnval;
-                                var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
-                                result.Add((object)val1, vtime, 0);
+                                if ((sval2 - sval1) != 0)
+                                {
+                                    var val1 = pval1 / tval1 * (sval2 - sval1) + sval1;
+                                    result.Add((object)val1, vtime, 0);
+                                }
+                                else
+                                {
+                                    result.Add((object)sval2, vtime, 0);
+                                }
                             }
                         }
                         else if (!IsBadQuality(quality))
@@ -1018,7 +1135,7 @@ namespace DBRuntime.His
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <param name="result"></param>
-        public void ReadValue<T>(int id, List<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result, QueryContext context,out DateTime timelimit)
+        public void ReadValue<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result, QueryContext context,out DateTime timelimit)
         {
             DateTime dnow = DateTime.UtcNow;
             //timelimit = dnow;
@@ -1043,8 +1160,16 @@ namespace DBRuntime.His
                         vv.Value.Memory.MakeMemoryBusy();
                     }
                 }
+                if (vhh.Length > 0)
+                {
+                    dnow = vhh.Last().Value.End;
+                    var val = ReadLastValue<T>(vhh.Last().Value, id, out DateTime time, out byte quality);
 
-                dnow = vhh.Last().Value.End;
+                    context.Add("MemoryLastValue", val);
+                    context.Add("MemoryLastQuality", quality);
+                }
+                
+
                 timelimit = dnow;
 
                 foreach (var vv in vhh)
@@ -1109,7 +1234,8 @@ namespace DBRuntime.His
                                     {
                                         //从文件读取
                                         var vtmp = vv.Key.Start.AddMinutes(-5);
-                                        var val = (context["IHisQuery"] as IHisQuery).ReadFileFirstValue<T>(id, vtmp, context);
+                                        // var val = (context["IHisQuery"] as IHisQuery).ReadFileFirstValue<T>(id, vtmp, context);
+                                        var val = (context["IHisQuery"] as IHisQuery).ReadFileLastValue<T>(id, vtmp, context);
                                         if (val != null)
                                         {
                                             var hval = (TagHisValue<T>)val;
@@ -1191,8 +1317,18 @@ namespace DBRuntime.His
                     }
                     vhh = mManualHisMemorys[id].ToArray();
                 }
+                if (vhh != null && vhh.Length > 0)
+                {
+                    dnow = vhh.Last().Value.End;
+                    var val = ReadLastValue<T>(vhh.Last().Value, out DateTime time, out byte quality);
 
-                dnow = vhh.Last().Value.End;
+                    context.Add("MemoryLastValue", val);
+                    context.Add("MemoryLastQuality", quality);
+                }
+                else
+                {
+
+                }
                 timelimit = dnow;
 
                 ManualTimeSpanMemory3 prev;
@@ -1239,7 +1375,7 @@ namespace DBRuntime.His
                                   
                                     object ppval = null;
                                     DateTime time = context.LastTime;
-                                    byte quality = (byte)QualityConst.Null; ;
+                                    byte quality = (byte)QualityConst.Null;
 
                                     var vval = context.GetBlockLastValue("memorypreview",0);
                                     if (vval != null)
@@ -1254,20 +1390,28 @@ namespace DBRuntime.His
                                     }
                                     else
                                     {
-                                        var vtmp = vv.Value.Memory.Time.AddMinutes(-5);
-                                        //从文件中读取
-                                        var val = (context["IHisQuery"] as IHisQuery).ReadFileLastValue<T>(id, vtmp, context);
-                                        if (val != null)
+                                        if (vv.Value.Memory.Time == DateTime.MinValue)
                                         {
-                                            var hval = (TagHisValue<T>)val;
-                                            if (!hval.IsEmpty())
+                                            LoggerService.Service.Warn("HisDataMemoryQueryService", $"ReadValue 时间错误 {vv.Value.Start } - {vv.Value.End} vkey:{vv.Key} ");
+                                            //continue;
+                                        }
+                                        else
+                                        {
+                                            var vtmp = vv.Value.Memory.Time.AddMinutes(-5);
+                                            //从文件中读取
+                                            var val = (context["IHisQuery"] as IHisQuery).ReadFileLastValue<T>(id, vtmp, context);
+                                            if (val != null)
                                             {
-                                                ppval = hval.Value;
-                                                time = hval.Time;
-                                                quality = hval.Quality;
+                                                var hval = (TagHisValue<T>)val;
+                                                if (!hval.IsEmpty())
+                                                {
+                                                    ppval = hval.Value;
+                                                    time = hval.Time;
+                                                    quality = hval.Quality;
 
-                                                context.RegistorLastKeyHisValue<T>("memorypreview", 0, (T)ppval, time, quality);
+                                                    context.RegistorLastKeyHisValue<T>("memorypreview", 0, (T)ppval, time, quality);
 
+                                                }
                                             }
                                         }
                                     }
@@ -1320,11 +1464,20 @@ namespace DBRuntime.His
         {
             try
             {
-                var vcount = memory.Memory.ReadValueOffsetAddressByIndex(id) / 2 - 1;
-                var vmm = memory.Memory.TagAddress[id];
-                quality = memory.Memory.ReadByte(memory.Memory.ReadDataBaseAddressByIndex(vmm), memory.Memory.ReadQualityOffsetAddressByIndex(vmm) + vcount);
-                time = memory.Memory.ReadDateTime(memory.Memory.ReadDataBaseAddressByIndex(vmm), vcount);
-                return ReadValueInner<T>(memory.Memory, new List<int>() { vcount }, 0, memory.Memory.ReadValueOffsetAddressByIndex(vmm), memory.Memory.ReadDataBaseAddressByIndex(vmm))[0];
+                if (memory.Memory.Handles!=null && memory.Memory.Handles.Count > 0)
+                {
+                    var vcount = memory.Memory.ReadValueOffsetAddressByIndex(id) / 2 - 1;
+                    var vmm = memory.Memory.TagAddress[id];
+                    quality = memory.Memory.ReadByte(memory.Memory.ReadDataBaseAddressByIndex(vmm), memory.Memory.ReadQualityOffsetAddressByIndex(vmm) + vcount);
+                    time = memory.Memory.ReadDateTime(memory.Memory.ReadDataBaseAddressByIndex(vmm), vcount);
+                    return ReadValueInner<T>(memory.Memory, new List<int>() { vcount }, 0, memory.Memory.ReadValueOffsetAddressByIndex(vmm), memory.Memory.ReadDataBaseAddressByIndex(vmm))[0];
+                }
+                else
+                {
+                    time = DateTime.MinValue;
+                    quality = (byte)QualityConst.Null;
+                    return null;
+                }
             }
             catch
             {
@@ -1538,6 +1691,49 @@ namespace DBRuntime.His
             //}
 
             //return default(T);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public object GetStartValue<T>(long id, out DateTime time, out byte quality)
+        {
+            if (IsManualRecord(id))
+            {
+                lock (mManualHisMemorys)
+                {
+                    if (mManualHisMemorys.ContainsKey(id)&& mManualHisMemorys[id].Count>0)
+                    {
+                        return ReadFirstValue<T>( mManualHisMemorys[id].First().Value,out time,out quality);
+                    }
+                }
+                time = DateTime.MinValue;
+                quality = byte.MaxValue;
+                return null;
+            }
+            else
+            {
+                lock (mHisMemorys)
+                {
+                    if (mHisMemorys.Count > 0)
+                    {
+                        var mm = mHisMemorys.First().Value;
+                        var vmm = mm.Memory.TagAddress[(int)id];
+                        return ReadFirstValue<T>(mm, vmm, out time, out quality);
+                    }
+                    else
+                    {
+                        time = DateTime.MinValue;
+                        quality = byte.MaxValue;
+                        return null;
+                    }
+                }
+            }
         }
 
         #endregion ...Methods...

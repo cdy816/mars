@@ -319,16 +319,16 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void Save()
+        public bool Save()
         {
-            Save(PathHelper.helper.GetDataPath(this.Document.Name,this.Document.Name + ".sdb"));
+            return Save(PathHelper.helper.GetDataPath(this.Document.Name,this.Document.Name + ".sdb"));
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="sfile"></param>
-        public void Save(string sfile)
+        public bool Save(string sfile)
         {
             XElement doc = new XElement("Security");
             doc.SetAttributeValue("Name", this.Document.Name);
@@ -339,9 +339,8 @@ namespace Cdy.Tag
                 doc.Add(Save(this.Document.User));
             if (this.Document.Permission != null)
                 doc.Add(Save(this.Document.Permission));
-
            
-            doc.Save(sfile);
+            return doc.SaveXMLToFile(sfile,"SecuritySerise");
         }
 
         /// <summary>

@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Cdy.Tag;
+using Cdy.Tag.Consume;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace DBGrpcApi
 {
-    public class Program
+    public class Program : IEmbedProxy
     {
         static int Port = 14333;
 
@@ -24,6 +26,12 @@ namespace DBGrpcApi
                 if (System.IO.File.Exists(spath))
                 {
                     XElement xx = XElement.Load(spath);
+                    if (xx.Element("Allow") != null)
+                        Cdy.Tag.Common.ClientAuthorization.Instance.LoadAllowFromXML(xx.Element("Allow"));
+
+                    if (xx.Element("Forbidden") != null)
+                        Cdy.Tag.Common.ClientAuthorization.Instance.LoadForbiddenFromXML(xx.Element("Forbidden"));
+
                     return int.Parse(xx.Attribute("ServerPort")?.Value);
                 }
             }
@@ -39,11 +47,18 @@ namespace DBGrpcApi
             try
             {
                 Port = ReadServerPort();
-                Console.Title = "DBGrpcApi";
-                if (args.Contains("/m"))
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    WindowConsolHelper.MinWindow("DBGrpcApi");
+                    WindowConsolHelper.DisbleQuickEditMode();
+                    if (!Console.IsInputRedirected)
+                        Console.Title = "DBGrpcApi";
+                    if (args.Contains("/m"))
+                    {
+                        WindowConsolHelper.MinWindow("DBGrpcApi");
+                    }
                 }
+                Cdy.Tag.Common.ProcessMemoryInfo.Instances.StartMonitor("DBGrpcApi");
                 foreach (var vv in args)
                 {
                     if (vv != "/m")
@@ -109,10 +124,66 @@ namespace DBGrpcApi
                     }
                     else
                     {
-                        webBuilder.UseUrls("https://0.0.0.0:" + Port);
+                        string spath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mars.pfx");
+                        if (System.IO.File.Exists(spath))
+                        {
+                            webBuilder.UseKestrel(options =>
+                            {
+                                options.ListenAnyIP(Port, listenOps =>
+                                {
+                                    listenOps.UseHttps(callback =>
+                                    {
+                                        callback.AllowAnyClientCertificate();
+                                        callback.ServerCertificate = new System.Security.Cryptography.X509Certificates.X509Certificate2(spath, "mars");
+                                    });
+                                });
+                            });
+                        }
+                        else
+                        {
+                            webBuilder.UseUrls("https://0.0.0.0:" + Port);
+                        }
                     }
 
                     webBuilder.UseStartup<Startup>();
                 });
+
+        #region IEmbedProxy
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <exception cref="NotImplementedException"></exception>
+        public void Init()
+        {
+            Port=ReadServerPort();
+            Startup.IsRunningEmbed=true;
+        }
+        private IHost host;
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Start()
+        {
+            Task.Run(() => {
+                try
+                {
+                    host = CreateHostBuilder(null).Build();
+                    host.Run();
+                }
+                catch
+                {
+
+                }
+            });
+          
+        }
+
+        public void Stop()
+        {
+            host?.StopAsync();
+            host= null;
+        }
+        #endregion
+
     }
 }

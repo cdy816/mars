@@ -1,0 +1,114 @@
+﻿@using AntDesign;
+@inject NavigationManager Navigation;
+@inject MarsProxy mProxy;
+
+<div class="d-flex flex-column h-100" style="width:240px;border-color:gray;border-right-width:1px;border-right-style:solid;">
+    <div class="flex-fill">
+        @foreach (var vv in mTreeItems)
+        {
+            if (vv is TreeItemCollection)
+            {
+                <TreeGroupView Data="@(vv as TreeItemCollection)" />
+            }
+            else
+            {
+                <TreeItemView Data="@vv" />
+            }
+        }
+    </div>
+</div>
+
+@code {
+
+    private TreeItem mCurrent;
+
+    /// <summary>
+    ///
+    /// </summary>
+    public TreeItem CurrentSelect
+    {
+        get
+        {
+            return mCurrent;
+        }
+        set
+        {
+            if (mCurrent != null)
+            {
+                mCurrent.IsSelected = false;
+            }
+            mCurrent = value;
+            StateHasChanged();
+        }
+    }
+
+    private List<TreeItem> mTreeItems = new List<TreeItem>();
+
+
+
+    private List<string> groups = new List<string>();
+    private List<string> rootgroups = new List<string>();
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        groups = mProxy.ListALlTagGroup();
+        rootgroups = groups.Where(e => e.IndexOf(".") < 0 && !string.IsNullOrEmpty(e)).ToList();
+        InitTreeItem();
+    }
+
+    private void InitTreeItem()
+    {
+        mTreeItems.Clear();
+        TreeItem mdatabase = new TreeItem() { Name = "服务器概况", Url = "/main", SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; }, Icon = "./css/Image/database.png" };
+        mTreeItems.Add(mdatabase);
+
+        var tagtree = new RootTagGroupItem()
+            {
+                Name = "数据监视",
+                Url = "/datamonitor",
+                Icon = "./css/Image/tag.png",
+                SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; },
+            };
+        InitTagGroup(tagtree);
+        mTreeItems.Add(tagtree);
+
+        var classtree = new TreeItem()
+            {
+                Name = "Sql 查询",
+                Icon = "./css/Image/class.png",
+                Url = "/sqlquery",
+                SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; },
+            };
+        mTreeItems.Add(classtree);
+        var security = new TreeItem() { Name = "系统日志", Url = "/logmonitor", Icon = "./css/Image/Security.png", SelectChangedAction = (e, val) => { if (val) CurrentSelect = e; } };
+        mTreeItems.Add(security);
+      
+    }
+
+    private void InitTagGroup(RootTagGroupItem parent)
+    {
+        foreach (var vvv in rootgroups)
+        {
+            TagGroupItem groupViewModel = new TagGroupItem()
+                {
+                    Name = vvv,
+                    Description = vvv,
+                    Icon = "./css/Image/Folder.png",
+                    SelectChangedAction = (e, val) =>
+                    {
+                        if (val)
+                        {
+                            CurrentSelect = e;
+                            Navigation.NavigateTo("/datamonitor/" + e.Name);
+                        }
+                    },
+                };
+            parent.Add(groupViewModel);
+            groupViewModel.InitData(groups);
+        }
+    }
+}

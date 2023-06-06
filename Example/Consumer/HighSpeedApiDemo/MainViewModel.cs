@@ -6,6 +6,7 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
+using Cdy.Tag;
 using DBInStudio.Desktop;
 using System;
 using System.Collections.Generic;
@@ -39,11 +40,15 @@ namespace HighSpeedApiDemo
 
         private ICommand mQueryComplexValueCommand;
 
+        private ICommand mSqlQueryCommand;
+
         private List<int> mIds;
 
         private List<int> mHours;
 
         private List<int> mSeconds;
+
+        public string mSqlExp = "select tag1 from a where time>='2023-04-29 0:0:0' and time < '2023-04-29 23:59:59'";
 
         #endregion ...Variables...
 
@@ -62,6 +67,40 @@ namespace HighSpeedApiDemo
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public string SqlExp
+        {
+            get
+            {
+                return mSqlExp;
+            }
+            set
+            {
+                if (mSqlExp != value)
+                {
+                    mSqlExp = value;
+                    OnPropertyChanged("SqlExp");
+                }
+            }
+        }
+
+        public ICommand SqlQueryCommand
+        {
+            get
+            {
+                if(mSqlQueryCommand == null)
+                {
+                    mSqlQueryCommand = new RelayCommand(() => {
+                        ExecuteSql(mSqlExp);
+                    });
+                }
+                return mSqlQueryCommand;
+            }
+        }
+
 
         public ICommand QueryComplexValueCommand
         {
@@ -385,9 +424,199 @@ namespace HighSpeedApiDemo
             }
         }
 
+        private ICommand mSetTagStateCommand;
+        public ICommand SetTagStateCommand
+        {
+            get
+            {
+                if(mSetTagStateCommand==null)
+                {
+                    mSetTagStateCommand = new RelayCommand(() => {
+                        var vals = new Dictionary<int, short>();
+                        vals.Add(Id, (short)DateTime.Now.Second);
+                        clinet.SetTagState(vals);
+                    });
+                }
+                return mSetTagStateCommand;
+            }
+        }
+
+        private ICommand mSetTagExtendField2Command;
+        public ICommand SetTagExtendField2Command
+        {
+            get
+            {
+                if (mSetTagExtendField2Command == null)
+                {
+                    mSetTagExtendField2Command = new RelayCommand(() => {
+                        var vals = new Dictionary<int, long>();
+                        vals.Add(Id, (short)DateTime.Now.Second);
+                        clinet.SetTagExtendField2(vals);
+                    });
+                }
+                return mSetTagExtendField2Command;
+            }
+        }
+
+        private ICommand mGetTagStateCommand;
+        public ICommand GetTagStateCommand
+        {
+            get
+            {
+                if (mGetTagStateCommand == null)
+                {
+                    mGetTagStateCommand = new RelayCommand(() => {
+                        var vals = clinet.GetTagState(new List<int>() { Id });
+                        if(vals!=null && vals.Count > 0)
+                        {
+                            MessageBox.Show(vals.First().Value.ToString());
+                        }
+                    });
+                }
+                return mGetTagStateCommand;
+            }
+        }
+
+        private ICommand mGetTagExtendField2Command;
+        public ICommand GetTagExtendField2Command
+        {
+            get
+            {
+                if (mGetTagExtendField2Command == null)
+                {
+                    mGetTagExtendField2Command = new RelayCommand(() => {
+                        var vals = clinet.GetTagExtendField2(new List<int>() { Id });
+                        if (vals != null && vals.Count > 0)
+                        {
+                            MessageBox.Show(vals.First().Value.ToString());
+                        }
+                    });
+                }
+                return mGetTagExtendField2Command;
+            }
+        }
+
+        private ICommand mQueryMaxValueCommand;
+
+        public ICommand QueryMaxValueCommand
+        {
+            get
+            {
+                if (mQueryMaxValueCommand == null)
+                {
+                    mQueryMaxValueCommand = new RelayCommand(() => {
+                        DateTime stime = ModifyDate.AddHours(ModifyStartTime).AddMinutes(ModifyStartSecond);
+                        DateTime etime = ModifyDate.AddHours(ModifyEndTime).AddMinutes(ModifyEndSecond);
+
+                        var vals = clinet.FindNumberTagMaxValue(Id, stime, etime);
+                        StringBuilder sb = new StringBuilder();
+                        sb.Append(vals.Item1 + " > ");
+                        foreach (var vv in vals.Item2)
+                        {
+                            sb.Append(vv + ",");
+                        }
+                        MessageBox.Show(sb.ToString());
+                    });
+
+
+                }
+                return mQueryMaxValueCommand;
+            }
+        }
+
+        private ICommand mQueryAvgValueCommand;
+        public ICommand QueryAvgValueCommand
+        {
+            get
+            {
+                if (mQueryAvgValueCommand == null)
+                {
+                    mQueryAvgValueCommand = new RelayCommand(() => {
+                        DateTime stime = ModifyDate.AddHours(ModifyStartTime).AddMinutes(ModifyStartSecond);
+                        DateTime etime = ModifyDate.AddHours(ModifyEndTime).AddMinutes(ModifyEndSecond);
+
+                        var vals = clinet.FindNumberTagAvgValue(Id, stime, etime);
+                        MessageBox.Show(vals.ToString());
+                    });
+                }
+                return mQueryAvgValueCommand;
+            }
+        }
+
+        private ICommand mCalKeepTimeCommand;
+        public ICommand CalKeepTimeCommand
+        {
+            get
+            {
+                if (mCalKeepTimeCommand == null)
+                {
+                    mCalKeepTimeCommand = new RelayCommand(() =>
+                    {
+                        DateTime stime = ModifyDate.AddHours(ModifyStartTime).AddMinutes(ModifyStartSecond);
+                        DateTime etime = ModifyDate.AddHours(ModifyEndTime).AddMinutes(ModifyEndSecond);
+                        var vals = clinet.CalTagValueKeepTime(Id, stime, etime, Cdy.Tag.NumberStatisticsType.GreatValue, Value, 0);
+                        MessageBox.Show(vals.ToString());
+                    });
+                }
+                return mCalKeepTimeCommand;
+            }
+        }
+
+        private ICommand mQueryGreatValueCommand;
+        public ICommand QueryGreatValueCommand
+        {
+            get
+            {
+                if (mQueryGreatValueCommand == null)
+                {
+                    mQueryGreatValueCommand = new RelayCommand(() =>
+                    {
+                        DateTime stime = ModifyDate.AddHours(ModifyStartTime).AddMinutes(ModifyStartSecond);
+                        DateTime etime = ModifyDate.AddHours(ModifyEndTime).AddMinutes(ModifyEndSecond);
+
+                        var vals = clinet.FindTagValue(Id, stime, etime, Cdy.Tag.NumberStatisticsType.GreatValue, Value, 0.1);
+                        MessageBox.Show(vals.ToString());
+
+                        var vals2 = clinet.FindTagValues(Id, stime, etime, Cdy.Tag.NumberStatisticsType.GreatValue, Value, 0.1);
+                        if (vals2 != null)
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            foreach (var v in vals2)
+                            {
+                                sb.AppendLine(v.Key + "," + v.Value);
+                            }
+                            MessageBox.Show(sb.ToString());
+                        }
+                    });
+                }
+                return mQueryGreatValueCommand;
+            }
+        }
+
+        private ICommand mReadTagStatisticsCommand;
+        public ICommand ReadTagStatisticsCommand
+        {
+            get
+            {
+                if (mReadTagStatisticsCommand == null)
+                {
+                    mReadTagStatisticsCommand = new RelayCommand(() =>
+                    {
+                        ReadTagStatistics();
+                    });
+                }
+                return mReadTagStatisticsCommand;
+            }
+        }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
+
+        private void ReadTagStatistics()
+        {
+            var infos = clinet.GetTagStatisticsInfos();
+        }
 
         /// <summary>
         /// 
@@ -538,6 +767,40 @@ namespace HighSpeedApiDemo
             //            mTags[i].Value = aqvals[i].Item1?.ToString();
             //    }
             //}
+        }
+
+        private void ExecuteSql(string sql)
+        {
+            var vals = clinet.QueryValueBySql(sql);
+            if (vals is HisQueryTableResult)
+            {
+                foreach (var vv in (vals as HisQueryTableResult).ReadRows())
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.Append(vv.Item1.ToString());
+                    foreach (var vv2 in vv.Item2)
+                    {
+                        sb.Append($",{vv2}");
+                    }
+                    Debug.WriteLine(sb.ToString());
+                }
+            }
+            else if (vals is List<double>)
+            {
+                foreach (var vv in vals as List<double>)
+                {
+                    Debug.Write(vv + ",");
+                }
+                Debug.WriteLine("");
+
+            }
+            else if (vals is Dictionary<int, TagRealValue>)
+            {
+                foreach (var vv in vals as Dictionary<int, TagRealValue>)
+                {
+                    Debug.WriteLine(vv.Value.Value + ",");
+                }
+            }
         }
 
         #endregion ...Methods...

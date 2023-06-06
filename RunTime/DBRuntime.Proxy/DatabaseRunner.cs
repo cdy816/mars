@@ -1,4 +1,5 @@
 ﻿using Cdy.Tag;
+using Cdy.Tag.Common.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -234,11 +235,20 @@ namespace DBRuntime.Proxy
 
                 if (mProxy.IsConnected)
                 {
+                    string sname = mProxy.GetRunnerDatabase();
+                    if (string.IsNullOrEmpty(sname)) continue;
                     try
                     {
+                        var up = ReadLoginUser(sname);
+                        if(up!=null)
+                        {
+                            mProxy.UserName = up.Item1;
+                            mProxy.Password = up.Item2;
+                        }
+
                         if (mProxy.CheckLogin())
                         {
-                            string sname = mProxy.GetRunnerDatabase();
+                           
                             if (!string.IsNullOrEmpty(sname))
                             {
                                 CheckAndLoadDatabase(sname);
@@ -276,6 +286,31 @@ namespace DBRuntime.Proxy
                 Thread.Sleep(2000);
                 
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        private Tuple<string,string> ReadLoginUser(string database)
+        {
+            if(string.IsNullOrEmpty(database))
+            {
+                return null;
+            }
+            string sdb = database.Split(",")[0];
+            string sfile = System.IO.Path.Combine(PathHelper.helper.DataPath, sdb, "ApiUser.sdb");
+            if(System.IO.File.Exists(sfile))
+            {
+                var txt = Md5Helper.Decode(System.IO.File.ReadAllText(sfile));
+                if(!string.IsNullOrEmpty(txt))
+                {
+                    var vss = txt.Split(",");
+                    return new Tuple<string, string>(vss[0], vss[1]);
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -354,8 +389,10 @@ namespace DBRuntime.Proxy
                 LoggerService.Service.Info("DatabaseRunner", "从远程加载数据库完成");
             }
 
-            realEnginer = new RealEnginer(mRealDatabase);
-            realEnginer.Init();
+            var memoryInfo = mProxy.GetRealTagMemoryInfo(out int mlen);
+
+            realEnginer = new RealEnginer();
+            realEnginer.Init(mRealDatabase,memoryInfo,mlen);
 
             RegistorInterface();
             IsReady = true;
@@ -379,10 +416,16 @@ namespace DBRuntime.Proxy
                         this.mRealDatabase = mDatabase;
 
                         var oldeng = realEnginer;
-                        realEnginer = new RealEnginer(this.mRealDatabase);
-                        realEnginer.Init();
 
-                        
+                        var memoryInfo = mProxy.GetRealTagMemoryInfo(out int mlen);
+
+                        realEnginer = new RealEnginer();
+                        realEnginer.Init(mRealDatabase, memoryInfo, mlen);
+
+                        //realEnginer = new RealEnginer(this.mRealDatabase);
+                        //realEnginer.Init();
+
+
                         mDriver.Start(realEnginer);
 
                         oldeng.Dispose();
@@ -424,9 +467,14 @@ namespace DBRuntime.Proxy
                         this.mRealDatabase = mProxy.LoadRealDatabase();
 
                         var oldeng = realEnginer;
-                        realEnginer = new RealEnginer(this.mRealDatabase);
-                        realEnginer.Init();
                         
+                        var memoryInfo = mProxy.GetRealTagMemoryInfo(out int mlen);
+                        realEnginer = new RealEnginer();
+                        realEnginer.Init(mRealDatabase, memoryInfo, mlen);
+
+                        //realEnginer = new RealEnginer(this.mRealDatabase);
+                        //realEnginer.Init();
+
                         mDriver.Start(realEnginer);
 
                         ServiceLocator.Locator.Registor<ITagManager>(mRealDatabase);

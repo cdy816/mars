@@ -35,6 +35,8 @@ namespace DBRuntime.Api
 
         public const byte SyncSecuritySetting = 32;
 
+        public const byte RealTagMemoryInfo = 33;
+
         public const byte Hart = byte.MaxValue;
 
         private List<string> mClients = new List<string>();
@@ -116,7 +118,7 @@ namespace DBRuntime.Api
                     break;
                 case GetdatabaseName:
                     loginId = data.ReadLong();
-                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    //if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
                         Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.TagInfoRequest, Runner4.CurrentDatabase + "," + Runner4.CurrentDatabaseVersion + "," + Runner4.CurrentDatabaseLastUpdateTime));
                     }
@@ -142,8 +144,29 @@ namespace DBRuntime.Api
                     loginId = data.ReadLong();
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
-                        var vss = (Cdy.Tag.ServiceLocator.Locator.Resolve<IHisTagQuery>() as HisEnginer4).HisTagManager.SeriseToStream();
+                        var vss = (Cdy.Tag.ServiceLocator.Locator.Resolve<IHisTagQuery>() as HisEnginer5).HisTagManager.SeriseToStream();
                         Parent.AsyncCallback(client, ToByteBuffer(ApiFunConst.SyncHisTagConfig, vss));
+                    }
+                    break;
+                case RealTagMemoryInfo:
+                    loginId = data.ReadLong();
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    {
+                        var rg = Cdy.Tag.ServiceLocator.Locator.Resolve<IRealData>() as RealEnginer;
+                        int memoryLen = 0;
+                        if(rg!= null)
+                        {
+                            memoryLen =  rg.Memory.Length;
+                        }
+                        ByteBuffer re =Parent.Allocate (ApiFunConst.RealTagMemoryInfo, 4*rg.IdAndValueAddress.Count*12+1);
+                        re.Write(memoryLen);
+                        re.Write(rg.IdAndValueAddress.Count);
+                        foreach(var vv in rg.IdAndValueAddress)
+                        {
+                            re.Write(vv.Key); 
+                            re.Write(vv.Value);
+                        }
+                        Parent.AsyncCallback(client, re);
                     }
                     break;
                 case Hart:

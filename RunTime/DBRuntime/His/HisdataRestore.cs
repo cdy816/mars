@@ -17,24 +17,60 @@ namespace DBRuntime.His
         /// <summary>
         /// 检查并恢复异常数据
         /// </summary>
-        public void CheckAndRestore()
+        public bool CheckAndRestore()
         {
+            bool re = false;
             var rgs = LogStorageManager.Instance.ListAllLogRegion();
             if(rgs.Count > 0)
             {
+                re = true;
                 int i = 1;
                 int count = rgs.Count;
                 foreach(var rr in rgs)
                 {
-                    LoggerService.Service.Info("HisDataRestore", $"开始恢复因非正常退出,未存盘的数据....{i}/{count}");
-                    ProcessLogRegion(rr.Value);
-                    rr.Value.Dispose();
-                    i++;
-                    rr.Value.Clear();
+                    try
+                    {
+                        LoggerService.Service.Info("HisDataRestore", $"开始恢复因非正常退出,未存盘的数据....{i}/{count}");
+                        ProcessLogRegion(rr.Value);
+                        rr.Value.Dispose();
+                        i++;
+                        rr.Value.Clear();
+                    }
+                    catch(Exception ex)
+                    {
+                        LoggerService.Service.Info("HisDataRestore", $"恢复因非正常退出,未存盘的数据 出错 {ex.Message} {ex.StackTrace}");
+                    }
                 }
             }
 
             ServiceLocator.Locator.Resolve<IHisDataManagerService>().ClearTmpFile();
+            return re;
+        }
+
+        /// <summary>
+        /// 检查并更新到实时数据
+        /// </summary>
+        /// <param name="tagservice"></param>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        private void CheckRestoreRealTag(IRealData tagservice, int id, object value, DateTime time, byte quality)
+        {
+            try
+            {
+                if (value == null) return;
+
+                var val = tagservice.Read(id, out byte qua, out DateTime rtime);
+                if (time > rtime)
+                {
+                    tagservice.Write(id, value, time, quality);
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("CheckRestoreRealTag", $" {id} {time} {ex.Message} {ex.StackTrace}");
+            }
         }
 
         /// <summary>
@@ -69,6 +105,10 @@ namespace DBRuntime.His
                     }
                 }
 
+                var realservice = ServiceLocator.Locator.Resolve<IRealData>();
+
+                var hisservice = ServiceLocator.Locator.Resolve<IHisEngine3>();
+
                 //追加结束标识
                 foreach (var vv in mValues.Values)
                 {
@@ -76,6 +116,16 @@ namespace DBRuntime.His
                     {
                         var last = vv.Values.Last();
                         vv.Add(last.Time.AddMilliseconds(10), new CachItem() { Time = last.Time.AddMilliseconds(10), Id = last.Id, Quality = (byte)QualityConst.Close, Type = last.Type, Value = last.Value });
+                        
+                        //更新到实时数据
+                        if (realservice != null)
+                            CheckRestoreRealTag(realservice, last.Id, last.Value, last.Time, last.Quality);
+
+                        var vhistag = hisservice.GetHisTag(last.Id);
+                        if(vhistag!=null)
+                        {
+                            vhistag.LastUpdateTime = last.Time;
+                        }
                     }
                 }
 
@@ -199,13 +249,20 @@ namespace DBRuntime.His
                             fshr.Dispose();
                             break;
                         case TagType.String:
-                            HisQueryResult<string> sfshr = new HisQueryResult<string>(vv.Value.Values.Count);
-                            foreach (var v in vv.Value.Values)
+                            if (vv.Value.Values.Count > 0)
                             {
-                                sfshr.Add(v.Value, v.Time, v.Quality);
+                                HisQueryResult<string> sfshr = new HisQueryResult<string>(vv.Value.Values.Count);
+                                foreach (var v in vv.Value.Values)
+                                {
+                                    sfshr.Add(v.Value, v.Time, v.Quality);
+                                }
+                                mmb = Compile<string>(id, time, sfshr);
+                                sfshr.Dispose();
                             }
-                            mmb = Compile<string>(id, time, sfshr);
-                            sfshr.Dispose();
+                            else
+                            {
+                                mmb = null;
+                            }
                             break;
                         case TagType.DateTime:
                             HisQueryResult<DateTime> dtshr = new HisQueryResult<DateTime>(vv.Value.Values.Count);

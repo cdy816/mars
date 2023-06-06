@@ -115,6 +115,24 @@ namespace DBRuntimeMonitor.Properties {
         }
         
         /// <summary>
+        ///   查找类似 AlarmLevel 的本地化字符串。
+        /// </summary>
+        internal static string AlarmLevel {
+            get {
+                return ResourceManager.GetString("AlarmLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AlarmValue 的本地化字符串。
+        /// </summary>
+        internal static string AlarmValue {
+            get {
+                return ResourceManager.GetString("AlarmValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 All group 的本地化字符串。
         /// </summary>
         internal static string AllGroup {
@@ -138,6 +156,33 @@ namespace DBRuntimeMonitor.Properties {
         internal static string Append {
             get {
                 return ResourceManager.GetString("Append", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AppendContent1 的本地化字符串。
+        /// </summary>
+        internal static string AppendContent1 {
+            get {
+                return ResourceManager.GetString("AppendContent1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AppendContent2 的本地化字符串。
+        /// </summary>
+        internal static string AppendContent2 {
+            get {
+                return ResourceManager.GetString("AppendContent2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 AppendContent3 的本地化字符串。
+        /// </summary>
+        internal static string AppendContent3 {
+            get {
+                return ResourceManager.GetString("AppendContent3", resourceCulture);
             }
         }
         
@@ -232,6 +277,15 @@ namespace DBRuntimeMonitor.Properties {
         }
         
         /// <summary>
+        ///   查找类似 CreateTime 的本地化字符串。
+        /// </summary>
+        internal static string CreateTime {
+            get {
+                return ResourceManager.GetString("CreateTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Custom 的本地化字符串。
         /// </summary>
         internal static string Custom {
@@ -311,6 +365,33 @@ namespace DBRuntimeMonitor.Properties {
         internal static string Default {
             get {
                 return ResourceManager.GetString("Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 DeleteNote 的本地化字符串。
+        /// </summary>
+        internal static string DeleteNote {
+            get {
+                return ResourceManager.GetString("DeleteNote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 DeleteTime 的本地化字符串。
+        /// </summary>
+        internal static string DeleteTime {
+            get {
+                return ResourceManager.GetString("DeleteTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 DeleteUser 的本地化字符串。
+        /// </summary>
+        internal static string DeleteUser {
+            get {
+                return ResourceManager.GetString("DeleteUser", resourceCulture);
             }
         }
         
@@ -419,6 +500,15 @@ namespace DBRuntimeMonitor.Properties {
         internal static string Export {
             get {
                 return ResourceManager.GetString("Export", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 ExtendField1 的本地化字符串。
+        /// </summary>
+        internal static string ExtendField1 {
+            get {
+                return ResourceManager.GetString("ExtendField1", resourceCulture);
             }
         }
         
@@ -572,6 +662,15 @@ namespace DBRuntimeMonitor.Properties {
         internal static string IDResetWarnning {
             get {
                 return ResourceManager.GetString("IDResetWarnning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Ignore system exit 的本地化字符串。
+        /// </summary>
+        internal static string IgnorClosedQuality {
+            get {
+                return ResourceManager.GetString("IgnorClosedQuality", resourceCulture);
             }
         }
         
@@ -770,6 +869,15 @@ namespace DBRuntimeMonitor.Properties {
         internal static string Memory {
             get {
                 return ResourceManager.GetString("Memory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 MessageBody 的本地化字符串。
+        /// </summary>
+        internal static string MessageBody {
+            get {
+                return ResourceManager.GetString("MessageBody", resourceCulture);
             }
         }
         
@@ -990,6 +1098,15 @@ namespace DBRuntimeMonitor.Properties {
         }
         
         /// <summary>
+        ///   查找类似 Process 的本地化字符串。
+        /// </summary>
+        internal static string Process {
+            get {
+                return ResourceManager.GetString("Process", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Process Count 的本地化字符串。
         /// </summary>
         internal static string ProcessCount {
@@ -1179,6 +1296,24 @@ namespace DBRuntimeMonitor.Properties {
         }
         
         /// <summary>
+        ///   查找类似 RestoreTime 的本地化字符串。
+        /// </summary>
+        internal static string RestoreTime {
+            get {
+                return ResourceManager.GetString("RestoreTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 RestoreValue 的本地化字符串。
+        /// </summary>
+        internal static string RestoreValue {
+            get {
+                return ResourceManager.GetString("RestoreValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Sample Duration 的本地化字符串。
         /// </summary>
         internal static string SampleDuration {
@@ -1265,6 +1400,15 @@ namespace DBRuntimeMonitor.Properties {
         internal static string Send {
             get {
                 return ResourceManager.GetString("Send", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Server 的本地化字符串。
+        /// </summary>
+        internal static string Server {
+            get {
+                return ResourceManager.GetString("Server", resourceCulture);
             }
         }
         
@@ -1386,6 +1530,15 @@ namespace DBRuntimeMonitor.Properties {
         }
         
         /// <summary>
+        ///   查找类似 SourceTag 的本地化字符串。
+        /// </summary>
+        internal static string SourceTag {
+            get {
+                return ResourceManager.GetString("SourceTag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Start 的本地化字符串。
         /// </summary>
         internal static string Start {
@@ -1494,6 +1647,15 @@ namespace DBRuntimeMonitor.Properties {
         }
         
         /// <summary>
+        ///   查找类似 ThreadCount 的本地化字符串。
+        /// </summary>
+        internal static string ThreadCount {
+            get {
+                return ResourceManager.GetString("ThreadCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Time 的本地化字符串。
         /// </summary>
         internal static string Time {
@@ -1521,6 +1683,15 @@ namespace DBRuntimeMonitor.Properties {
         }
         
         /// <summary>
+        ///   查找类似 TotalCPU 的本地化字符串。
+        /// </summary>
+        internal static string TotalCPU {
+            get {
+                return ResourceManager.GetString("TotalCPU", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 TotalDisk 的本地化字符串。
         /// </summary>
         internal static string TotalDisk {
@@ -1535,6 +1706,15 @@ namespace DBRuntimeMonitor.Properties {
         internal static string Type {
             get {
                 return ResourceManager.GetString("Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Unit 的本地化字符串。
+        /// </summary>
+        internal static string Unit {
+            get {
+                return ResourceManager.GetString("Unit", resourceCulture);
             }
         }
         
@@ -1616,6 +1796,15 @@ namespace DBRuntimeMonitor.Properties {
         internal static string WebApi {
             get {
                 return ResourceManager.GetString("WebApi", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 WorkingSet Memory 的本地化字符串。
+        /// </summary>
+        internal static string WorksetMemory {
+            get {
+                return ResourceManager.GetString("WorksetMemory", resourceCulture);
             }
         }
         

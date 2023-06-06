@@ -38,6 +38,36 @@ namespace Cdy.Tag
         #region ... Methods    ...
 
         /// <summary>
+        /// 设置变量的状态
+        /// </summary>
+        /// <param name="tagid"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        bool SetTagState(int tagid, short value);
+
+        /// <summary>
+        /// 获取变量的状态
+        /// </summary>
+        /// <param name="tagid"></param>
+        /// <returns></returns>
+        short? GetTagState(int tagid);
+
+        /// <summary>
+        /// 设置变量的扩展字段2
+        /// </summary>
+        /// <param name="tagid"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        bool SetTagExtend2(int tagid, long value);
+
+        /// <summary>
+        /// 获取变量的扩展字段2
+        /// </summary>
+        /// <param name="tagid"></param>
+        /// <returns></returns>
+        long? GetTagExtend2(int tagid);
+
+        /// <summary>
         /// 获取变量的值
         /// </summary>
         /// <param name="id"></param>
@@ -83,6 +113,13 @@ namespace Cdy.Tag
         /// <param name="id"></param>
         /// <param name="res"></param>
         void GetComplexTagValue(int id, List<RealTagValueWithTimer> res);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="res"></param>
+        void ListComplexTagChildTagId(int id, Dictionary<int, string> res);
 
         /// <summary>
         /// 

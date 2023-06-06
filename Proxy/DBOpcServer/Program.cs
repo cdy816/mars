@@ -1,10 +1,12 @@
 ﻿using Cdy.Tag;
+using Cdy.Tag.Consume;
 using DBRuntime.Proxy;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 
 namespace DBOpcServer
 {
-    internal class Program
+    internal class Program : IEmbedProxy
     {
         private static bool mIsClosed = false;
 
@@ -35,12 +37,18 @@ namespace DBOpcServer
         {
             Console.CancelKeyPress += Console_CancelKeyPress;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-            WindowConsolHelper.DisbleQuickEditMode();
 
-            Console.Title = "DBOpcServer";
-            if (args.Contains("/m"))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                WindowConsolHelper.MinWindow("DBOpcServer");
+                WindowConsolHelper.DisbleQuickEditMode();
+
+                Cdy.Tag.Common.ProcessMemoryInfo.Instances.StartMonitor("DBOpcServer");
+                if (!Console.IsInputRedirected)
+                    Console.Title = "DBOpcServer";
+                if (args.Contains("/m"))
+                {
+                    WindowConsolHelper.MinWindow("DBOpcServer");
+                }
             }
 
             OPCServer.Server.Port = ReadServerPort();
@@ -128,5 +136,30 @@ namespace DBOpcServer
         {
             Stop();
         }
+
+
+
+        #region IEmbedProxy
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Init()
+        {
+            OPCServer.Server.Port = ReadServerPort();
+        }
+
+        void IEmbedProxy.Start()
+        {
+            OPCServer.Server.NoneSecurityMode = mNoneSecurityMode;
+            OPCServer.Server.Start();
+        }
+
+        void IEmbedProxy.Stop()
+        {
+            OPCServer.Server.Stop();
+            mIsClosed = true;
+        }
+
+        #endregion
     }
 }

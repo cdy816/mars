@@ -1,0 +1,44 @@
+﻿@inject NavigationManager Navigation
+
+<div class="ms-1 ps-2 flex-fill tree-item rounded-2 @IsSelected()" onclick=@(()=>BtnClick())>
+    <div class="d-flex flex-row align-items-center">
+        @if (!string.IsNullOrEmpty(Data.Icon))
+        {
+            <img class="rounded float-start m-1" src="@Data.Icon"  style="width:18px"/>
+        }
+        @Data.Name
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public Data.TreeItem Data{ get; set; }
+
+    public string IsSelected()
+    {
+        return Data.IsSelected ? "active" : "";
+    }
+
+    protected override void OnInitialized()
+    {
+        Data.SelectedChangedEvent += OnSelectedChanged;
+    }
+
+    private void OnSelectedChanged(bool val)
+    {
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    private void BtnClick()
+    {
+        Data?.Click();
+        if(!string.IsNullOrEmpty(Data.Url))
+        {
+            Navigation.NavigateTo(Data.Url);
+        }
+    }
+}

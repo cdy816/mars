@@ -8,12 +8,57 @@ package GrpcService;
 service Data {
   // 更新历史数据
   rpc UpdateHisValue (HisDataRequest) returns (BoolReply);
+
+  //更新某个区域的历史数据
+  rpc UpdateAreaHisValue(HisAreaDataRequest) returns(BoolReply);
+
   //更新实时数据
   rpc UpdateValue (DataRequest) returns (BoolReply);
-
+  //登录
   rpc Login (LoginRequest) returns (LoginReply);
+  //心跳
   rpc Hart (HartRequest) returns (BoolReply);
+  //退出
   rpc Logout (LogoutRequest) returns (BoolReply);
+
+  // 读取指定间隔的时间点的值
+  rpc GetHisValue (QueryHisDataRequest) returns (HisDataCollectionReplay);
+
+  // 读取指定间隔的时间点的值
+  rpc GetHisValueIgnorSystemExit (QueryHisDataRequest) returns (HisDataCollectionReplay);
+
+    // 读取指定间隔的时间点的值
+  rpc GetHisValueAtTimes (QueryHisDataAtTimesRequest) returns (HisDataCollectionReplay);
+
+  // 读取指定间隔的时间点的值
+  rpc GetHisValueAtTimesIgnorSystemExit (QueryHisDataAtTimesRequest) returns (HisDataCollectionReplay);
+
+  //读取所有值
+  rpc GetAllHisValue (QueryAllHisDataRequest) returns (HisDataCollectionReplay);
+
+  //获取实时值
+  rpc GetRealValue (GetRealValueRequest) returns (GetRealValueReply);
+}
+
+// The response message containing the greetings.
+message GetRealValueReply {
+  bool Result=1;
+  repeated ValueQualityTime Values = 2;
+  
+}
+
+message ValueQualityTime{
+	int32 Id=1;
+	int32 ValueType=2;
+	string Value=3;
+	int32 Quality=4;
+	int64 time=5;
+}
+
+message GetRealValueRequest {
+  string Token = 1;
+  string Group=2;
+  repeated string TagNames=3;
 }
 
 //
@@ -35,6 +80,12 @@ message TagValue
 message HisDataRequest{
 	string Token=1;
 	repeated TagHisDataValue Value=2;
+}
+
+
+message HisAreaDataRequest{
+	string Token=1;
+	TagHisTime_Values Value=2;
 }
 
 //
@@ -81,4 +132,57 @@ message BoolReply {
   string ErroMessage=2;
 }
 
+message QueryHisDataRequest{
+	string Token=1;
+	repeated string Tags=2;
+	int64 StartTime=3;
+	int64 EndTime=4;
+	int32 Duration=5;
+	int32 QueryType=6;
+}
+
+message QueryHisDataAtTimesRequest{
+	string Token=1;
+	repeated string Tags=2;
+	int32 QueryType=3;
+	repeated int64 Times=4;
+}
+
+
+message QueryAllHisDataRequest{
+	string Token=1;
+	repeated string Tags=2;
+	int64 StartTime=3;
+	int64 EndTime=4;
+}
+
+message HisDataCollectionReplay{
+	bool result=1;
+	repeated HisDataPointCollection Values=2;
+}
+
+message HisDataPointCollection{
+	string Tag=1;
+	int32 ValueType=2;
+	repeated HisDataPoint Values=3;
+}
+
+message HisDataPoint{
+	string Value=1;
+	int64 Time=2;
+	int32 Quality=3;
+}
+
+//
+message TagHisTime_Values
+{
+	int64 Time=1;
+	repeated TagHisValue Values=2;
+}
+
+message TagHisValue
+{
+	string Name =1;
+    string Value=2;
+}
 

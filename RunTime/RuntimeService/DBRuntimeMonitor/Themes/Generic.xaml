@@ -28,7 +28,11 @@
     <DataTemplate DataType="{x:Type viewmodel:HisTagViewer}">
         <view:HisTagViewerView />
     </DataTemplate>
-    
+
+    <DataTemplate DataType="{x:Type viewmodel:AlarmDetailViewModel}">
+        <view:AlarmDetailView />
+    </DataTemplate>
+
     <BooleanToVisibilityConverter x:Key="bvc" />
 
     <SolidColorBrush x:Key="Button.Static.Background" Color="#FFDDDDDD"/>

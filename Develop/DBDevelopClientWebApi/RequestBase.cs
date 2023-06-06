@@ -240,6 +240,47 @@ namespace DBDevelopClientWebApi
         public string ErroMsg { get; set; }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public class WebApiUpdateDriverSettingRequest : WebApiDatabaseRequest
+    {
+        public Dictionary<string, string> Settings { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class WebApiGetDriverSettingResponse : ResultResponse
+    {
+        public Dictionary<string, string> Settings { get; set; }
+    }
+
+    public class WebApiProxyApiUpdateRequest : WebApiDatabaseRequest
+    {
+        public bool EnableWebApi { get; set; }
+
+        public bool EnableGrpcApi { get; set; }
+
+        public bool EnableHighApi { get; set; }
+
+
+        public bool EnableOpcServer { get; set; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ProxyApiResponse : ResultResponse
+    {
+        public bool EnableWebApi { get; set; }
+
+        public bool EnableGrpcApi { get; set; }
+
+        public bool EnableHighApi { get; set; }
+
+        public bool EnableOpcServer { get; set; }
+    }
 
     /// <summary>
     /// 

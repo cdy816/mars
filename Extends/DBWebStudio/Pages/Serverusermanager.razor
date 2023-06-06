@@ -1,0 +1,328 @@
+﻿@page "/serverusermanager"
+@using System.Text;
+@using DBWebStudio.Data;
+@inject MarsProxy mProxy;
+@inject NavigationManager Navigation;
+@inject NotifyManager mNotifier;
+@inject IJSRuntime JS;
+
+<title>服务器用户管理</title>
+
+<div class="d-flex flex-row h-100" style="height:760px">
+    <div class="card text-light h-100 mt-1" style="background-color:rgba(100,100,100,0.2);">
+        <div class="card-header">
+            用户列表
+        </div>
+        <div class="card-body  py-1">
+            <div class=" mb-3 p-0 d-flex flex-column h-100">
+                <div class="list-group m-1 flex-fill text-light" style="background-color:rgba(100,100,100,0.2);overflow:auto">
+@*                <select class="form-select flex-fill text-light " multiple style="background-color:rgba(100,100,100,0.2);overflow:auto" title="userselect">*@
+                    @foreach (var vv in mUsers)
+                    {
+                        if(vv.Name == mCurrentUserName)
+                        {
+                            <div class="list-group-item list-group-item-action  active form-check" style="cursor:pointer"  @onclick=@(e=>CurrentUserSelect(vv.Name))>
+                                @vv.Name
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="list-group-item  text-light" style="background-color:transparent;cursor:pointer" @onclick=@(e=>CurrentUserSelect(vv.Name))>
+                                @vv.Name
+                            </div>
+                        }
+                    }
+                @*</select>*@
+                </div>
+                <div class=" hstack mt-2 justify-content-between p-0" style="width:300px">
+                    <button class="btn btn-primary" type="submit" @onclick="@(e=>AddUser())">添加</button>
+                    <button class="btn btn-danger" type="submit" @onclick="@(e=>RemoveUser())">删除</button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    @if (mCurrentUserItem != null)
+    {
+        <div class="card text-light h-100 mx-2 mt-1" style="background-color:rgba(100,100,100,0.2);min-width:400px">
+            <div class="card-header">
+                @mCurrentUserName 用户详情
+            </div>
+            <div class="card-body vstack  py-1">
+                <div class="col-3 input-group mb-3 p-0" style="width:300px">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon5">用户名</span>
+                    <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-1" placeholder="用户名" readonly="@(!CanUserNameModify())" @bind=@UserName />
+                </div>
+
+                <div class="col-3 input-group mb-3 p-0" style="width:300px">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon5">密码</span>
+                    <input type="password" class="form-control  bg-white bg-opacity-25  text-light  py-1" placeholder="密  码" @bind=@Password />
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" value="" id="isadmin" @bind=@IsAdmin>
+                    <label class="form-check-label" for="isadmin">
+                        管理员
+                    </label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" value="" id="cannewdb" @bind=@CanNewDatabase>
+                    <label class="form-check-label" for="cannewdb">
+                        新建数据库
+                    </label>
+                </div>
+
+                <div class="col-3 mb-3 p-0" style="width:300px">
+                    <span class="text-light  py-1" id="basic-addon5">数据库</span>
+                    <div class="list-group m-3">
+                        @foreach (var vv in mPermissions)
+                        {
+                            string svv = vv;
+                            var tick = DateTime.Now.Ticks;
+                            string sid = svv + tick;
+                            if (mCurrentUserItem != null && mCurrentUserItem.Databases.Contains(vv))
+                            {
+                                <div class="list-group-item list-group-item-action  active form-check" style="cursor:pointer" @key=@sid @onclick=@(e=>PermissionSelectClick(svv))>
+                                    <input class="form-check-input mx-2" type="checkbox" value="" id="flexCheckChecked@(sid)" checked readonly>
+                                    <label class="form-check-label mx-2 text-light" for="flexCheckChecked@(sid)">
+                                        @svv
+                                    </label>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="list-group-item  form-check" style="background-color:transparent;cursor:pointer" @key=@sid @onclick=@(e=>PermissionSelectClick(svv))>
+                                    <input class="form-check-input  mx-2" type="checkbox" value="" id="flexCheckChecked@(sid)" readonly>
+                                    <label class="form-check-label mx-2 text-light" style="cursor:pointer" for="flexCheckChecked@(sid)">
+                                        @svv
+                                    </label>
+                                </div>
+                            }
+                        }
+                    </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>
+@code {
+    private string mCurrentUserName="";
+    public string CurrentUserName
+    {
+        get
+        {
+            return mCurrentUserName;
+        }
+        set
+        {
+            mCurrentUserName = value;
+            if (!string.IsNullOrEmpty(value) && mUsers.Count>0)
+            {
+                if(mCurrentUserItem!=null && mCurrentUserItem.IsChanged)
+                {
+                    mProxy.UpdateUser(mCurrentUserItem.Name,mCurrentUserItem.IsAdmin,mCurrentUserItem.CanNewDatabase,mCurrentUserItem.Databases);
+                }
+                mCurrentUserItem = mUsers.Where(e => e.Name == value).First();
+            }
+        }
+    }
+
+    public bool CanUserNameModify()
+    {
+        return mCurrentUserName != "Admin";
+    }
+
+    public string UserName
+    {
+        get
+        {
+            return mCurrentUserItem != null ? mCurrentUserItem.Name : "";
+        }
+        set
+        {
+            if (mCurrentUserItem.Name != value)
+            {
+                if(mProxy.ReNameUser(mCurrentUserName,value))
+                {
+                    mCurrentUserItem.Name = value;
+                    mCurrentUserName = value;
+                }
+                else
+                {
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public string Password
+    {
+        get
+        {
+            return mCurrentUserItem != null ? mCurrentUserItem.Password : "";
+        }
+        set
+        {
+            string oldpass = mCurrentUserItem.Password;
+            mCurrentUserItem.Password = value;
+            if(!string.IsNullOrEmpty(mCurrentUserName))
+                mProxy.ModifyUserPassword(oldpass, value);
+        }
+    }
+
+    private bool IsAdmin
+    {
+        get
+        {
+            return mCurrentUserItem != null && mCurrentUserItem.IsAdmin;
+        }
+        set
+        {
+            if(mCurrentUserItem!=null)
+            {
+                mCurrentUserItem.IsAdmin = value;
+            }
+        }
+    }
+
+    private bool CanNewDatabase
+    {
+        get
+        {
+            return mCurrentUserItem != null && mCurrentUserItem.CanNewDatabase;
+        }
+        set
+        {
+            if (mCurrentUserItem != null)
+            {
+                mCurrentUserItem.CanNewDatabase = value;
+            }
+        }
+    }
+
+    private void CurrentUserSelect(string name)
+    {
+        CurrentUserName = name;
+    }
+
+    private ServerUserItemViewModel mCurrentUserItem;
+
+
+    private List<ServerUserItemViewModel> mUsers = new List<ServerUserItemViewModel>();
+    private List<string> mPermissions = new List<string>();
+
+    DateTime mLastClickTime;
+    private void PermissionSelectClick(string p)
+    {
+        if ((DateTime.Now-mLastClickTime).TotalMilliseconds<300)
+        {
+            return;
+        }
+        if (mCurrentUserItem != null)
+        {
+            if (!mCurrentUserItem.Databases.Contains(p))
+            {
+                mCurrentUserItem.Databases.Add(p);
+            }
+            else
+            {
+                mCurrentUserItem.Databases.Remove(p);
+            }
+            mCurrentUserItem.IsChanged = true;
+        }
+        mLastClickTime = DateTime.Now;
+    }
+
+    private string GetAvaiableUserName()
+    {
+        var names = mProxy.GetAllDatabaseUserNames();
+        string basename = "user";
+        for(int i=1;i<int.MaxValue;i++)
+        {
+            string sname = basename + i;
+            if(!names.Contains(sname))
+            {
+                return sname;
+            }
+        }
+        return string.Empty;
+    }
+
+    private void AddUser()
+    {
+        string sName = GetAvaiableUserName();
+        if (mProxy.AddUser(sName,"",false,false))
+        {
+            var user = new ServerUserItemViewModel() { Name = sName, IsAdmin = false, CanNewDatabase = false, Password = "", Databases = new List<string>() };
+            mUsers.Add(user);
+            mCurrentUserName = user.Name;
+            mCurrentUserItem = user;
+        }
+    }
+
+    private void RemoveUser()
+    {
+        if (mCurrentUserItem != null && mCurrentUserItem.CanDelete())
+        {
+            if(mProxy.RemoveUser(mCurrentUserItem.Name))
+            {
+                int ind = mUsers.IndexOf(mCurrentUserItem);
+                mUsers.Remove(mCurrentUserItem);
+                mCurrentUserItem = null;
+                mCurrentUserName = string.Empty;
+
+                if(ind>=mUsers.Count)
+                {
+                    mCurrentUserItem = mUsers[mUsers.Count - 1];
+                }
+                else
+                {
+                    mCurrentUserItem = mUsers[ind];
+                }
+                if(mCurrentUserItem!=null)
+                {
+                    mCurrentUserName = mCurrentUserItem.Name;
+                }
+
+            }
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        mUsers.Clear();
+        var users = mProxy.GetUsers();
+        foreach(var vv in users)
+        {
+            var user = new ServerUserItemViewModel() { Name = vv.Key, IsAdmin = vv.Value.Item1, CanNewDatabase = vv.Value.Item2, Password = "", Databases = vv.Value.Item3 };
+            mUsers.Add(user);
+        }
+        mPermissions = mProxy.ListDatabase().Keys.ToList();
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Navigation.LocationChanged += locationChanged;
+    }
+
+    private void locationChanged(object sender, LocationChangedEventArgs e)
+    {
+        if (!e.Location.Contains("serverusermanager"))
+        {
+            if (mCurrentUserItem != null && mCurrentUserItem.IsChanged)
+            {
+                mProxy.UpdateUser(mCurrentUserItem.Name, mCurrentUserItem.IsAdmin, mCurrentUserItem.CanNewDatabase, mCurrentUserItem.Databases);
+            }
+            Navigation.LocationChanged -= locationChanged;
+        }
+    }
+}

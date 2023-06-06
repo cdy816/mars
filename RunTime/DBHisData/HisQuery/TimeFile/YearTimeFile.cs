@@ -8,6 +8,7 @@
 //==============================================================
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Cdy.Tag
@@ -33,6 +34,21 @@ namespace Cdy.Tag
         #endregion ...Constructor...
 
         #region ... Properties ...
+        /// <summary>
+        /// 
+        /// </summary>
+        public string DataPath { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string BackPath { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Database { get; set; }
+
 
         #endregion ...Properties...
 
@@ -81,6 +97,12 @@ namespace Cdy.Tag
             if(this.ContainsKey(startTime.Month))
             {
                 (this[startTime.Month] as MonthTimeFile).CheckFileExist(file, startTime);
+
+                CheckAndLoad(startTime);
+                if (this.ContainsKey(startTime.Month))
+                {
+                    (this[startTime.Month] as MonthTimeFile).CheckFileExist(file, startTime);
+                }
             }
         }
 
@@ -133,10 +155,106 @@ namespace Cdy.Tag
         {
             if(this.ContainsKey(dateTime.Month))
             {
+                
                 return (this[dateTime.Month] as MonthTimeFile).GetDataFile(dateTime);
+            }
+            else
+            {
+                CheckAndLoad(dateTime);
+                if (this.ContainsKey(dateTime.Month))
+                {
+                    return (this[dateTime.Month] as MonthTimeFile).GetDataFile(dateTime);
+                }
             }
             return null;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public void FillDataFile(Dictionary<int,RecordList<DateTime>> dateTimes, SortedDictionary<DateTime, IDataFile> dic, List<DateTime> logFileTimes)
+        {
+            foreach(var vtime in dateTimes)
+            {
+                if (this.ContainsKey(vtime.Key))
+                {
+                    (this[vtime.Key] as MonthTimeFile).FillDataFile(vtime.Value,dic, logFileTimes);
+                }
+                else
+                {
+                    CheckAndLoad(vtime.Value.First());
+                    if (this.ContainsKey(vtime.Key))
+                    {
+                        (this[vtime.Key] as MonthTimeFile).FillDataFile(vtime.Value, dic, logFileTimes);
+                    }
+                    else
+                    {
+                        logFileTimes.AddRange(vtime.Value);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public void FillDataFile(Dictionary<int, RecordList<DateTime>> dateTimes, SortedDictionary<DateTime, IDataFile> dic, ArrayList<DateTime> logFileTimes)
+        {
+            foreach (var vtime in dateTimes)
+            {
+                if (this.ContainsKey(vtime.Key))
+                {
+                    (this[vtime.Key] as MonthTimeFile).FillDataFile(vtime.Value, dic, logFileTimes);
+                }
+                else
+                {
+                    CheckAndLoad(vtime.Value.First());
+                    if (this.ContainsKey(vtime.Key))
+                    {
+                        (this[vtime.Key] as MonthTimeFile).FillDataFile(vtime.Value, dic, logFileTimes);
+                    }
+                    else
+                    {
+                        logFileTimes.AddRange(vtime.Value);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time"></param>
+        public void ClearCach(DateTime time)
+        {
+            if (this.ContainsKey(time.Month))
+            {
+                (this[time.Month] as MonthTimeFile).ClearCachedTimes();
+            }
+        }
+
+        private void CheckAndLoad(DateTime time)
+        {
+            string spath = System.IO.Path.Combine(this.DataPath, time.Year.ToString(), time.Month.ToString());
+            if(System.IO.Directory.Exists(spath))
+            {
+                AddMonth(time.Month);
+            }
+
+            if (!string.IsNullOrEmpty(this.BackPath))
+            {
+                spath = System.IO.Path.Combine(this.BackPath, time.Year.ToString(), time.Month.ToString());
+                if (System.IO.Directory.Exists(spath))
+                {
+                    AddMonth(time.Month);
+                }
+            }
+        }
+
 
         /// <summary>
         /// 
@@ -156,6 +274,14 @@ namespace Cdy.Tag
                 {
                     re.AddRange((this[mon] as MonthTimeFile).GetDataFiles(startTime, span));
                 }
+                else
+                {
+                    CheckAndLoad(startTime);
+                    if (this.ContainsKey(mon))
+                    {
+                        re.AddRange((this[mon] as MonthTimeFile).GetDataFiles(startTime, span));
+                    }
+                }
             }
             else
             {
@@ -163,6 +289,14 @@ namespace Cdy.Tag
                 if (this.ContainsKey(mon))
                 {
                     re.AddRange((this[mon] as MonthTimeFile).GetDataFiles(startTime, nxtMonth - startTime));
+                }
+                else
+                {
+                    CheckAndLoad(startTime);
+                    if (this.ContainsKey(mon))
+                    {
+                        re.AddRange((this[mon] as MonthTimeFile).GetDataFiles(startTime, nxtMonth - startTime));
+                    }
                 }
                 re.AddRange(GetDataFiles(nxtMonth, startTime+span - nxtMonth));
             }

@@ -16,7 +16,7 @@ namespace Cdy.Tag
     /// <summary>
     /// 
     /// </summary>
-    public class StatisticsFileHelper
+    public class StatisticsFileHelper:IDisposable
     {
 
         #region ... Variables  ...
@@ -180,7 +180,7 @@ namespace Cdy.Tag
         private void Read(int id,DateTime time,List<DateTime> times,NumberStatisticsQueryResult result)
         {
             string sfile = GetStatisticsFileName(id, time);
-            string ss = System.IO.Path.Combine(GetPrimaryHisDataPath(), sfile);
+            string ss = System.IO.Path.Combine(GetPrimaryHisDataPath(), (id / TagCountOneFile).ToString("X3"),time.Year.ToString(),time.Month.ToString(), time.Day.ToString(), sfile);
             if(System.IO.File.Exists(ss))
             {
                 Read(ss, id, times, result);
@@ -232,6 +232,14 @@ namespace Cdy.Tag
                 }
 
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Dispose()
+        {
+            Manager=null;
         }
 
         #endregion ...Methods...

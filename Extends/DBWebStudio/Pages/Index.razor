@@ -1,0 +1,17 @@
+﻿@page "/Main"
+
+<PageTitle>Welcome</PageTitle>
+<div class="vstack h-100 align-items-center justify-content-center">
+    <h1 class="text-light text-center w-100">欢迎来到Mars实时物联数据库</h1>
+    <span class="text-light w-100 text-center"> @(DateTime.Now.ToString("yyyy-mm-dd HH:MM:ss"))</span>
+</div>
+
+
+@code
+{
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        StateHasChanged();
+    }
+}

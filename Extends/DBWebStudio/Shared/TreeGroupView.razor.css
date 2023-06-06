@@ -1,0 +1,16 @@
+
+.tree-item {
+    height: 32px;
+    cursor: pointer;
+    color: white;
+}
+
+div .active {
+    background-color: rgba(255,255,255,0.25);
+    color: white;
+}
+
+.tree-item:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+}

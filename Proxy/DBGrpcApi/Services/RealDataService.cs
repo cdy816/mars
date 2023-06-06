@@ -104,6 +104,149 @@ namespace DBGrpcApi
         /// <param name="request"></param>
         /// <param name="context"></param>
         /// <returns></returns>
+        public override Task<GetTagStateReply> GetTagState(GetTagStateRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token) && SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
+            {
+                GetTagStateReply response = new GetTagStateReply() { Result = true };
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+                var ids = service.GetTagIdByName(request.TagNames.Select(e => string.IsNullOrEmpty(request.Group) ? e : request.Group + "." + e).ToList());
+                Dictionary<int, string> tags = new Dictionary<int, string>();
+                for (int i = 0; i < request.TagNames.Count; i++)
+                {
+                    if (ids.Count > i && ids[i].HasValue)
+                    {
+                        if (service.IsComplexTag(ids[i].Value))
+                        {
+                            service.ListComplexTagChildTagId(ids[i].Value, tags);
+                        }
+                        else
+                        {
+                            tags.Add(ids[i].Value, request.TagNames[i]);
+                        }
+                    }
+                    else
+                    {
+                        response.Values.Add(new IntValueItem() { TagName = request.TagNames[i], Value = -1 });
+                    }
+                }
+                if (tags.Count > 0)
+                {
+                    List<short> states = null;
+                    if (Startup.IsRunningEmbed)
+                    {
+                        states= new List<short>();
+                        foreach(var vv in tags)
+                        {
+                            var vval = service.GetTagState(vv.Key);
+                            if (vval != null)
+                            states.Add(vval.Value);
+                            else
+                            {
+                                states.Add(-1);
+                            }
+                            
+                        }
+                    }
+                    else
+                    {
+                        states = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.GetTagState(tags.Keys.ToList());
+                    }
+                   
+                    if (states != null && states.Count > 0)
+                    {
+                        int i = 0;
+                        foreach (var vv in tags)
+                        {
+                            response.Values.Add(new IntValueItem() { TagName = vv.Value, Value = states[i] });
+                            i++;
+                        }
+                    }
+                }
+                return Task.FromResult(response);
+            }
+            else
+            {
+                return Task.FromResult(new GetTagStateReply() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<GetTagExtendField2Reply> GetTagExtendField2(GetTagStateRequest request, ServerCallContext context)
+        {
+            if (SecurityManager.Manager.IsLogin(request.Token) && SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
+            {
+                GetTagExtendField2Reply response = new GetTagExtendField2Reply() { Result = true };
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+                var ids = service.GetTagIdByName(request.TagNames.Select(e => string.IsNullOrEmpty(request.Group) ? e : request.Group + "." + e).ToList());
+                Dictionary<int, string> tags = new Dictionary<int, string>();
+                for (int i = 0; i < request.TagNames.Count; i++)
+                {
+                    if (ids.Count > i && ids[i].HasValue)
+                    {
+                        if (service.IsComplexTag(ids[i].Value))
+                        {
+                            service.ListComplexTagChildTagId(ids[i].Value, tags);
+                        }
+                        else
+                        {
+                            tags.Add(ids[i].Value, request.TagNames[i]);
+                        }
+                    }
+                    else
+                    {
+                        response.Values.Add(new Int64ValueItem() { TagName = request.TagNames[i], Value = -1 });
+                    }
+                }
+                if (tags.Count > 0)
+                {
+                    List<long> states=null;
+                    if (Startup.IsRunningEmbed)
+                    {
+                        states = new List<long>();
+                        foreach (var vv in tags)
+                        {
+                            var vval = service.GetTagExtend2(vv.Key);
+                            if (vval != null)
+                                states.Add(vval.Value);
+                            else
+                            {
+                                states.Add(-1);
+                            }
+
+                        }
+                    }
+                    else
+                        states = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.GetTagExtendField2(tags.Keys.ToList());
+                    if (states != null && states.Count > 0)
+                    {
+                        int i = 0;
+                        foreach (var vv in tags)
+                        {
+                            response.Values.Add(new Int64ValueItem() { TagName = vv.Value, Value = states[i] });
+                            i++;
+                        }
+                    }
+                }
+                return Task.FromResult(response);
+            }
+            else
+            {
+                return Task.FromResult(new GetTagExtendField2Reply() { Result = false });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public override Task<GetRealValueReply> GetRealValueById(GetRealValueByIdRequest request, ServerCallContext context)
         {
             if (SecurityManager.Manager.IsLogin(request.Token) && SecurityManager.Manager.CheckReaderPermission(request.Token, request.Group))
@@ -370,6 +513,99 @@ namespace DBGrpcApi
             }
             return Task.FromResult(new BoolResultReply { Result = false });
 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReply> SetTagState(SetTagStateRequest request, ServerCallContext context)
+        {
+            bool re = true;
+            if (SecurityManager.Manager.IsLogin(request.Token))
+            {
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+                foreach (var vv in request.Values)
+                {
+                    string sname = GetGroupName(vv.TagName);
+                    re &= SecurityManager.Manager.CheckWritePermission(request.Token, sname);
+                }
+
+                if (re)
+                {
+                    Dictionary<int, short> vals = new Dictionary<int, short>();
+                    foreach (var vv in request.Values)
+                    {
+                        var vid = service.GetTagIdByName(new List<string>() { vv.TagName });
+                        if(vid!=null&&vid.Count>0 && vid[0].HasValue && vid[0].Value>-1)
+                        {
+                            vals.Add(vid[0].Value,(short)vv.Value);
+                        }
+                    }
+                    if (Startup.IsRunningEmbed)
+                    {
+                        foreach(var vv in vals)
+                        {
+                           re&= service.SetTagState(vv.Key,vv.Value);
+                        }
+                    }
+                    else
+                    {
+                        re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.SetTagState(vals);
+                    }
+                }
+
+                return Task.FromResult(new BoolResultReply { Result = re });
+            }
+            return Task.FromResult(new BoolResultReply { Result = false });
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<BoolResultReply> SetTagExtendField2(SetTagExtendField2Request request, ServerCallContext context)
+        {
+            bool re = true;
+            if (SecurityManager.Manager.IsLogin(request.Token))
+            {
+                var service = ServiceLocator.Locator.Resolve<IRealTagConsumer>();
+                foreach (var vv in request.Values)
+                {
+                    string sname = GetGroupName(vv.TagName);
+                    re &= SecurityManager.Manager.CheckWritePermission(request.Token, sname);
+                }
+
+                if (re)
+                {
+                    Dictionary<int, long> vals = new Dictionary<int, long>();
+                    foreach (var vv in request.Values)
+                    {
+                        var vid = service.GetTagIdByName(new List<string>() { vv.TagName });
+                        if (vid != null && vid.Count > 0 && vid[0].HasValue && vid[0].Value > -1)
+                        {
+                            vals.Add(vid[0].Value, vv.Value);
+                        }
+                    }
+                    if (Startup.IsRunningEmbed)
+                    {
+                        foreach (var vv in vals)
+                        {
+                            service.SetTagExtend2(vv.Key, vv.Value);
+                        }
+                    }
+                    else
+                    {
+                        re = DBRuntime.Proxy.DatabaseRunner.Manager.Proxy.SetTagExtendField2(vals);
+                    }
+                }
+                return Task.FromResult(new BoolResultReply { Result = re });
+            }
+            return Task.FromResult(new BoolResultReply { Result = false });
         }
 
         /// <summary>

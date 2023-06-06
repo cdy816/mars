@@ -151,6 +151,7 @@ namespace Cdy.Tag
             hisTag.Type = (RecordType)(int.Parse(xe.Attribute("Type").Value));
             hisTag.TagType = (TagType)(int.Parse(xe.Attribute("TagType").Value));
             hisTag.CompressType = int.Parse(xe.Attribute("CompressType").Value);
+
             if(xe.Attribute("MaxValueCountPerSecond")!=null)
             hisTag.MaxValueCountPerSecond = short.Parse(xe.Attribute("MaxValueCountPerSecond").Value);
             if(xe.Element("Parameters") !=null)

@@ -200,7 +200,7 @@ namespace DBRuntimeMonitor.View
                 }
 
 
-
+                
                 this.tb.Plot.Clear();
                 bool isvailed = false;
                 bool isinvailed = false;
@@ -239,9 +239,8 @@ namespace DBRuntimeMonitor.View
                 lg.FillColor = System.Drawing.Color.Transparent;
                 lg.OutlineColor = System.Drawing.Color.Transparent;
                 lg.FontColor = System.Drawing.Color.WhiteSmoke;
-
-                
-
+                this.tb.Plot.AxisAutoX();
+               //tb.Plot.XAxis.RecalculateAxisSize();
                 tb.Refresh();
             });
            

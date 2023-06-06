@@ -5,12 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HighSpeedApiDemo"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="900">
+        Title="MainWindow" Height="550" Width="1000">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition Height="*" />
-            <RowDefinition Height="160"/>
+            <RowDefinition Height="260"/>
         </Grid.RowDefinitions>
         <TextBlock Text="服务器地址:"  HorizontalAlignment="Left" VerticalAlignment="Center" Margin="6,0,0,0"/>
         <TextBox x:Name="ip" Width="200" HorizontalAlignment="Left" Margin="86,0,0,0" VerticalAlignment="Center" Text="{Binding Ip,Mode=TwoWay,UpdateSourceTrigger=LostFocus}" />
@@ -48,10 +48,22 @@
         <Button Content="修改历史数据" HorizontalAlignment="Left" Margin="570,86,0,0" Grid.Row="2" VerticalAlignment="Top" Width="106" Command="{Binding ModifyHisValueCommand}"/>
         <ComboBox HorizontalAlignment="Left" Margin="378,51,0,0" Grid.Row="2" Text="{Binding ModifyStartSecond, Mode=TwoWay}" ItemsSource="{Binding Seconds}" IsEditable="True" VerticalAlignment="Top" Width="65"/>
         <ComboBox HorizontalAlignment="Left" Margin="663,47,0,0" Grid.Row="2" Text="{Binding ModifyEndSecond, Mode=TwoWay}" ItemsSource="{Binding Seconds}" IsEditable="True" VerticalAlignment="Top" Width="65"/>
-        <Button Content="查询历史数据(所有值)" HorizontalAlignment="Left" Margin="755,47,0,0" Grid.Row="2" VerticalAlignment="Top" Width="127" Command="{Binding QueryAllValueCommand}"/>
-        <Button Content="查询历史数据(时段)" HorizontalAlignment="Left" Margin="755,87,0,0" Grid.Row="2" VerticalAlignment="Top" Width="126" Command="{Binding QueryHisValueCommand}"/>
-        <Button Content="查询历史数据(时刻)" HorizontalAlignment="Left" Margin="755,125,0,0" Grid.Row="2" VerticalAlignment="Top" Width="127" Command="{Binding QueryHisValue2Command}"/>
+        <Button Content="查询历史数据(所有值)" HorizontalAlignment="Left" Margin="755,47,0,0" Grid.Row="2" VerticalAlignment="Top" Width="126" Command="{Binding QueryAllValueCommand}"/>
+        <Button Content="查询历史数据(时段)" HorizontalAlignment="Left" Margin="755,87,0,0" Grid.Row="2" VerticalAlignment="Top" Width="125" Command="{Binding QueryHisValueCommand}"/>
+        <Button Content="查询历史数据(时刻)" HorizontalAlignment="Left" Margin="755,125,0,0" Grid.Row="2" VerticalAlignment="Top" Width="126" Command="{Binding QueryHisValue2Command}"/>
         <Button Content="读取复杂变量" HorizontalAlignment="Left" Margin="501,15,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding QueryComplexValueCommand}"/>
+        <Button Content="下发状态值" HorizontalAlignment="Left" Margin="600,15,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding SetTagStateCommand}"/>
+        <Button Content="下发扩展属性" HorizontalAlignment="Left" Margin="696,15,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding SetTagExtendField2Command}"/>
+        <Button Content="读取状态值" HorizontalAlignment="Left" Margin="797,14,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding GetTagStateCommand}"/>
+        <Button Content="读取扩展属性" HorizontalAlignment="Left" Margin="890,14,0,0" Grid.Row="2" VerticalAlignment="Top" Width="76" Command="{Binding GetTagExtendField2Command}"/>
+        <Button Content="保持时间" HorizontalAlignment="Left" Margin="35,125,0,0" Grid.Row="2" VerticalAlignment="Top" Width="102" Command="{Binding CalKeepTimeCommand}"/>
+        <Button Content="大于某值" HorizontalAlignment="Left" Margin="153,125,0,0" Grid.Row="2" VerticalAlignment="Top" Width="102" Command="{Binding QueryGreatValueCommand}"/>
+        <Button Content="平均值" HorizontalAlignment="Left" Margin="280,125,0,0" Grid.Row="2" VerticalAlignment="Top" Width="102" Command="{Binding QueryAvgValueCommand}"/>
+        <Button Content="最大值" HorizontalAlignment="Left" Margin="410,125,0,0" Grid.Row="2" VerticalAlignment="Top" Width="102" Command="{Binding QueryMaxValueCommand}"/>
+        <Label Content="Sql 语句:" HorizontalAlignment="Left" Margin="10,167,0,0" Grid.Row="2" VerticalAlignment="Top"/>
+        <TextBox x:Name="sqlexp" HorizontalAlignment="Left" Margin="84,171,0,0" Grid.Row="2" TextWrapping="Wrap" Text="{Binding SqlExp,Mode=TwoWay}" VerticalAlignment="Top" Width="674" Height="52"/>
+        <Button x:Name="sqlb" Content="查询" HorizontalAlignment="Left" Margin="772,172,0,0" Grid.Row="2" VerticalAlignment="Top" Height="30" Width="80" Command="{Binding SqlQueryCommand}"/>
+        <Button x:Name="readStatistics" Content="读取变量统计信息" HorizontalAlignment="Left" Margin="897,48,0,0" Grid.Row="2" VerticalAlignment="Top" Width="103" Command="{Binding ReadTagStatisticsCommand}"/>
 
     </Grid>
 </Window>

@@ -100,29 +100,29 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void Save()
+        public bool Save()
         {
-            Save(PathHelper.helper.GetDataPath(this.Document.Name,this.Document.Name + ".cls"));
+           return Save(PathHelper.helper.GetDataPath(this.Document.Name,this.Document.Name + ".cls"));
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="sfile"></param>
-        public void Save(string sfile)
+        public bool Save(string sfile)
         {
             XElement doc = new XElement("ComplexTagClassDocument");
             doc.SetAttributeValue("Name", Document.Name);
             doc.SetAttributeValue("Version", Document.Version);
             doc.SetAttributeValue("Auther", "cdy");
-           
+
             XElement xe = new XElement("Class");
-            foreach(var vv in Document.Class.Values)
+            foreach (var vv in Document.Class.Values)
             {
                 xe.Add(vv.SaveToXML());
             }
             doc.Add(xe);
-            doc.Save(sfile);
+            return doc.SaveXMLToFile(sfile, "ComplexTagClassSerise");
         }
 
         /// <summary>

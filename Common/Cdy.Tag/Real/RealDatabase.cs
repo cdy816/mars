@@ -46,7 +46,7 @@ namespace Cdy.Tag
         /// <summary>
         /// 当前最大ID
         /// </summary>
-        public int MaxId { get; set; } = 0;
+        public int MaxId { get; set; } = -1;
 
         /// <summary>
         /// 最小ID
@@ -87,9 +87,16 @@ namespace Cdy.Tag
             foreach(var vv in Tags)
             {
                 vv.Value.UpdateFullName();
-                if(!NamedTags.ContainsKey(vv.Value.FullName))
+
+                string sname = vv.Value.FullName;
+                if(!string.IsNullOrEmpty(vv.Value.Parent))
                 {
-                    NamedTags.Add(vv.Value.FullName, vv.Value);
+                    sname = string.IsNullOrEmpty(vv.Value.Group)?vv.Value.FullName: vv.Value.Group + "." + vv.Value.FullName;
+                }
+
+                if(!NamedTags.ContainsKey(sname))
+                {
+                    NamedTags.Add(sname, vv.Value);
                 }
             }
         }
@@ -144,6 +151,25 @@ namespace Cdy.Tag
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public List<string> ListAreas()
+        {
+            return this.Tags.Select(e=>e.Value.Area).Distinct().ToList();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="area"></param>
+        /// <returns></returns>
+        public List<Tagbase> GetTagByArea(string area)
+        {
+            return Tags.Values.Where(e=>e.Area == area).ToList();
         }
 
         /// <summary>
@@ -272,7 +298,7 @@ namespace Cdy.Tag
 
                 CheckAndAddGroup(tag.Group)?.Tags.Add(tag);
                 MaxId = Math.Max(MaxId, tag.Id);
-
+                
                 tag.UpdateFullName();
 
                 if (!NamedTags.ContainsKey(tag.FullName))
@@ -383,9 +409,12 @@ namespace Cdy.Tag
                 {
                     Tags.Remove(vv.Key);
                 }
-                if(NamedTags.ContainsKey(vv.Value.FullName))
+
+                string skey = string.IsNullOrEmpty(tag.Group) ? vv.Value.FullName : tag.Group + "." + vv.Value.FullName;
+
+                if(NamedTags.ContainsKey(skey))
                 {
-                    NamedTags.Remove(vv.Value.FullName);
+                    NamedTags.Remove(skey);
                 }
                 if(vv.Value is ComplexTag)
                 {
@@ -405,8 +434,9 @@ namespace Cdy.Tag
             foreach(var vv in cls.Tags)
             {
                 var vtag = vv.Value.Clone();
-                vtag.Id = MaxId++;
+                vtag.Id = ++MaxId;
                 vtag.Parent = tag.Id.ToString();
+                vtag.Group = tag.Group;
 
                 if (!Tags.ContainsKey(vtag.Id))
                 {
@@ -419,16 +449,24 @@ namespace Cdy.Tag
                 
                 vtag.FullName = tag.FullName + "." + vtag.Name;
 
-                if(!this.NamedTags.ContainsKey(vtag.FullName))
+                if(vtag.FullName.StartsWith(vtag.Group+"."))
                 {
-                    this.NamedTags.Add(vtag.FullName, vtag);
+                    vtag.FullName = vtag.FullName.Substring(vtag.Group.Length+1);
+                }
+
+                string sfullname = string.IsNullOrEmpty(tag.Group) ? vtag.FullName : tag.Group + "." + vtag.FullName;
+
+                if(!this.NamedTags.ContainsKey(sfullname))
+                {
+                    this.NamedTags.Add(sfullname, vtag);
                 }
                 else
                 {
-                    this.NamedTags[vtag.FullName] = vtag;
+                    this.NamedTags[sfullname] = vtag;
                 }
 
                 tag.Tags.Add(vtag.Id, vtag);
+                //vtag.Group = tag.Group;
 
                 var hstag = cls.HisTags.ContainsKey(vv.Key)?cls.HisTags[vv.Key].Clone():null;
                 if(hstag != null)
@@ -526,6 +564,7 @@ namespace Cdy.Tag
                     foreach (var vv in (oldtag as ComplexTag).Tags)
                     {
                         (tag as ComplexTag).Tags.Add(vv.Key, vv.Value);
+                        vv.Value.Group=(tag as ComplexTag).Group;
                     }
                 }
 
@@ -544,16 +583,31 @@ namespace Cdy.Tag
                 tag.UpdateFullName();
 
                 var oldtag = Tags[tag.Id];
+
                 var oldname = oldtag.FullName;
-                if(oldname!=tag.FullName)
+
+                if(!string.IsNullOrEmpty(oldtag.Parent))
+                {
+                    oldname = string.IsNullOrEmpty(oldtag.Group) ? oldtag.FullName : oldtag.Group + "." + oldtag.FullName;
+                }
+                
+
+                string sname = tag.FullName;
+
+                if (!string.IsNullOrEmpty(tag.Parent))
+                {
+                    sname = string.IsNullOrEmpty(tag.Group) ? tag.FullName : tag.Group + "." + tag.FullName;
+                }
+
+                if (oldname!= sname)
                 {
                     if(NamedTags.ContainsKey(oldname))
                     NamedTags.Remove(oldname);
-                    NamedTags.Add(tag.FullName, tag);
+                    NamedTags.Add(sname, tag);
                 }
                 else
                 {
-                    NamedTags[tag.FullName] = tag;
+                    NamedTags[sname] = tag;
                 }
                 Tags[tag.Id] = tag;
 
@@ -594,16 +648,19 @@ namespace Cdy.Tag
             else
             {
                 Dictionary<string, Tuple<int, string>> names = new Dictionary<string, Tuple<int, string>>();
-                ListAllTagNames(tag,"",names);
+                ListAllTagNames(tag,tag.Group,names);
                 foreach(var vv in names)
                 {
                     if(Tags.ContainsKey(vv.Value.Item1))
                     {
                         var vtag = Tags[vv.Value.Item1];
                         Tags.Remove(vv.Value.Item1);
-                        if(NamedTags.ContainsKey(vtag.FullName))
+
+                        string sname = string.IsNullOrEmpty(vtag.Group)?vtag.FullName: vtag.Group+"."+vtag.FullName;
+
+                        if (NamedTags.ContainsKey(sname))
                         {
-                            NamedTags.Remove(vtag.FullName);
+                            NamedTags.Remove(sname);
                         }
                     }
 
@@ -621,18 +678,22 @@ namespace Cdy.Tag
                 {
                     var vtag = vv.Value.Clone();
 
-                    if (names.ContainsKey(vv.Key))
+                    string sstmp = string.IsNullOrEmpty(tag.Group) ? vv.Key : tag.Group + "." + vv.Key;
+
+                    if (names.ContainsKey(sstmp))
                     {
-                        id = names[vv.Key].Item1;
-                        vtag.LinkAddress = names[vv.Key].Item2;
+                        id = names[sstmp].Item1;
+                        vtag.LinkAddress = names[sstmp].Item2;
                     }
                     else
                     {
-                        id = MaxId++;
+                        id = ++MaxId;
                     }
                     
                     vtag.Id = id;
                     vtag.Parent = tag.Id.ToString();
+                    vtag.Group = tag.Group;
+
                     tag.Tags.Add(id, vtag);
                     Tags.Add(id, vtag);
 
@@ -666,16 +727,18 @@ namespace Cdy.Tag
             {
                 string stmp = head + "." + vv.Value.Name;
 
+                string sstmp = string.IsNullOrEmpty(tag.Group) ? stmp : tag.Group + "." + stmp;
+
                 var vtag = vv.Value.Clone();
 
-                if (names.ContainsKey(stmp))
+                if (names.ContainsKey(sstmp))
                 {
-                    id = names[stmp].Item1;
-                    vtag.LinkAddress = names[stmp].Item2;
+                    id = names[sstmp].Item1;
+                    vtag.LinkAddress = names[sstmp].Item2;
                 }
                 else
                 {
-                    id = MaxId++;
+                    id = ++MaxId;
                 }
               
                 if (cls.HisTags.ContainsKey(vv.Value.Id))
@@ -686,15 +749,17 @@ namespace Cdy.Tag
                 }
                 vtag.Id = id;
                 vtag.Parent = tag.Id.ToString();
+                vtag.Group = tag.Group;
+
                 tag.Tags.Add(id, vtag);
 
-                if (!NamedTags.ContainsKey(stmp))
+                if (!NamedTags.ContainsKey(sstmp))
                 {
-                    NamedTags.Add(stmp, vtag);
+                    NamedTags.Add(sstmp, vtag);
                 }
                 else
                 {
-                    NamedTags[stmp] = vtag;
+                    NamedTags[sstmp] = vtag;
                 }
 
                 if (!Tags.ContainsKey(id))
@@ -780,7 +845,7 @@ namespace Cdy.Tag
         /// <returns></returns>
         public bool Append(Tagbase tag)
         {
-            tag.Id = MaxId++;
+            tag.Id = ++MaxId;
             MinId = Math.Min(MinId, tag.Id);
             return Add(tag);
         }

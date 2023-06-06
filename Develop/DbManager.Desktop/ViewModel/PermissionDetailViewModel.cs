@@ -158,7 +158,7 @@ namespace DBInStudio.Desktop.ViewModel
         private void Add()
         {
             string sname = GetAvaiabelName("Permission");
-            Cdy.Tag.UserPermission pitem = new Cdy.Tag.UserPermission() { Name = sname };
+            Cdy.Tag.UserPermission pitem = new Cdy.Tag.UserPermission() {Name = sname };
             if (DBDevelopClientApi.DevelopServiceHelper.Helper.UpdateDatabasePermission(this.Database, pitem))
             {
                 this.Permissions.Add(new PermissionItemViewModel(pitem) { IsNew = true,Parent=this });
@@ -258,8 +258,8 @@ namespace DBInStudio.Desktop.ViewModel
         #region ... Properties ...
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
         public bool IsSelected
         {
             get
@@ -387,8 +387,10 @@ namespace DBInStudio.Desktop.ViewModel
             }
             set
             {
-                mModel.Name = value;
-                IsChanged = true;
+                if (!string.IsNullOrEmpty(value) && DBDevelopClientApi.DevelopServiceHelper.Helper.ReNameDatabasePermission(Parent.Database, value, mModel.Name))
+                {
+                    mModel.Name = value;
+                }
                 OnPropertyChanged("Name");
             }
         }

@@ -7,7 +7,7 @@
              xmlns:res="clr-namespace:HisDataTools"
              xmlns:chart="clr-namespace:HeBianGu.WPF.EChart"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="926">
+             d:DesignHeight="450" d:DesignWidth="1200">
     <UserControl.Resources>
         <res:IndexConverter x:Key="ic" />
         <local:QualityValueConvert x:Key="qvc" />
@@ -34,17 +34,20 @@
 
             <Label Content="{res:ResMarker EndTime, :}" HorizontalAlignment="Left" Margin="240,10,0,0" VerticalAlignment="Top" Grid.Column="2"/>
 
-            <Button Content="{res:ResMarker Query}" Command="{Binding QueryCommand}"  HorizontalAlignment="Right" Padding="2" Margin="0,10,10,0" VerticalAlignment="Top"  Width="79" Grid.Column="3"/>
+            <Button Content="{res:ResMarker Query}" Command="{Binding QueryCommand}"  HorizontalAlignment="Left" Padding="2" Margin="239,10,0,0" VerticalAlignment="Top"  Width="79" Grid.Column="3"/>
 
             <Label Content="{res:ResMarker Tag,:}" HorizontalAlignment="Left" Margin="5,10,0,0" VerticalAlignment="Top"/>
             <DatePicker SelectedDate="{Binding EndTime,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Margin="5,10,0,0" Grid.Column="3"/>
             <ComboBox ItemsSource="{Binding HourItems}" SelectedIndex="{Binding EndTimeHour,UpdateSourceTrigger=PropertyChanged}" IsEditable="True"  HorizontalAlignment="Left" Margin="170,10,0,0" VerticalAlignment="Top" Width="60" Grid.Column="3"/>
             <Label Content="{res:ResMarker TimeSpan, :}" HorizontalAlignment="Left" Margin="5,37,0,0" VerticalAlignment="Top"/>
+            <Label Content="s" HorizontalAlignment="Left" Grid.Column="1" Margin="170,37,0,0" VerticalAlignment="Top"/>
             <ComboBox  IsEditable="True" Text="{Binding TimeSpan,UpdateSourceTrigger=PropertyChanged}"   HorizontalAlignment="Left" Margin="10,39,0,0" VerticalAlignment="Top" Width="154" Grid.Column="1"/>
             <CheckBox IsEnabled="{Binding IsChecked,ElementName=oname}" IsChecked="{Binding AllValue,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker AllValue}" Grid.Column="2" HorizontalAlignment="Left" Margin="5,42,0,0" VerticalAlignment="Top"/>
             <Label Content="{Binding OpMessage}" Grid.Column="3" Margin="0,40,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" />
-            <RadioButton x:Name="oname" GroupName="gg" IsChecked="{Binding IsOriginalValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker OriginalValue}" Grid.Column="3" HorizontalAlignment="Left" Margin="5,44,0,0" VerticalAlignment="Top"/>
-            <RadioButton GroupName="gg" IsChecked="{Binding IsStatisticsValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker StatisticsValue}" Grid.Column="3" HorizontalAlignment="Left" Margin="94,44,0,0" VerticalAlignment="Top"/>
+            <!--<RadioButton x:Name="oname" GroupName="gg" IsChecked="{Binding IsOriginalValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker OriginalValue}" Grid.Column="3" HorizontalAlignment="Left" Margin="5,44,0,0" VerticalAlignment="Top"/>
+            <RadioButton GroupName="gg" IsChecked="{Binding IsStatisticsValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker StatisticsValue}" Grid.Column="3" HorizontalAlignment="Left" Margin="94,44,0,0" VerticalAlignment="Top"/>-->
+
+            <CheckBox IsEnabled="{Binding AllValue,Converter={StaticResource biv}}" IsChecked="{Binding IgnorClosedQuality,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker IgnorClosedQuality}" Grid.Column="3" HorizontalAlignment="Left" Margin="10,42,0,0" VerticalAlignment="Top"/>
 
             <Label Content="{res:ResMarker QueryValueMatchType,:}" HorizontalAlignment="Left" Margin="97,36,0,0" VerticalAlignment="Top" Grid.Column="2"/>
 
@@ -55,6 +58,8 @@
                 <ComboBoxItem Content="Closer" />
                 <ComboBoxItem Content="Linear" />
             </ComboBox>
+            <Button Content="{res:ResMarker Export}" Command="{Binding ExportCommand}"  HorizontalAlignment="Left" Padding="2" Margin="331,10,0,0" VerticalAlignment="Top"  Width="79" Grid.Column="3" Height="21"/>
+            <CheckBox  IsChecked="{Binding ExportQuality, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="{res:ResMarker ExportQuality}" Grid.Column="3" HorizontalAlignment="Left" Margin="331,42,0,0" VerticalAlignment="Top"/>
 
 
 

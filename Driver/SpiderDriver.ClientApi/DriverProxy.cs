@@ -308,6 +308,16 @@ namespace SpiderDriver.ClientApi
         /// <summary>
         /// 登录
         /// </summary>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool Login(int timeout=5000)
+        {
+            return Login(UserName, Password,5000);
+        }
+
+        /// <summary>
+        /// 登录
+        /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <param name="timeount"></param>
@@ -320,7 +330,7 @@ namespace SpiderDriver.ClientApi
                 mUser = username;
                 mPass = password;
                 int size = username.Length + password.Length + 9;
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, size);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, size + 1);
                 mb.Write(ApiFunConst.LoginFun);
                 mb.Write(username);
                 mb.Write(password);
@@ -779,7 +789,7 @@ namespace SpiderDriver.ClientApi
 
             if (data.Position <= 0 || mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + (int)data.Position);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + (int)data.Position+1);
             mb.Write(ApiFunConst.SetTagRealAndHisValueFun);
             mb.Write(this.mLoginId);
             mb.Write(data.ValueCount);
@@ -822,7 +832,7 @@ namespace SpiderDriver.ClientApi
 
             if (data.Position <= 0 || mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + (int)data.Position+64);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + (int)data.Position+64 + 1);
             mb.Write(ApiFunConst.SetTagRealAndHisValueWithUserFun);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
@@ -887,7 +897,7 @@ namespace SpiderDriver.ClientApi
 
             if (data.Position <= 0 || mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position + 1);
             mb.Write(ApiFunConst.SetTagRealAndHisValueFun);
             mb.Write(this.mLoginId);
             mb.Write(data.ValueCount);
@@ -937,7 +947,7 @@ namespace SpiderDriver.ClientApi
             CheckLogin();
             if (mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * 32);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * 32 + 1);
             mb.Write(ApiFunConst.SetTagRealAndHisValueFun);
             mb.Write(this.mLoginId);
             mb.Write(ids.Count);
@@ -978,7 +988,7 @@ namespace SpiderDriver.ClientApi
             CheckLogin();
             if (mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * 32);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * 32 + 1);
             mb.Write(ApiFunConst.SetTagRealAndHisValueFun);
             mb.Write(this.mLoginId);
             mb.Write(ids.Count);
@@ -1005,7 +1015,7 @@ namespace SpiderDriver.ClientApi
             //CheckLogin();
             if (mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * (32 + 64) + 64);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count * (32 + 64) + 64 + 1);
             mb.Write(ApiFunConst.SetTagRealAndHisValueWithUserFun);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
@@ -1036,7 +1046,7 @@ namespace SpiderDriver.ClientApi
             //Stopwatch sw = new Stopwatch();
             //sw.Start();
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position + 1);
             mb.Write(ApiFunConst.SetTagValueAndQualityFun);
             mb.Write(this.mLoginId);
             mb.Write(data.ValueCount);
@@ -1077,7 +1087,7 @@ namespace SpiderDriver.ClientApi
 
             if (mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position+64);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position+64 + 1);
             mb.Write(ApiFunConst.SetTagValueAndQualityWithUserFun);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
@@ -1117,7 +1127,7 @@ namespace SpiderDriver.ClientApi
             CheckLogin();
             if (mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 14 + (int)data.Position + 1);
             mb.Write(ApiFunConst.SetTagValueAndQualityFun);
             mb.Write(this.mLoginId);
             mb.Write(data.ValueCount);
@@ -1168,7 +1178,7 @@ namespace SpiderDriver.ClientApi
             CheckLogin();
             if (mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * 32);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * 32 + 1);
             mb.Write(ApiFunConst.SetTagValueAndQualityFun);
             mb.Write(this.mLoginId);
             mb.Write(values.Count);
@@ -1211,7 +1221,7 @@ namespace SpiderDriver.ClientApi
             //CheckLogin();
             if (mIsRealDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * (32 + 64) + 64);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * (32 + 64) + 64 + 1);
             mb.Write(ApiFunConst.SetTagValueAndQualityWithUserFun);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
@@ -1254,7 +1264,7 @@ namespace SpiderDriver.ClientApi
         {
             CheckLogin();
             if (mIsRealDataBusy) return false;
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * 32);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + values.Count * 32 + 1);
             mb.Write(ApiFunConst.SetTagValueAndQualityFun);
             mb.Write(this.mLoginId);
             mb.Write(values.Count);
@@ -1304,7 +1314,7 @@ namespace SpiderDriver.ClientApi
         {
             CheckLogin();
            
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count() * 4);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count() * 4 + 1);
             mb.Write(ApiFunConst.RegistorTag);
             mb.Write(this.mLoginId);
             mb.Write(ids.Count());
@@ -1339,7 +1349,7 @@ namespace SpiderDriver.ClientApi
         {
             CheckLogin();
          
-            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count() * 4);
+            var mb = GetBuffer(ApiFunConst.RealValueFun, 13 + ids.Count() * 4 + 1);
             mb.Write(ApiFunConst.UnRegistorTag);
             mb.Write(this.mLoginId);
             mb.Write(ids.Count());
@@ -1410,7 +1420,7 @@ namespace SpiderDriver.ClientApi
         {
             CheckLogin();
             if (mIsHisDataBusy) return false;
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + values.Count() * 33);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + values.Count() * 33 + 1);
             mb.Write(ApiFunConst.SetTagHisValue);
             mb.Write(this.mLoginId);
             mb.Write(id);
@@ -1455,7 +1465,7 @@ namespace SpiderDriver.ClientApi
         {
             //CheckLogin();
             if (mIsHisDataBusy) return false;
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + values.Count() * 33+128);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + values.Count() * 33+128 + 1);
             mb.Write(ApiFunConst.SetTagHisValueWithUser);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
@@ -1502,7 +1512,7 @@ namespace SpiderDriver.ClientApi
             CheckLogin();
             if (mIsHisDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + (int)data.Position);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + (int)data.Position + 1);
             mb.Write(ApiFunConst.SetTagHisValue);
             mb.Write(this.mLoginId);
             mb.Write(id);
@@ -1549,7 +1559,7 @@ namespace SpiderDriver.ClientApi
             //CheckLogin();
             if (mIsHisDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + (int)data.Position+128);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 18 + (int)data.Position+128 + 1);
             mb.Write(ApiFunConst.SetTagHisValueWithUser);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
@@ -1595,7 +1605,7 @@ namespace SpiderDriver.ClientApi
             if (mIsHisDataBusy) return false;
 
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + idvalues.Count * 38);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + idvalues.Count * 38 + 1);
             mb.Write(ApiFunConst.SetTagHisValue2);
             mb.Write(this.mLoginId);
             mb.Write(idvalues.Count);
@@ -1641,7 +1651,7 @@ namespace SpiderDriver.ClientApi
             if (mIsHisDataBusy) return false;
 
             //CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + idvalues.Count * (38+64)+ 64);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + idvalues.Count * (38+64)+ 64 + 1);
             mb.Write(ApiFunConst.SetTagHisValueWithUser2);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
@@ -1688,7 +1698,7 @@ namespace SpiderDriver.ClientApi
             if (mIsHisDataBusy) return false;
 
             CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + (int)data.Position);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + (int)data.Position + 1);
             mb.Write(ApiFunConst.SetTagHisValue2);
             mb.Write(this.mLoginId);
             mb.Write(data.ValueCount);
@@ -1727,7 +1737,7 @@ namespace SpiderDriver.ClientApi
             if (mIsHisDataBusy) return false;
 
             //CheckLogin();
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + (int)data.Position+64);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 13 + (int)data.Position+64 + 1);
             mb.Write(ApiFunConst.SetTagHisValueWithUser2);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
@@ -1768,7 +1778,7 @@ namespace SpiderDriver.ClientApi
 
             if (mIsHisDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 26 + 40);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 26 + 40 + 1);
             mb.Write(ApiFunConst.SetTagHisValue2);
             mb.Write(this.mLoginId);
             mb.Write(1);
@@ -1811,7 +1821,7 @@ namespace SpiderDriver.ClientApi
 
             if (mIsHisDataBusy) return false;
 
-            var mb = GetBuffer(ApiFunConst.HisValueFun, 26 + 40+128);
+            var mb = GetBuffer(ApiFunConst.HisValueFun, 26 + 40+128 + 1);
             mb.Write(ApiFunConst.SetTagHisValueWithUser2);
             mb.Write(this.mUser);
             mb.Write(this.mPass);
@@ -1854,7 +1864,7 @@ namespace SpiderDriver.ClientApi
                 ClearData(mInfoRequreData);
                 List<int> re = new List<int>();
                 CheckLogin();
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13 + tags.Count() * 256);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13 + tags.Count() * 256 + 1);
                 mb.Write(ApiFunConst.GetTagIdByNameFun);
                 mb.Write(this.mLoginId);
                 mb.Write(tags.Count());
@@ -1907,7 +1917,7 @@ namespace SpiderDriver.ClientApi
         {
             lock (mTagInfoLockObj)
             {             
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13 + tags.Count() * 256);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13 + tags.Count() * 256 + 1);
                 mb.Write(ApiFunConst.GetTagIdByNameFun);
                 mb.Write(this.mLoginId);
                 mb.Write(tags.Count());
@@ -1932,7 +1942,7 @@ namespace SpiderDriver.ClientApi
                 ClearData(mInfoRequreData);
                 Dictionary<int, Tuple<string, byte>> re = new Dictionary<int, Tuple<string, byte>>();
                 CheckLogin();
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 9);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 9 + 1);
                 mb.Write(ApiFunConst.QueryAllTagNameAndIds);
                 mb.Write(this.mLoginId);
                 DateTime dt = DateTime.Now;
@@ -2028,7 +2038,7 @@ namespace SpiderDriver.ClientApi
                 ClearData(mInfoRequreData);
                 List<int> re = new List<int>();
                 CheckLogin();
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 9);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 9 + 1);
                 mb.Write(ApiFunConst.GetDriverRecordTypeTagIds);
                 mb.Write(this.mLoginId);
                 DateTime dt = DateTime.Now;
@@ -2111,7 +2121,7 @@ namespace SpiderDriver.ClientApi
                 ClearData(mInfoRequreData);
                 List<bool> re = new List<bool>();
                 CheckLogin();
-                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13 + ids.Count() * 4);
+                var mb = GetBuffer(ApiFunConst.TagInfoRequestFun, 13 + ids.Count() * 4 + 1);
                 mb.Write(ApiFunConst.GetDriverRecordTypeTagIds2);
                 mb.Write(this.mLoginId);
                 mb.Write(ids.Count());

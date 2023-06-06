@@ -23,6 +23,9 @@ namespace DbInRunWebApi
     /// </summary>
     public class WebAPIStartup
     {
+
+        public static bool IsRunningEmbed=false;
+
         /// <summary>
         /// 
         /// </summary>
@@ -103,6 +106,13 @@ namespace DbInRunWebApi
 
             //app.UseHttpsRedirection();
 
+            app.UseCors((builder) => {
+
+                builder.AllowAnyHeader();
+                builder.AllowAnyOrigin();
+                builder.AllowAnyMethod();
+            });
+
             app.UseRouting();
 
             app.UseAuthorization();
@@ -123,10 +133,12 @@ namespace DbInRunWebApi
                 setting0.DocumentTitle = "Mars database web api access document";
             }));
 
-            
 
-            DatabaseRunner.Manager.Load();
-            DatabaseRunner.Manager.Start();
+            if (!IsRunningEmbed)
+            {
+                DatabaseRunner.Manager.Load();
+                DatabaseRunner.Manager.Start();
+            }
         }
     }
 }

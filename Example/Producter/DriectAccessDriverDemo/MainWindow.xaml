@@ -27,6 +27,8 @@
         <TextBox x:Name="hisvaluetimespan" HorizontalAlignment="Left" Margin="442,245,0,0" Text="1" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Height="17"/>
         <Label Content="个数:" HorizontalAlignment="Left" Margin="610,239,0,0" VerticalAlignment="Top"  />
         <TextBox x:Name="hisvaluecount" HorizontalAlignment="Left" Margin="651,244,0,0" Text="60" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" Height="17"/>
+        <Button x:Name="readRealValue" Content="读取实时值" HorizontalAlignment="Left" Margin="75,283,0,0" VerticalAlignment="Top" Click="readRealValue_Click"/>
+        <Button x:Name="ReadHisVal" Content="读取历史值" HorizontalAlignment="Left" Margin="75,317,0,0" VerticalAlignment="Top" Click="ReadHisVal_Click"/>
 
     </Grid>
 </Window>

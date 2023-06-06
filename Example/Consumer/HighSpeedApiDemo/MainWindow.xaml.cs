@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Cdy.Tag;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,6 +26,16 @@ namespace HighSpeedApiDemo
         {
             InitializeComponent();
             this.DataContext = new MainViewModel();
+        }
+
+        private void sqlb_Click(object sender, RoutedEventArgs e)
+        {
+           
+        }
+
+        private void readStatistics_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

@@ -2,7 +2,7 @@
   "profiles": {
     "DBGrpcApi": {
       "commandName": "Executable",
-      "executablePath": "C:\\Users\\cdy81\\Dev\\Gitee\\Output\\DBGrpcApi.exe",
+      "executablePath": "C:\\Users\\chongdaoyang.JIUSIYI\\source\\repos\\Dev\\mars\\Output\\DBGrpcApi.exe",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

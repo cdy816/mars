@@ -4,6 +4,11 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Version>1.0.0</Version>
+    <Authors>chongdaoyang</Authors>
+    <Product>Mars</Product>
+    <RepositoryUrl>https://github.com/cdy816/mars</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

@@ -30,6 +30,16 @@ namespace Cdy.Tag
         void ReadValue<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result);
 
         /// <summary>
+        /// 查询一些列时间点上的值，忽略系统退出引起的影响
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        void ReadValueIgnorClosedQuality<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result);
+
+        /// <summary>
         /// 
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -39,7 +49,15 @@ namespace Cdy.Tag
         /// <param name="result"></param>
         void ReadValueByUTCTime<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result);
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="result"></param>
+        void ReadValueByUTCTimeIgnorClosedQuality<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type, HisQueryResult<T> result);
 
         /// <summary>
         /// 
@@ -59,7 +77,27 @@ namespace Cdy.Tag
         /// <param name="times"></param>
         /// <param name="type"></param>
         /// <returns></returns>
+        HisQueryResult<T> ReadValueIgnorClosedQuality<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         HisQueryResult<T> ReadValueByUTCTime<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        HisQueryResult<T> ReadValueByUTCTimeIgnorClosedQuality<T>(int id, IEnumerable<DateTime> times, QueryValueMatchType type);
 
         /// <summary>
         /// 
@@ -364,5 +402,24 @@ namespace Cdy.Tag
         /// <param name="context"></param>
         /// <returns></returns>
         object ReadFileLastValue<T>(int id, DateTime time, QueryContext context);
+
+        /// <summary>
+        /// 读取某个变量的最后更新时间
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        DateTime ReadTagLastAvaiableValueTime<T>(int id);
+
+        /// <summary>
+        /// 过滤查询一组变量的所有值
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="filter"></param>
+        /// <param name="tagtypes"></param>
+        /// <returns></returns>
+        HisQueryTableResult ReadAllValueAndFilter(List<int> ids, DateTime startTime, DateTime endTime, ExpressFilter filter, Dictionary<int, byte> tagtypes);
     }
 }

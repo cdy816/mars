@@ -197,6 +197,15 @@ namespace Cdy.Tag
         }
 
         /// <summary>
+        /// 压缩被阻塞
+        /// </summary>
+        /// <returns></returns>
+        public bool IsBlocked()
+        {
+            return false;
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="dataMemory"></param>
@@ -217,19 +226,35 @@ namespace Cdy.Tag
             }
         }
 
+        private bool mIsManualBusy = false;
+
+        private object mManualLocker = new object();
+
         /// <summary>
-        /// 
+        /// 提交压缩
         /// </summary>
         /// <param name="data"></param>
         public void RequestManualToCompress(ManualHisDataMemoryBlock data)
         {
-            foreach (var vv in mTargetMemorys)
+            var did = data.Id / TagCountOneFile;
+            if(mTargetMemorys.ContainsKey(did))
             {
-                if (data.Id >= vv.Value.Id * TagCountOneFile && data.Id < (vv.Value.Id + 1) * TagCountOneFile)
-                {
-                    vv.Value.AddManualToCompress(data);
-                }
+                mTargetMemorys[did].AddManualToCompress(data);
+                lock (mManualLocker)
+                    mIsManualBusy = true;
             }
+            //foreach (var vv in mTargetMemorys)
+            //{
+               
+
+            //    if (data.Id >= vv.Value.Id * TagCountOneFile && data.Id < (vv.Value.Id + 1) * TagCountOneFile)
+            //    {
+            //        vv.Value.AddManualToCompress(data);
+            //        lock(mManualLocker)
+            //        mIsManualBusy = true;
+            //        break;
+            //    }
+            //}
 
         }
 
@@ -238,10 +263,14 @@ namespace Cdy.Tag
         /// </summary>
         public void SubmitManualToCompress()
         {
-            if (resetEvent != null && !resetEvent.SafeWaitHandle.IsClosed)
+            lock (mManualLocker)
             {
-                lock (resetEvent)
-                    resetEvent.Set();
+                if (resetEvent != null && !resetEvent.SafeWaitHandle.IsClosed && mIsManualBusy)
+                {
+                    mIsManualBusy = false;
+                    lock (resetEvent)
+                        resetEvent.Set();
+                }
             }
         }
 
@@ -321,7 +350,7 @@ namespace Cdy.Tag
                     //#if DEBUG 
                     Stopwatch sw = new Stopwatch();
                     sw.Start();
-                    LoggerService.Service.Info("Compress", "********开始执行压缩********", ConsoleColor.Blue);
+                    LoggerService.Service.Info("Compress", "********开始执行压缩********" + " 内存占用(M): " + Process.GetCurrentProcess().WorkingSet64 / 1024.0 / 1024.0, ConsoleColor.Blue);
                     //#endif
 
                     if (mSourceMemorys.Count > 0)
@@ -373,11 +402,13 @@ namespace Cdy.Tag
                               ThreadHelper.AssignToCPU(CPUAssignHelper.Helper.CPUArray2);
                               mm.Value.ManualCompress();
                           });
+                        //适当的延时，防止大量的、低粒度频繁的调用压缩
+                        Thread.Sleep(1000);
                     }
 
                     //#if DEBUG
                     sw.Stop();
-                    LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" + " ElapsedMilliseconds:" + sw.ElapsedMilliseconds, ConsoleColor.Blue);
+                    LoggerService.Service.Info("Compress", ">>>>>>>>>压缩完成>>>>>>>>>" + " ElapsedMilliseconds:" + sw.ElapsedMilliseconds +" 内存占用(M): "+Process.GetCurrentProcess().WorkingSet64 / 1024.0 / 1024.0, ConsoleColor.Blue);
                     //#endif
 
                     ServiceLocator.Locator.Resolve<IDataSerialize4>().RequestToSave();
@@ -458,6 +489,22 @@ namespace Cdy.Tag
         public void Release(MarshalMemoryBlock data)
         {
             MarshalMemoryBlockPool.Pool.Release(data);
+        }
+
+        /// <summary>
+        /// 提交区域压缩
+        /// </summary>
+        /// <param name="data"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public void RequestManualToCompress(ManualHisDataMemoryBlockArea data)
+        {
+            var did = data.Id / TagCountOneFile;
+            if (mTargetMemorys.ContainsKey(data.Id))
+            {
+                mTargetMemorys[did].AddManualToCompress(data);
+                lock (mManualLocker)
+                    mIsManualBusy = true;
+            }
         }
 
 

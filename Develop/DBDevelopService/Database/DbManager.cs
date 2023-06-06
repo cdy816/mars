@@ -43,7 +43,7 @@ namespace DBDevelopService
         /// </summary>
         public void Load()
         {
-            string databasePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location) , "Data");
+            string databasePath = PathHelper.helper.DataPath;
             
             if (System.IO.Directory.Exists(databasePath))
             {
@@ -71,7 +71,7 @@ namespace DBDevelopService
         /// </summary>
         public void PartLoad()
         {
-            string databasePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Data");
+            string databasePath = PathHelper.helper.DataPath;
 
             if (System.IO.Directory.Exists(databasePath))
             {
@@ -112,7 +112,7 @@ namespace DBDevelopService
         /// </summary>
         public void QuickReload()
         {
-            string databasePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Data");
+            string databasePath = PathHelper.helper.DataPath;
 
             if (System.IO.Directory.Exists(databasePath))
             {
@@ -140,7 +140,7 @@ namespace DBDevelopService
         /// <param name="database"></param>
         public void ReLoad(string database)
         {
-            string databasePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Data");
+            string databasePath = PathHelper.helper.DataPath;
 
             if (System.IO.Directory.Exists(databasePath))
             {
@@ -225,6 +225,48 @@ namespace DBDevelopService
             }
             Save(mDatabase[name]);
             return mDatabase[name];
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="desc"></param>
+        /// <returns></returns>
+        public bool RemoveDB(string name)
+        {
+            if (mDatabase.ContainsKey(name))
+            {
+                CheckAndContinueLoadDatabase(mDatabase[name]);
+                CheckAndRemoveDatabaseFile(mDatabase[name]);
+                mDatabase.Remove(name);
+                return true;
+            }
+            return false;
+        }
+
+        private void CheckAndRemoveDatabaseFile(Cdy.Tag.Database database)
+        {
+            //删除历史数据
+            string spath = database.HisDatabase.Setting.HisDataPathPrimary;
+            if(!string.IsNullOrEmpty(spath)&&System.IO.Directory.Exists(spath))
+            {
+                System.IO.Directory.Delete(spath, true);
+            }
+
+            //删除备份历史数据
+            spath = database.HisDatabase.Setting.HisDataPathBack;
+            if (!string.IsNullOrEmpty(spath) && System.IO.Directory.Exists(spath))
+            {
+                System.IO.Directory.Delete(spath, true);
+            }
+
+            //删除所有配置文件
+            spath = PathHelper.helper.GetDataPath(database.Name, "");
+            if(System.IO.Directory.Exists(spath))
+            {
+                System.IO.Directory.Delete(spath,true);
+            }
         }
 
         /// <summary>

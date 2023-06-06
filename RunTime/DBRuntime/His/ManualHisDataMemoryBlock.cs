@@ -103,6 +103,11 @@ namespace DBRuntime.His
         /// </summary>
         public DateTime PreTime { get; set; }
 
+        /// <summary>
+        /// 区域Id
+        /// </summary>
+        public string AreaId { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...

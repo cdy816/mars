@@ -1,0 +1,75 @@
+﻿@page "/databaseselect"
+@layout SingalLayout
+@inject NavigationManager Navigation
+@inject MarsProxy mProxy;
+
+<div class="container w-25  align-content-center justify-content-center">
+    <div class="card  text-light align-content-center align-middle mt-5" style="background-color:rgba(100,100,100,0.4);min-height:150px">
+        <div class="row justify-content-lg-between">
+            <div class="col-4 align-content-center justify-content-center">
+                <h5 class="ms-3 mt-2">数据库选择</h5>
+            </div>
+        </div>
+        <div class="list-group m-3">
+            @foreach (var vv in mDatabaseList)
+            {
+                if (vv == CurrentSelect)
+                {
+                    <button type="button" class="list-group-item list-group-item-action list-group-item-light active" @onclick=@(e=>SelectClick(vv))>@vv</button>
+                }
+                else
+                {
+                    <button type="button" class="list-group-item list-group-item-action list-group-item-light" @onclick=@(e=>SelectClick(vv))>@vv</button>
+                }
+            }
+        </div>
+        <div class="m-3 row justify-content-between">
+            <button class="btn btn-primary align-content-center col-3" @onclick=OKClick>进入 @CurrentSelect</button>
+            @if (mIsCanNew)
+            {
+                <button type="button" class="btn btn-secondary col-3 " @onclick=NewClick>新建</button>
+            }
+        </div>
+    </div>
+
+</div>
+
+@code {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public string CurrentSelect { get; set; }
+
+    private List<string> mDatabaseList = new List<string>() { "test","test2","test3" };
+
+    public List<string> DatabaseList{get{ return mDatabaseList; }set{ mDatabaseList = value; }}
+
+    private bool mIsCanNew = false;
+
+    private void SelectClick(string sender)
+    {
+        CurrentSelect = sender;
+    }
+
+    private void OKClick()
+    {
+        mProxy.CurrentDatabase = CurrentSelect;
+        Navigation.NavigateTo("/Main");
+    }
+
+    private void NewClick()
+    {
+        Navigation.NavigateTo("/newdatabase");
+    }
+
+    protected override void OnParametersSet()
+    {
+        if(!mProxy.IsLogin)
+        {
+            Navigation.NavigateTo("/");
+        }
+        mIsCanNew = mProxy.CanNewDatabase();
+        DatabaseList = mProxy.ListDatabase().Keys.ToList();
+    }
+}

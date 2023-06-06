@@ -6,6 +6,7 @@
     <Product>Mars</Product>
     <Authors>chongdaoyang</Authors>
     <PackageProjectUrl>https://github.com/cdy816/mars</PackageProjectUrl>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

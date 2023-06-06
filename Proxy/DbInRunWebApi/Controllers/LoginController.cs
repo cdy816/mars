@@ -25,8 +25,9 @@ namespace DbInRunWebApi.Controllers
         [HttpPost("TryLogin")]
         public LoginResponse Login([FromBody] LoginUser user)
         {
+            string sip = this.ControllerContext.HttpContext.Connection.RemoteIpAddress.ToString();
             var service = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.IRuntimeSecurity>();
-            if (service != null)
+            if (service != null && Cdy.Tag.Common.ClientAuthorization.Instance.CheckIp(sip))
             {
                 string Token = service.Login(user.UserName, user.Password);
                 return new LoginResponse() { Token = Token, Result = !string.IsNullOrEmpty(Token), LoginTime = DateTime.Now.ToString(), TimeOut = service.TimeOut};
@@ -42,8 +43,8 @@ namespace DbInRunWebApi.Controllers
         /// </summary>
         /// <param name="token"></param>
         /// <returns></returns>
-        [HttpPost("Hart")]
-        public ResponseBase Hart([FromBody] Requestbase token)
+        [HttpPost("Heart")]
+        public ResponseBase Heart([FromBody] Requestbase token)
         {
             //try
             //{

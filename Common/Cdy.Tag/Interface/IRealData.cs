@@ -691,6 +691,27 @@ namespace Cdy.Tag
 
         #endregion
 
+        #region Common Read/Write
+        /// <summary>
+        /// 读取变量的值
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="quality"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        object Read(int id,out byte quality ,out DateTime time);
+
+        /// <summary>
+        /// 写入值
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <param name="time"></param>
+        /// <param name="quality"></param>
+        /// <returns></returns>
+        bool Write(int id,object value,DateTime time,byte quality);
+
+        #endregion
         #endregion ...Methods...
 
         #region ... Interfaces ...

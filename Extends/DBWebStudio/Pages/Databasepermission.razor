@@ -1,0 +1,369 @@
+﻿@page "/databasepermission"
+@using Cdy.Tag;
+@using DBWebStudio.Data;
+@using System.Text;
+@inject MarsProxy mProxy;
+@inject NavigationManager Navigation;
+@inject NotifyManager mNotifier;
+@inject IJSRuntime JS;
+
+<div class="d-flex h-100 flex-column">
+    <div class="card  text-light" style="background-color:rgba(100,100,100,0.2)">
+        <div class="card-header" >
+           数据库权限
+        </div>
+    </div>
+    <div class="card text-light flex-fill mt-1" style="background-color:rgba(100,100,100,0.2);height:300px">
+        <div style="height:100%;overflow-y:auto">
+            <table class="table text-light">
+                <thead>
+                    <tr>
+                        <th scope="col">序号</th>
+                        <th scope="col">名称</th>
+                        <th scope="col">描述</th>
+                        <th scope="col">写可用</th>
+                        <th scope="col">授权访问组</th>
+                      
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int i = 1;
+                        foreach (var vv in mTags)
+                        {
+                            <tr class="tr" onclick="@(()=>SelectRow(vv))" @key=@vv.Model.Name>
+                                <td scope="row" style="width:48px;">
+                                    <StringEditor Value="@((i++).ToString())" Target="@vv">
+                                    </StringEditor>
+                                </td>
+                                <td scope="row">
+                                    <StringEditor Value="@vv.Model.Name" Target="@vv">
+                                        <Editor>
+                                            <input type="text" style="width:200px" class="form-control bg-white bg-opacity-25  text-light py-0" placeholder="名称" @bind=@PermissionName />
+                                        </Editor>
+                                    </StringEditor>
+                                </td>
+                                <td scope="row">
+                                    <StringEditor Value="@vv.Model.Desc" Target="@vv">
+                                        <Editor>
+                                            <input type="text" style="width:260px" class="form-control bg-white bg-opacity-25  text-light py-0" placeholder="描述" @bind=@vv.Model.Desc />
+                                        </Editor>
+                                    </StringEditor>
+                                </td>
+                                <td scope="row">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" @bind=@vv.Model.EnableWrite id="flexCheckDefault">
+                                    </div>
+                                </td>
+                                <td scope="row">
+                                    <StringEditor Value="@vv.GroupString" Target="@vv">
+                                        <Editor>
+                                        <div class="hstack">
+                                             <input type="text" class="form-control px-0  bg-white bg-opacity-25  text-light  py-0" @bind=@vv.GroupString />
+                                                <button type="button" class="btn btn-secondary mx-1  py-0" data-bs-toggle="modal" data-bs-target="#convertModel">...</button>
+                                        </div>
+                                        </Editor>
+                                    </StringEditor>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="d-flex mt-2 justify-content-between">
+        <div class="hstack">
+            <button type="button" class="btn btn-success me-2" onclick="@(()=>AddUserPermission())">添加</button>
+            <button type="button" class="btn btn-secondary mx-2" disabled="@(mLastSelect==null)" onclick="@(()=>RemoveUserPermission())">删除</button>
+        </div>
+        <span class="text-light mt-1" >总共 @(mTags.Count) 条记录</span>
+    </div>
+
+    @{
+        <div class="modal modal-static" id="convertModel" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"  aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered" >
+                <div class="modal-content" style="min-height:600px">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="importModelLabel">访问组配置</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body d-flex flex-row">
+                        <div class="vstack flex-fill" style="min-width:320px">
+                            <span>已使用的组</span>
+                            <div class="list-group m-1 flex-fill" style="background-color:rgba(100,100,100,0.2);overflow:auto">
+                               
+                                @foreach (var vv in mPermissionUsedGroup)
+                                {
+                                    if (vv == mSelectedUsedGroup)
+                                    {
+                                        <div class="list-group-item list-group-item-action  active form-check" style="cursor:pointer" @onclick=@(e=>{mSelectedUsedGroup=vv;})>
+                                            @vv
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="list-group-item " style="background-color:transparent;cursor:pointer" @onclick=@(e=>{mSelectedUsedGroup=vv;})>
+                                            @vv
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                       <div class="vstack align-items-center justify-content-center" style="width:auto">
+                            <button type="button" class="btn btn-primary mx-1 my-2" style="width:60px"  @onclick=@(()=>AddToPermissionGroup())>&lt;</button>
+                            <button type="button" class="btn btn-primary mx-1 my-2" style="width:60px"  @onclick=@(()=>RemoveFromPermissionGroup())>&gt;</button>
+                            <button type="button" class="btn btn-primary mx-1 my-2" style="width:60px"  @onclick=@(()=>AddAllToPermissionGroup())>&lt;&lt;</button>
+                            <button type="button" class="btn btn-primary mx-1 my-2" style="width:60px"  @onclick=@(()=>RemveAllFromPermissionGroup())>&gt;&gt;</button>
+                       </div>
+                        <div class="vstack flex-fill" style="min-width:320px">
+                            <span>所有组</span>
+                            <div class="list-group m-1 flex-fill" style="background-color:rgba(100,100,100,0.2);overflow:auto">
+                               
+                                @foreach (var vv in mAllTagGroups)
+                                {
+                                    if (vv == mSelectedAllTagGroup)
+                                    {
+                                        <div class="list-group-item list-group-item-action  active form-check" style="cursor:pointer" @onclick=@(e=>{mSelectedAllTagGroup=vv;})>
+                                            @vv
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="list-group-item " style="background-color:transparent;cursor:pointer" @onclick=@(e=>{mSelectedAllTagGroup=vv;})>
+                                            @vv
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="width:120px" @onclick=@(()=>GroupBrowserProcss())>确定</button>
+                    </div>
+               </div>
+            </div>
+        </div>
+    }
+</div>
+@code {
+
+
+    private bool mIsChanged = false;
+
+    private List<UserPermissionModel> mTags = new List<UserPermissionModel>();
+
+    private List<string> mPermissionUsedGroup = new List<string>();
+    private string mSelectedUsedGroup;
+
+    private List<string> mAllTagGroups = new List<string>();
+    private List<string> mAllTagGroupsCach = new List<string>();
+    private string mSelectedAllTagGroup;
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Navigation.LocationChanged += locationChanged;
+    }
+
+    public string PermissionName
+    {
+        get
+        {
+            return mLastSelect != null ? mLastSelect.Model.Name : "";
+        }
+        set
+        {
+            if (mLastSelect != null && mLastSelect.Model.Name!=value)
+            {
+                if(mProxy.RenameDatabasePermission(mLastSelect.Model.Name,value))
+                {
+                    mLastSelect.Model.Name = value;
+                }
+            }
+        }
+    }
+
+    private void  locationChanged(object sender, LocationChangedEventArgs e)
+    {
+        if (!e.Location.Contains("databasepermission"))
+        {
+            if(mLastSelect!=null)
+            {
+                UpdateTag(mLastSelect);
+                mLastSelect = null;
+            }
+            Navigation.LocationChanged -= locationChanged;
+            DisposeTags();
+        }
+
+    }
+
+    private UserPermissionModel mLastSelect;
+
+    private void SelectRow(UserPermissionModel model)
+    {
+        if (mLastSelect != model)
+        {
+            if (mLastSelect != null)
+            {
+                mLastSelect.IsSelected = false;
+            }
+            mLastSelect = model;
+            StateHasChanged();
+            if(mLastSelect!=null)
+            {
+                mLastSelect.IsSelected = true;
+                if (mLastSelect.Model.Group!=null)
+                    mPermissionUsedGroup = new List<string>(mLastSelect.Model.Group);
+                else
+                {
+                    mPermissionUsedGroup = new List<string>();
+                }
+                mAllTagGroups = mAllTagGroupsCach.ToList();
+                foreach(var vv in mPermissionUsedGroup)
+                {
+                    if(mAllTagGroups.Contains(vv))
+                    {
+                        mAllTagGroups.Remove(vv);
+                    }
+                }
+            }
+        }
+    }
+
+    private void GroupBrowserProcss()
+    {
+        if(mLastSelect!=null)
+        {
+            mLastSelect.Model.Group = mPermissionUsedGroup.ToList();
+        }
+    }
+
+    private void AddToPermissionGroup()
+    {
+        var vv = mSelectedAllTagGroup;
+        if(!mPermissionUsedGroup.Contains(vv))
+            mPermissionUsedGroup.Add(vv);
+
+        if(mAllTagGroups.Contains(vv))
+        {
+            mAllTagGroups.Remove(vv);
+        }
+    }
+
+    private void AddAllToPermissionGroup()
+    {
+        foreach(var vv in mAllTagGroups)
+        {
+            if (!mPermissionUsedGroup.Contains(vv))
+                mPermissionUsedGroup.Add(vv);
+        }
+        mAllTagGroups.Clear();
+    }
+
+    private void RemoveFromPermissionGroup()
+    {
+        var vv = mSelectedUsedGroup;
+        if (mPermissionUsedGroup.Contains(vv))
+            mPermissionUsedGroup.Remove(vv);
+
+        if (!mAllTagGroups.Contains(vv))
+        {
+            mAllTagGroups.Add(vv);
+        }
+    }
+
+    private void RemveAllFromPermissionGroup()
+    {
+        mPermissionUsedGroup.Clear();
+        mAllTagGroups = mAllTagGroupsCach.ToList();
+    }
+
+
+    #region Query
+
+    /// <summary>
+    /// 
+    /// </summary>
+    private void RefreshTag()
+    {
+        var pps = mProxy.GetAllDatabasePermission();
+        if(pps!=null)
+        {
+            foreach(var vv in pps)
+            {
+                mTags.Add(new UserPermissionModel(vv));
+            }
+        }
+
+        mAllTagGroupsCach = mProxy.ListTagGroup().Select(e => e.Item1).ToList();
+       
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        RefreshTag();
+    }
+    #endregion
+
+    #region Add and Remove
+
+    private bool UpdateTag(UserPermissionModel tagmodel)
+    {
+        return mProxy.UpdateDatabasePermission(tagmodel.Model);
+    }
+
+    private string GetAvaiableNames(string basename)
+    {
+        string sbase = basename;
+        var names = mTags.Select(e => e.Model.Name).ToList();
+        for(int i=0;i<int.MaxValue;i++)
+        {
+            sbase = basename + i;
+            if(!names.Contains(sbase))
+            {
+                return sbase;
+            }
+        }
+        return sbase;
+    }
+
+    private void AddUserPermission()
+    {
+        string sname = GetAvaiableNames("permission");
+        Cdy.Tag.UserPermission up = new UserPermission() { Name = sname, EnableWrite = false, SuperPermission = false, Group = new List<string>() };
+        if(mProxy.UpdateDatabasePermission(up))
+        {
+            mTags.Add(new UserPermissionModel(up));
+        }
+        mIsChanged = true;
+    }
+
+    private void RemoveUserPermission()
+    {
+        if(mLastSelect!=null)
+        {
+            mProxy.RemoveDatabasePermission(mLastSelect.Model.Name);
+        }
+    }
+
+    #endregion
+
+
+
+    private void DisposeTags()
+    {
+        foreach (var vv in mTags)
+        {
+            vv.Model = null;
+        }
+        mTags.Clear();
+    }
+}

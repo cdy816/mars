@@ -52,6 +52,10 @@ namespace DBDevelopService.Controllers
         public double MinValue { get; set; }
         public byte Precision { get; set; }
 
+        public string Unit { get; set; }
+
+        public string ExtendField1 { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -71,6 +75,10 @@ namespace DBDevelopService.Controllers
         public void CloneFromRealTag(Tagbase realtag)
         {
             this.Id = realtag.Id;
+            if (string.IsNullOrEmpty(realtag.Group))
+            {
+
+            }
             this.Name = realtag.Name;
             this.Type = (byte)realtag.Type;
             this.Group = realtag.Group;
@@ -78,6 +86,9 @@ namespace DBDevelopService.Controllers
             this.LinkAddress = realtag.LinkAddress;
             this.ReadWriteType = (int)realtag.ReadWriteType;
             this.Convert = realtag.Conveter != null ? realtag.Conveter.SeriseToString() : "";
+            this.Unit = realtag.Unit;
+            this.ExtendField1 = realtag.ExtendField1;
+
             if(realtag is NumberTagBase)
             {
                 this.MaxValue = (realtag as NumberTagBase).MaxValue;
@@ -139,6 +150,8 @@ namespace DBDevelopService.Controllers
                 re.Desc = this.Desc;
                 re.Id = (int)this.Id;
                 re.ReadWriteType = (Cdy.Tag.ReadWriteMode)this.ReadWriteType;
+                re.Unit = this.Unit;
+                re.ExtendField1 = this.ExtendField1;
                 if (!string.IsNullOrEmpty(this.Convert))
                 {
                     re.Conveter = this.Convert.DeSeriseToValueConvert();

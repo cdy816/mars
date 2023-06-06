@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Cdy.Tag;
 using Grpc.Core;
@@ -84,13 +86,23 @@ namespace DBRuntimeServer
             return Task.FromResult(new BoolReponse() { Result = true });
         }
 
+        private bool CheckProcesses(string name)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return Process.GetProcessesByName(name).Length > 0;
+            else
+            {
+                return Cdy.Tag.Common.ProcessMemoryInfo.IsExist(name);
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="name"></param>
         private void CheckProcessStart(string name)
         {
-            if(Process.GetProcessesByName(name).Length<=0)
+            if(!CheckProcesses(name))
             {
                 var file = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), name);
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
@@ -139,6 +151,37 @@ namespace DBRuntimeServer
             var mm = rs.Memory();
             re.MemoryUsed = mm.Item1.ToString();
             re.MemoryTotal = mm.Item2.ToString();
+
+            return Task.FromResult(re);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override Task<GetProcessInfoResponse> GetProcessInfo(GetProcessInfoRequest request, ServerCallContext context)
+        {
+            if (!UserManager.Manager.CheckLogin(request.Token)) return Task.FromResult(new GetProcessInfoResponse() { Result = false });
+
+            GetProcessInfoResponse re = new GetProcessInfoResponse() { Result = true };
+            DBRuntimeImp.ProcessMonitorManager.Manager.Update();
+
+            foreach(var vv in DBRuntimeImp.ProcessMonitorManager.Manager.ListProcess())
+            {
+                if (vv.IsOpened)
+                {
+                    var vp = new ProcessInfo() { Name = vv.Name, CPU = vv.Info.CPU, Memory = vv.Info.TotalMemory, StartTime = vv.Info.StartTime.ToString(), TotalCPU = vv.Info.TotalCPU, ThreadCount = vv.Info.ThreadCount,IsOpened=true };
+                    foreach (var vvv in vv.Info.Clients) vp.Clients.Add(new RemoteClient() { DateTime = vvv.Value.Time.ToString(), Ip = new IPAddress(vvv.Value.Ip).ToString(), Port = vvv.Value.Port });
+                    re.Infos.Add(vp);
+                }
+                else
+                {
+                    var vp = new ProcessInfo() { Name = vv.Name, IsOpened = false };
+                    re.Infos.Add(vp);
+                }
+            }
 
             return Task.FromResult(re);
         }

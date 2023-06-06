@@ -247,9 +247,9 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void Save()
+        public bool Save()
         {
-            Save(PathHelper.helper.GetDataPath(this.Database.Name, this.Database.Name + ".hdb"));
+          return  Save(PathHelper.helper.GetDataPath(this.Database.Name, this.Database.Name + ".hdb"));
         }
 
         /// <summary>
@@ -265,8 +265,9 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         /// <param name="file"></param>
-        public void Save(string file)
+        public bool Save(string file)
         {
+            bool re = true;
             XElement xe = new XElement("HisDatabase");
             xe.SetAttributeValue("Version", Database.Version);
             xe.SetAttributeValue("Name", Database.Name);
@@ -275,16 +276,16 @@ namespace Cdy.Tag
 
             XElement xx = new XElement("Tags");
 
-            foreach(var vv in Database.HisTags)
+            foreach (var vv in Database.HisTags)
             {
                 xx.Add(vv.Value.SaveToXML());
             }
             xe.Add(xx);
 
-           
-
-            xe.Save(file);
-            Database.IsDirty = false;
+            re = xe.SaveXMLToFile(file, "HisDatabaseSerise");
+            if (re)
+                Database.IsDirty = false;
+            return re;
         }
 
 

@@ -40,6 +40,52 @@ namespace DirectAccessDriver
         /// </summary>
         public const byte SetTagHisValue2 = 62;
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetAreaTagHisValue = 63;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetAreaTagHisValue2 = 64;
+
+        /// <summary>
+        /// 读取历史数据
+        /// </summary>
+        public const byte ReadTagAllHisValue = 151;
+
+        /// <summary>
+        /// 根据时间间隔读取历史数据
+        /// </summary>
+        public const byte ReadHisDataByTimeSpan = 152;
+
+        /// <summary>
+        /// 根据时间点读取历史数据
+        /// </summary>
+        public const byte ReadHisDatasByTimePoint = 153;
+
+        /// <summary>
+        /// 根据时间间隔读取历史数据,忽略系统退出的影响
+        /// </summary>
+        public const byte ReadHisDataByTimeSpanByIgnorClosedQuality = 155;
+
+        /// <summary>
+        /// 根据时间点读取历史数据,忽略系统退出的影响
+        /// </summary>
+        public const byte ReadHisDatasByTimePointByIgnorClosedQuality = 156;
+
+        /// <summary>
+        /// 历史数据查询返回
+        /// </summary>
+        public const byte ReadTagHisValueReturn = 159;
+
+        /// <summary>
+        /// 通过SQL查询历史
+        /// </summary>
+        public const byte ReadHisValueBySQL = 140;
+
         /// <summary>
         /// 
         /// </summary>
@@ -64,6 +110,13 @@ namespace DirectAccessDriver
         /// 
         /// </summary>
         public const byte SetTagRealAndHisValueWithTimeFun = 15;
+
+        /// <summary>
+        /// 读取实时值
+        /// </summary>
+        public const byte ReadTagRealValue = 91;
+
+        
 
         /// <summary>
         /// 
@@ -147,5 +200,39 @@ namespace DirectAccessDriver
         /// </summary>
         public const byte SetTagHisValueWithUser2 = 162;
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte AysncValueBack = 81;
+
+
+        public const byte SetTagValueAndQualityFunAsync = 82;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagRealAndHisValueFunAsync = 83;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagValueTimeAndQualityFunAsync = 84;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte SetTagRealAndHisValueWithTimeFunAsync = 85;
+
+
+        /// <summary>
+        /// 通过变量名设置实时历史值
+        /// </summary>
+        public const byte SetTagRealAndHisValueWithTagNameFun = 86;
+
+        /// <summary>
+        /// 通过变量名设置实时历史值,并带时间戳
+        /// </summary>
+        public const byte SetTagRealAndHisValueTimerWithTagNameFun = 87;
     }
 }

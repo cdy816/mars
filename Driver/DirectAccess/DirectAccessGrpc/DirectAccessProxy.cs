@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Xml.Linq;
 
 namespace DirectAccessGrpc
@@ -195,7 +196,7 @@ namespace DirectAccessGrpc
                 }
                 else
                 {
-                    mClient.Hart();
+                    mClient.Heart();
                     Thread.Sleep(3000);
                 }
             }
@@ -310,6 +311,8 @@ namespace DirectAccessGrpc
             return true;
         }
 
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -327,6 +330,22 @@ namespace DirectAccessGrpc
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="time"></param>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public bool UpdateAreaHisData(DateTime time,IEnumerable<RealTagValue> values)
+        {
+            if(IsConnected)
+            {
+                mClient.SetAreaTagHisValue(time, values);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="values"></param>
         /// <returns></returns>
         public bool UpdateHisData(Dictionary<int, IEnumerable<TagValueAndType>> values)
@@ -336,6 +355,117 @@ namespace DirectAccessGrpc
                 return mClient.SetMutiTagHisValue(values, 10000);
             }
             return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public HisQueryResult<T> QueryAllHisData<T>(int id,DateTime stime,DateTime etime,int timeout=5000)
+        {
+            if (IsConnected)
+            {
+                return mClient.QueryAllHisValue<T>(id, stime,etime,timeout);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Dictionary<int, TagRealValue> GetRealData(List<int> ids, int timeout = 5000)
+        {
+            if (IsConnected)
+            {
+                return mClient.GetRealData(ids, timeout);
+            }
+            return null;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <param name="span"></param>
+        /// <param name="type"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public HisQueryResult<T> QueryHisData<T>(int id,DateTime stime,DateTime etime,TimeSpan span,QueryValueMatchType type, int timeout = 5000)
+        {
+            if (IsConnected)
+            {
+                return mClient.QueryHisValueForTimeSpan<T>(id,stime,etime,span,type,timeout);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="stime"></param>
+        /// <param name="etime"></param>
+        /// <param name="span"></param>
+        /// <param name="type"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public HisQueryResult<T> QueryHisDataByIgnorSystemExit<T>(int id, DateTime stime, DateTime etime, TimeSpan span, QueryValueMatchType type, int timeout = 5000)
+        {
+            if (IsConnected)
+            {
+                return mClient.QueryHisValueForTimeSpanByIgnorSystemExit<T>(id, stime, etime, span, type, timeout);
+            }
+            return null;
+        }
+
+        
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public HisQueryResult<T> QueryHisData<T>(int id, List<DateTime> times, QueryValueMatchType type, int timeout = 5000)
+        {
+            if (IsConnected)
+            {
+                return mClient.QueryHisValueAtTimes<T>(id, times, type, timeout);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="type"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public HisQueryResult<T> QueryHisDataByIgnorSystemExit<T>(int id, List<DateTime> times, QueryValueMatchType type, int timeout = 5000)
+        {
+            if (IsConnected)
+            {
+                return mClient.QueryHisValueAtTimesByIgnorSystemExit<T>(id, times, type, timeout);
+            }
+            return null;
         }
 
         #endregion ...Methods...

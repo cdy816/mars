@@ -1,4 +1,5 @@
-﻿using Cdy.Tag.Common.Common;
+﻿using Cdy.Tag;
+using Cdy.Tag.Common.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +35,7 @@ namespace DBDevelopService.Security
         /// </summary>
         public void Save()
         {
-            string sfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Sec.sdb");
+            string sfile = System.IO.Path.Combine(PathHelper.helper.DataPath, "Sec.sdb");
             System.IO.File.WriteAllText(sfile, Md5Helper.Encode(SaveToXML().ToString()));
         }
 
@@ -85,7 +86,7 @@ namespace DBDevelopService.Security
 
         public void Load()
         {
-            string sfile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Sec.sdb");
+            string sfile = System.IO.Path.Combine(PathHelper.helper.DataPath, "Sec.sdb");
             if (System.IO.File.Exists(sfile))
             {
                 var txt = Md5Helper.Decode(System.IO.File.ReadAllText(sfile));

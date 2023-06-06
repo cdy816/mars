@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Xml.Linq;
 
@@ -173,12 +174,13 @@ namespace Cdy.Tag
             return doc;
         }
 
+        
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="path"></param>
-        private void SaveDatabaseSelf(string path)
+        private bool SaveDatabaseSelf(string path)
         {
 
             XElement doc = new XElement("RealDatabase");
@@ -189,14 +191,7 @@ namespace Cdy.Tag
 
             doc.Add(Save(Dbase.Setting));
 
-            var spath = System.IO.Path.GetDirectoryName(path);
-            if(!System.IO.Directory.Exists(spath))
-            {
-                System.IO.Directory.CreateDirectory(spath);
-            }
-
-            doc.Save(path);
-
+            return doc.SaveXMLToFile(path, "SaveDatabaseSelf");
         }
 
         /// <summary>
@@ -271,19 +266,24 @@ namespace Cdy.Tag
         /// </summary>
         public void Save()
         {
-            SaveDatabaseSelf(PathHelper.helper.GetDataPath(Dbase.Name, Dbase.Name + ".db"));
-            new RealDatabaseSerise() { Database = Dbase.RealDatabase }.Save();
-            new HisDatabaseSerise() { Database = Dbase.HisDatabase }.Save();
-            new SecuritySerise() { Document = Dbase.Security }.Save();
-            new ComplexTagClassDocumentSerise() { Document = Dbase.ComplexTagClass }.Save();
-            SaveRDDCSecurity(Dbase.Name);
+            bool re = true;
+            re = SaveDatabaseSelf(PathHelper.helper.GetDataPath(Dbase.Name, Dbase.Name + ".db"));
+            re &= new RealDatabaseSerise() { Database = Dbase.RealDatabase }.Save();
+            re &= new HisDatabaseSerise() { Database = Dbase.HisDatabase }.Save();
+            re &= new SecuritySerise() { Document = Dbase.Security }.Save();
+            re &= new ComplexTagClassDocumentSerise() { Document = Dbase.ComplexTagClass }.Save();
+            re &= SaveRDDCSecurity(Dbase.Name);
+            if(!re)
+            {
+                LoggerService.Service.Erro("DatabaseSerise", "Save failed!");
+            }
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="databaseName"></param>
-        private void SaveRDDCSecurity(string databaseName)
+        private bool SaveRDDCSecurity(string databaseName)
         {
             string sfile = PathHelper.helper.GetDataPath(databaseName, "RDDC.cfg");
             if(!System.IO.File.Exists(sfile))
@@ -292,8 +292,9 @@ namespace Cdy.Tag
                 xx.SetAttributeValue("Enable", false);
                 xx.SetAttributeValue("Port", 7000);
                 xx.SetAttributeValue("RemoteIp", "127.0.0.1");
-                xx.Save(sfile);
+                return xx.SaveXMLToFile(sfile, "SaveRDDCSecurity");
             }
+            return true;
         }
 
         #endregion ...Methods...

@@ -135,6 +135,9 @@
   <data name="Append" xml:space="preserve">
     <value>增加</value>
   </data>
+  <data name="Area" xml:space="preserve">
+    <value>区域</value>
+  </data>
   <data name="Bad" xml:space="preserve">
     <value>坏</value>
   </data>
@@ -160,10 +163,10 @@
     <value>周期</value>
   </data>
   <data name="ComplexTagClass" xml:space="preserve">
-    <value>变量类</value>
+    <value>对象模板</value>
   </data>
   <data name="ComplexTagClassInfo" xml:space="preserve">
-    <value>变量类是对具有相关性的一组变量的抽象。通过变量类可以快速批量创建、维护一组相关变量；通过维护变量类，可以自动同步到以该类生成的变量。</value>
+    <value>对象模板是对具有相关性的一组变量的抽象。通过对象模板可以快速批量创建、维护一组相关变量；通过维护对象模板，可以自动同步到以该类生成的变量。</value>
   </data>
   <data name="CompressType" xml:space="preserve">
     <value>压缩类型</value>
@@ -232,6 +235,9 @@
   <data name="Express" xml:space="preserve">
     <value>表达式</value>
   </data>
+  <data name="ExtendField1" xml:space="preserve">
+    <value>扩展属性1</value>
+  </data>
   <data name="FindAvaiableId" xml:space="preserve">
     <value>重置Id</value>
   </data>
@@ -279,6 +285,12 @@
   </data>
   <data name="Init" xml:space="preserve">
     <value>初始值</value>
+  </data>
+  <data name="InvertConvert" xml:space="preserve">
+    <value>取反</value>
+  </data>
+  <data name="InvertConvertTitle" xml:space="preserve">
+    <value>Bool值取反</value>
   </data>
   <data name="IsAdmin" xml:space="preserve">
     <value>管理员</value>
@@ -431,6 +443,9 @@
   <data name="ReRun" xml:space="preserve">
     <value>热重启</value>
   </data>
+  <data name="ResetTagIdLable" xml:space="preserve">
+    <value>从指定的ID从小到大开始搜索，查找未使用的ID，并将其分配给变量</value>
+  </data>
   <data name="Save" xml:space="preserve">
     <value>保存</value>
   </data>
@@ -483,11 +498,17 @@
   <data name="SetDescription" xml:space="preserve">
     <value>设置描述</value>
   </data>
+  <data name="SetFailed" xml:space="preserve">
+    <value>设置失败</value>
+  </data>
   <data name="SetPasswordfail" xml:space="preserve">
     <value>设置密码失败!</value>
   </data>
   <data name="SetPasswordSeccussful" xml:space="preserve">
     <value>设置密码成功.</value>
+  </data>
+  <data name="SetTagIdLable" xml:space="preserve">
+    <value>设置变量的ID为指定值</value>
   </data>
   <data name="Setting" xml:space="preserve">
     <value>设置</value>
@@ -497,6 +518,9 @@
   </data>
   <data name="SlopeCompress" xml:space="preserve">
     <value>斜率</value>
+  </data>
+  <data name="Spider" xml:space="preserve">
+    <value>设备采集</value>
   </data>
   <data name="Start" xml:space="preserve">
     <value>启动</value>
@@ -540,11 +564,17 @@
   <data name="TagGroup" xml:space="preserve">
     <value>变量组</value>
   </data>
+  <data name="TagId" xml:space="preserve">
+    <value>变量ID</value>
+  </data>
   <data name="Timer" xml:space="preserve">
     <value>定时</value>
   </data>
   <data name="Type" xml:space="preserve">
     <value>类型</value>
+  </data>
+  <data name="Unit" xml:space="preserve">
+    <value>单位</value>
   </data>
   <data name="UpdateTagFail" xml:space="preserve">
     <value>更新变量 {0} 失败!</value>

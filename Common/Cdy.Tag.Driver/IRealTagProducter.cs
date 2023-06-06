@@ -242,6 +242,13 @@ namespace Cdy.Tag.Driver
         /// <param name="time">时间</param>
         void SetTagQuality(int id, byte quality, DateTime time);
 
+        /// <summary>
+        /// 获取变量的时间戳
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        DateTime GetTagUpdateTime(int id);
+
         #endregion
 
         #region Set by Tag instance

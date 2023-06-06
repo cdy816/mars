@@ -135,6 +135,12 @@
   <data name="Alarm" xml:space="preserve">
     <value>Alarm</value>
   </data>
+  <data name="AlarmLevel" xml:space="preserve">
+    <value>AlarmLevel</value>
+  </data>
+  <data name="AlarmValue" xml:space="preserve">
+    <value>AlarmValue</value>
+  </data>
   <data name="AllGroup" xml:space="preserve">
     <value>All group</value>
   </data>
@@ -143,6 +149,15 @@
   </data>
   <data name="Append" xml:space="preserve">
     <value>Append</value>
+  </data>
+  <data name="AppendContent1" xml:space="preserve">
+    <value>AppendContent1</value>
+  </data>
+  <data name="AppendContent2" xml:space="preserve">
+    <value>AppendContent2</value>
+  </data>
+  <data name="AppendContent3" xml:space="preserve">
+    <value>AppendContent3</value>
   </data>
   <data name="Bad" xml:space="preserve">
     <value>Bad</value>
@@ -174,6 +189,9 @@
   <data name="CPU" xml:space="preserve">
     <value>CPU</value>
   </data>
+  <data name="CreateTime" xml:space="preserve">
+    <value>CreateTime</value>
+  </data>
   <data name="Custom" xml:space="preserve">
     <value>Custom</value>
   </data>
@@ -203,6 +221,15 @@
   </data>
   <data name="Default" xml:space="preserve">
     <value>Default</value>
+  </data>
+  <data name="DeleteNote" xml:space="preserve">
+    <value>DeleteNote</value>
+  </data>
+  <data name="DeleteTime" xml:space="preserve">
+    <value>DeleteTime</value>
+  </data>
+  <data name="DeleteUser" xml:space="preserve">
+    <value>DeleteUser</value>
   </data>
   <data name="Desc" xml:space="preserve">
     <value>Description</value>
@@ -239,6 +266,9 @@
   </data>
   <data name="Export" xml:space="preserve">
     <value>Export</value>
+  </data>
+  <data name="ExtendField1" xml:space="preserve">
+    <value>ExtendField1</value>
   </data>
   <data name="FindAvaiableId" xml:space="preserve">
     <value>Reset id</value>
@@ -290,6 +320,9 @@
   </data>
   <data name="IDResetWarnning" xml:space="preserve">
     <value>Warning: The ID is used as the record identifier of historical records. Resetting the ID may cause confusion of historical data.</value>
+  </data>
+  <data name="IgnorClosedQuality" xml:space="preserve">
+    <value>Ignore system exit</value>
   </data>
   <data name="Import" xml:space="preserve">
     <value>Import</value>
@@ -357,6 +390,9 @@
   </data>
   <data name="Memory" xml:space="preserve">
     <value>Memory</value>
+  </data>
+  <data name="MessageBody" xml:space="preserve">
+    <value>MessageBody</value>
   </data>
   <data name="MinValue" xml:space="preserve">
     <value>MinValue</value>
@@ -430,6 +466,9 @@
   <data name="Precision" xml:space="preserve">
     <value>Precision</value>
   </data>
+  <data name="Process" xml:space="preserve">
+    <value>Process</value>
+  </data>
   <data name="ProcessCount" xml:space="preserve">
     <value>Process Count</value>
   </data>
@@ -493,6 +532,12 @@
   <data name="ReRun" xml:space="preserve">
     <value>ReRun</value>
   </data>
+  <data name="RestoreTime" xml:space="preserve">
+    <value>RestoreTime</value>
+  </data>
+  <data name="RestoreValue" xml:space="preserve">
+    <value>RestoreValue</value>
+  </data>
   <data name="SampleDuration" xml:space="preserve">
     <value>Sample Duration</value>
   </data>
@@ -523,6 +568,9 @@
   </data>
   <data name="Send" xml:space="preserve">
     <value>Send</value>
+  </data>
+  <data name="Server" xml:space="preserve">
+    <value>Server</value>
   </data>
   <data name="ServerBackupDataPath" xml:space="preserve">
     <value>History backup path</value>
@@ -563,6 +611,9 @@
   <data name="SlopeCompress" xml:space="preserve">
     <value>Slope</value>
   </data>
+  <data name="SourceTag" xml:space="preserve">
+    <value>SourceTag</value>
+  </data>
   <data name="Start" xml:space="preserve">
     <value>Start</value>
   </data>
@@ -599,6 +650,9 @@
   <data name="TagGroup" xml:space="preserve">
     <value>Tag group</value>
   </data>
+  <data name="ThreadCount" xml:space="preserve">
+    <value>ThreadCount</value>
+  </data>
   <data name="Time" xml:space="preserve">
     <value>Time</value>
   </data>
@@ -608,11 +662,17 @@
   <data name="Title" xml:space="preserve">
     <value>Mars database runtime manager</value>
   </data>
+  <data name="TotalCPU" xml:space="preserve">
+    <value>TotalCPU</value>
+  </data>
   <data name="TotalDisk" xml:space="preserve">
     <value>TotalDisk</value>
   </data>
   <data name="Type" xml:space="preserve">
     <value>Type</value>
+  </data>
+  <data name="Unit" xml:space="preserve">
+    <value>Unit</value>
   </data>
   <data name="UpdateTagFail" xml:space="preserve">
     <value>Update tag {0} failed!</value>
@@ -640,6 +700,9 @@
   </data>
   <data name="WebApi" xml:space="preserve">
     <value>Web Api</value>
+  </data>
+  <data name="WorksetMemory" xml:space="preserve">
+    <value>WorkingSet Memory</value>
   </data>
   <data name="Write" xml:space="preserve">
     <value>Write</value>

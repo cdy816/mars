@@ -31,20 +31,20 @@ namespace RuntimeServiceImp
         /// Gets the identifier of the network adapter<br />
         /// 获取网络适配器的标识符
         /// </summary>
-        public string Id => _instance.Id;
+        public string Id => _instance!=null? _instance.Id:"";
 
         /// <summary>
         /// The Mac address of the network<br />
         /// 网络的 Mac 地址
         /// </summary>
-        public string Mac => _instance.GetPhysicalAddress().ToString();
+        public string Mac => _instance != null ? _instance.GetPhysicalAddress().ToString():"";
 
         /// <summary>
         /// The network equipment name<br />
         /// 网卡名称
         /// <para>ex:WLAN</para>
         /// </summary>
-        public string Name => _instance.Name;
+        public string Name => _instance != null ? _instance.Name:"";
 
 
         /// <summary>
@@ -53,27 +53,27 @@ namespace RuntimeServiceImp
         /// <para> On Windows, it typically describes the interface vendor, type (for example, Ethernet), brand, and model<br />
         /// 在 Windows 上，它通常描述接口供应商、类型 (例如，以太网) 、品牌和型号；</para>
         /// </summary>
-        public string Trademark => _instance.Description;
+        public string Trademark => _instance != null ? _instance.Description:"";
 
         /// <summary>
         /// Returns the Media Access Control (MAC) or physical address for this adapter<br />
         /// 获取当前网卡的 mac 地址
         /// </summary>
-        public string PhysicalMac => _instance.GetPhysicalAddress().ToString();
+        public string PhysicalMac => _instance != null ? _instance.GetPhysicalAddress().ToString():"";
 
         /// <summary>
         /// Specifies the operational state of a network interface<br />
         /// 获取网络连接的当前操作状态<br />
         /// documentation:    <see href="https://docs.microsoft.com/zh-cn/dotnet/api/system.net.networkinformation.operationalstatus?view=netcore-3.1"/>
         /// </summary>
-        public OperationalStatus Status => _instance.OperationalStatus;
+        public OperationalStatus Status => _instance != null ? _instance.OperationalStatus: OperationalStatus.Unknown;
 
         /// <summary>
         /// Specifies types of network interfaces<br />
         /// 获取网卡接口类型<br />
         /// <see href="https://docs.microsoft.com/zh-cn/dotnet/api/system.net.networkinformation.networkinterfacetype?view=netcore-3.1"/>
         /// </summary>
-        public NetworkInterfaceType NetworkType => _instance.NetworkInterfaceType;
+        public NetworkInterfaceType NetworkType => _instance != null ? _instance.NetworkInterfaceType: NetworkInterfaceType.Unknown;
 
         #region 网络流量信息W
 
@@ -133,31 +133,31 @@ namespace RuntimeServiceImp
         /// 网卡链接速度，每字节/秒为单位
         /// </summary>
         /// <remarks>如果是-1，则说明无法获取此网卡的链接速度；例如 270_000_000 表示是 270MB 的链接速度</remarks>
-        public long Speed => _instance.Speed;
+        public long Speed => _instance != null ? _instance.Speed:0;
 
         /// <summary>
         /// Whether Ipv4 is supported<br />
         /// 是否支持 Ipv4
         /// </summary>
-        public bool IsSupportIpv4 => _instance.Supports(NetworkInterfaceComponent.IPv4);
+        public bool IsSupportIpv4 => _instance != null ? _instance.Supports(NetworkInterfaceComponent.IPv4):false;
 
         /// <summary>
         /// Whether Ipv6 is supported<br />
         /// 是否支持 Ipv6
         /// </summary>
-        public bool IsSupportIpv6 => _instance.Supports(NetworkInterfaceComponent.IPv6);
+        public bool IsSupportIpv6 => _instance != null ? _instance.Supports(NetworkInterfaceComponent.IPv6):false;
 
         #region 地址相关
         /// <summary>
         /// DnsSuffix<br />
         ///  连接特定的 DNS 后缀
         /// </summary>
-        public string DnsSuffix => _instance.GetIPProperties().DnsSuffix;
+        public string DnsSuffix => _instance != null ? _instance.GetIPProperties().DnsSuffix:"";
 
         /// <summary>
         /// DNS Server address collection
         /// </summary>
-        public IPAddressCollection DNSAddresses => _instance.GetIPProperties().DnsAddresses;
+        public IPAddressCollection DNSAddresses => _instance != null ? _instance.GetIPProperties().DnsAddresses:null;
 
         /// <summary>
         /// Gets the unicast addresses assigned to this interface<br />
@@ -190,15 +190,22 @@ namespace RuntimeServiceImp
         /// <returns></returns>
         public (double Received, double Send) GetInternetSpeed(int Milliseconds)
         {
-            if (!NetworkInterface.GetIsNetworkAvailable())
-                return (0, 0);
+            if (this._instance != null)
+            {
+                if (!NetworkInterface.GetIsNetworkAvailable())
+                    return (0, 0);
 
-            var newNetwork = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Id == this.Id).GetIPStatistics();
-            long rec = newNetwork.BytesReceived;
-            long send = newNetwork.BytesSent;
-            Thread.Sleep(Milliseconds);
-            newNetwork = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Id == this.Id).GetIPStatistics();
-            return ((newNetwork.BytesReceived - rec)/1024.0, (newNetwork.BytesSent - send)/1024.0);
+                var newNetwork = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Id == this.Id).GetIPStatistics();
+                long rec = newNetwork.BytesReceived;
+                long send = newNetwork.BytesSent;
+                Thread.Sleep(Milliseconds);
+                newNetwork = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Id == this.Id).GetIPStatistics();
+                return ((newNetwork.BytesReceived - rec) / 1024.0, (newNetwork.BytesSent - send) / 1024.0);
+            }
+            else
+            {
+                return (0, 0);
+            }
         }
 
         /// <summary>
@@ -209,16 +216,23 @@ namespace RuntimeServiceImp
         /// <returns></returns>
         public (int Received, int Send) GetInternetSpeedIpv4(int Milliseconds)
         {
-            if (!NetworkInterface.GetIsNetworkAvailable())
+            if (this._instance != null)
+            {
+                if (!NetworkInterface.GetIsNetworkAvailable())
+                    return (0, 0);
+
+                var newNetwork = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Id == this.Id).GetIPv4Statistics();
+
+                long rec = newNetwork.BytesReceived;
+                long send = newNetwork.BytesSent;
+                Thread.Sleep(Milliseconds);
+                newNetwork = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Id == this.Id).GetIPv4Statistics();
+                return ((int)(newNetwork.BytesReceived - rec), (int)(newNetwork.BytesSent - send));
+            }
+            else
+            {
                 return (0, 0);
-
-            var newNetwork = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Id == this.Id).GetIPv4Statistics();
-
-            long rec = newNetwork.BytesReceived;
-            long send = newNetwork.BytesSent;
-            Thread.Sleep(Milliseconds);
-            newNetwork = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Id == this.Id).GetIPv4Statistics();
-            return ((int)(newNetwork.BytesReceived - rec), (int)(newNetwork.BytesSent - send));
+            }
         }
 
         /// <summary>
@@ -245,15 +259,22 @@ namespace RuntimeServiceImp
         /// <returns></returns>
         public static (int Received, int send) GetNowInternetSpeed(int Milliseconds)
         {
-            if (!NetworkInterface.GetIsNetworkAvailable())
-                return (0, 0);
+            try
+            {
+                if (!NetworkInterface.GetIsNetworkAvailable())
+                    return (0, 0);
 
-            NetworkInterface inter = GetNetworkInfo().NetworkInterface;
-            var statistics = inter.GetIPStatistics();
-            long rec = statistics.BytesReceived;
-            long send = statistics.BytesSent;
-            Thread.Sleep(Milliseconds);
-            return ((int)(statistics.BytesReceived - rec), (int)(statistics.BytesSent - send));
+                NetworkInterface inter = GetNetworkInfo().NetworkInterface;
+                var statistics = inter.GetIPStatistics();
+                long rec = statistics.BytesReceived;
+                long send = statistics.BytesSent;
+                Thread.Sleep(Milliseconds);
+                return ((int)(statistics.BytesReceived - rec), (int)(statistics.BytesSent - send));
+            }
+            catch
+            {
+                return (0, 0);
+            }
         }
 
         /// <summary>
@@ -264,15 +285,22 @@ namespace RuntimeServiceImp
         /// <returns></returns>
         public static (int Received, int send) GetNowInternetSpeedIpv4(int Milliseconds)
         {
-            if (!NetworkInterface.GetIsNetworkAvailable())
-                return (0, 0);
+            try
+            {
+                if (!NetworkInterface.GetIsNetworkAvailable())
+                    return (0, 0);
 
-            NetworkInterface inter = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.OperationalStatus == OperationalStatus.Up);
-            var statistics = inter.GetIPv4Statistics();
-            long rec = statistics.BytesReceived;
-            long send = statistics.BytesSent;
-            Thread.Sleep(Milliseconds);
-            return ((int)(statistics.BytesReceived - rec), (int)(statistics.BytesSent - send));
+                NetworkInterface inter = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.OperationalStatus == OperationalStatus.Up);
+                var statistics = inter.GetIPv4Statistics();
+                long rec = statistics.BytesReceived;
+                long send = statistics.BytesSent;
+                Thread.Sleep(Milliseconds);
+                return ((int)(statistics.BytesReceived - rec), (int)(statistics.BytesSent - send));
+            }
+            catch
+            {
+                return (0, 0);
+            }
         }
 
 

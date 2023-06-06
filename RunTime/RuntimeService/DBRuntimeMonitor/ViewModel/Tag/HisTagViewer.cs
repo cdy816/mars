@@ -69,6 +69,8 @@ namespace DBRuntimeMonitor.ViewModel
 
         public event EventHandler Update;
 
+        private bool mIgnorClosedQuality = false;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -101,6 +103,27 @@ namespace DBRuntimeMonitor.ViewModel
         #endregion ...Constructor...
 
         #region ... Properties ...
+
+        /// <summary>
+            /// 
+            /// </summary>
+        public bool IgnorClosedQuality
+        {
+            get
+            {
+                return mIgnorClosedQuality;
+            }
+            set
+            {
+                if (mIgnorClosedQuality != value)
+                {
+                    mIgnorClosedQuality = value;
+                    OnPropertyChanged("IgnorClosedQuality");
+                }
+            }
+        }
+
+
 
         /// <summary>
         /// 
@@ -183,7 +206,7 @@ namespace DBRuntimeMonitor.ViewModel
                 if (mEndDate != value)
                 {
                     mEndDate = value;
-                    EndTime = mEndTime.AddHours(mEndHour);
+                    EndTime = mEndDate.AddHours(mEndHour);
                     OnPropertyChanged("EndDate");
                 }
             }
@@ -199,6 +222,7 @@ namespace DBRuntimeMonitor.ViewModel
             set
             {
                 mStartTime = value;
+                ExecuteQuery();
                 OnPropertyChanged("StartTime");
             }
         }
@@ -212,6 +236,7 @@ namespace DBRuntimeMonitor.ViewModel
             set
             {
                 mEndTime = value;
+                ExecuteQuery();
                 OnPropertyChanged("EndTime");
             }
         }
@@ -360,8 +385,8 @@ namespace DBRuntimeMonitor.ViewModel
 
                         double dtmp = -(mEndTime - mStartTime).TotalSeconds / 2;
 
-                        StartTime = mStartTime.AddSeconds(dtmp);
-                        EndTime = mEndTime.AddSeconds(dtmp);
+                        mStartTime = mStartTime.AddSeconds(dtmp);
+                        mEndTime = mEndTime.AddSeconds(dtmp);
 
                         mStartDate = mStartTime.Date;
                         mStartHour = mStartTime.Hour;
@@ -369,6 +394,12 @@ namespace DBRuntimeMonitor.ViewModel
                         mEndHour = EndTime.Hour;
 
                         ExecuteQuery();
+                        OnPropertyChanged("StartTime");
+                        OnPropertyChanged("EndTime");
+                        OnPropertyChanged("EndDate");
+                        OnPropertyChanged("StartDate");
+                        OnPropertyChanged("EndHour");
+                        OnPropertyChanged("StartHour");
                     });
                 }
                 return mPreCommand;
@@ -388,14 +419,20 @@ namespace DBRuntimeMonitor.ViewModel
                         
                         double dtmp = (mEndTime - mStartTime).TotalSeconds / 2;
 
-                        StartTime = mStartTime.AddSeconds(dtmp);
-                        EndTime = mEndTime.AddSeconds(dtmp);
+                        mStartTime = mStartTime.AddSeconds(dtmp);
+                        mEndTime = mEndTime.AddSeconds(dtmp);
 
                         mStartDate = mStartTime.Date;
                         mStartHour = mStartTime.Hour;
                         mEndDate = EndTime.Date;
                         mEndHour = EndTime.Hour;
                         ExecuteQuery();
+                        OnPropertyChanged("StartTime");
+                        OnPropertyChanged("EndTime");
+                        OnPropertyChanged("EndDate");
+                        OnPropertyChanged("StartDate");
+                        OnPropertyChanged("EndHour");
+                        OnPropertyChanged("StartHour");
                     });
                 }
                 return mNextCommand;
@@ -683,10 +720,21 @@ namespace DBRuntimeMonitor.ViewModel
         /// <typeparam name="T"></typeparam>
         private void ExecuteQueryFitting<T>()
         {
-            var vals = Client?.QueryHisValueForTimeSpan<T>(TagId, mStartTime, mEndTime,new TimeSpan(0,0,mTimeDuration),(QueryValueMatchType)FittingType);
-            if (vals != null && vals.Count > 0)
+            if (IgnorClosedQuality)
             {
-                FillValues(vals);
+                var vals = Client?.QueryHisValueForTimeSpanByIgnorSystemExit<T>(TagId, mStartTime, mEndTime, new TimeSpan(0, 0, mTimeDuration), (QueryValueMatchType)FittingType);
+                if (vals != null && vals.Count > 0)
+                {
+                    FillValues(vals);
+                }
+            }
+            else
+            {
+                var vals = Client?.QueryHisValueForTimeSpan<T>(TagId, mStartTime, mEndTime, new TimeSpan(0, 0, mTimeDuration), (QueryValueMatchType)FittingType);
+                if (vals != null && vals.Count > 0)
+                {
+                    FillValues(vals);
+                }
             }
         }
 

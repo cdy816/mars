@@ -151,11 +151,15 @@ namespace DBRuntime.His.Compress
         {
             if (mCanCompress && index>2)
             {
-                MemoryBlock.Write((byte)this.Precision);
+                MemoryBlock.Write((byte)(this.Precision + 100));
                 MemoryBlock.Write(mBuffer[0]);
+                int pval = 0;
                 for (int i = 1; i < index; i++)
                 {
-                    VarintMemory.WriteSInt32(TranslateData(mBuffer[i]));
+                    var vval = TranslateData(mBuffer[i]);
+                    VarintMemory.WriteSInt32(vval - pval);
+                    pval = vval;
+                    //VarintMemory.WriteSInt32(TranslateData(mBuffer[i]));
                 }
                 MemoryBlock.WriteBytes(9, VarintMemory.DataBuffer,0,(int)VarintMemory.WritePosition);
             }
@@ -186,7 +190,7 @@ namespace DBRuntime.His.Compress
             var memory = new MemorySpan(values);
             var type = memory.ReadByte();
             List<float> re = new List<float>(300);
-            var dval = (float)Math.Pow(10, type);
+           
             if(type == byte.MaxValue)
             {
                 while(memory.Position<memory.Length)
@@ -196,14 +200,38 @@ namespace DBRuntime.His.Compress
             }
             else
             {
-                var val = memory.ReadFloat();
-                re.Add(val);
-                using (ProtoMemory vmemory = new ProtoMemory(values,9))
+                if (type >= 100)
                 {
-                    while (vmemory.ReadPosition < vmemory.DataBuffer.Length)
+                    var dval = (float)Math.Pow(10, type - 100);
+                    var val = memory.ReadFloat();
+                    re.Add(val);
+                    int pval = 0;
+                    using (ProtoMemory vmemory = new ProtoMemory(values, 9))
                     {
-                        val += (vmemory.ReadSInt32() / dval);
-                        re.Add(val);
+                        while (vmemory.ReadPosition < vmemory.DataBuffer.Length)
+                        {
+                            var vval = vmemory.ReadSInt32();
+                            val += ((pval + vval) / dval);
+                            re.Add(val);
+                            pval += vval;
+
+                            //val += (vmemory.ReadSInt32() / dval);
+                            //re.Add(val);
+                        }
+                    }
+                }
+                else
+                {
+                    var dval = (float)Math.Pow(10, type);
+                    var val = memory.ReadFloat();
+                    re.Add(val);
+                    using (ProtoMemory vmemory = new ProtoMemory(values, 9))
+                    {
+                        while (vmemory.ReadPosition < vmemory.DataBuffer.Length)
+                        {
+                            val += (vmemory.ReadSInt32() / dval);
+                            re.Add(val);
+                        }
                     }
                 }
             }

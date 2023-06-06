@@ -506,6 +506,46 @@ namespace DBRuntimeMonitor
         /// <summary>
         /// 
         /// </summary>
+        public string Unit
+        {
+            get
+            {
+                return mRealTagMode.Unit;
+            }
+            set
+            {
+                if (mRealTagMode.Unit != value)
+                {
+                    mRealTagMode.Unit = value;
+                    IsChanged = true;
+                    OnPropertyChanged("Unit");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string ExtendField1
+        {
+            get
+            {
+                return mRealTagMode.ExtendField1;
+            }
+            set
+            {
+                if (mRealTagMode.ExtendField1 != value)
+                {
+                    mRealTagMode.ExtendField1 = value;
+                    IsChanged = true;
+                    OnPropertyChanged("ExtendField");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public bool IsTimerRecord
         {
             get

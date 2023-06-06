@@ -91,6 +91,10 @@ namespace DBInStudio.Desktop.View
                 (sender as DataGrid).BeginEdit();
             }
             mModel.SelectedCells = (sender as DataGrid).SelectedCells;
+            if((sender as DataGrid).SelectedItem!=null)
+            {
+                ((sender as DataGrid).SelectedItem as TagViewModel).IsSelected = true;
+            }
         }
 
         private void Type_SelectionChanged(object sender, SelectionChangedEventArgs e)

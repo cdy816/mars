@@ -76,9 +76,16 @@ namespace DBDevelopService
         /// <returns></returns>
         private bool LoginInner(string userName,string pass)
         {
-            if(Securitys!=null&&Securitys.User.Users.ContainsKey(userName))
+            try
             {
-                return Securitys.User.Users[userName].Password == pass;
+                if (Securitys != null && Securitys.User.Users.ContainsKey(userName))
+                {
+                    return Securitys.User.Users[userName].Password == pass;
+                }
+            }
+            catch
+            {
+
             }
             return false;
         }
@@ -91,9 +98,16 @@ namespace DBDevelopService
         /// <returns></returns>
         public bool CheckPasswordIsCorrect(string userName,string pass)
         {
-            if (Securitys != null && Securitys.User.Users.ContainsKey(userName))
+            try
             {
-                return Securitys.User.Users[userName].Password == pass;
+                if (Securitys != null && Securitys.User.Users.ContainsKey(userName))
+                {
+                    return Securitys.User.Users[userName].Password == pass;
+                }
+            }
+            catch
+            {
+
             }
             return false;
         }
@@ -115,8 +129,23 @@ namespace DBDevelopService
         /// <returns></returns>
         public string GetUserName(string loginId)
         {
-            var users = mLogins.Where(e => e.Value.Contains(loginId)).FirstOrDefault().Key;
-            return users;
+            lock (mLogins)
+            {
+                var utmp = mLogins.Where(e => e.Value.Contains(loginId));
+                try
+                {
+                    if (utmp.Count() > 0)
+                    {
+                        var users = utmp.FirstOrDefault().Key;
+                        return users;
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+            return String.Empty;
         }
 
         /// <summary>
@@ -126,10 +155,25 @@ namespace DBDevelopService
         /// <returns></returns>
         public User GetUser(string loginId)
         {
-            var user = mLogins.Where(e => e.Value.Contains(loginId)).FirstOrDefault().Key;
-            if (Securitys.User.Users.ContainsKey(user))
+            if (string.IsNullOrEmpty(loginId)) return null;
+            lock (mLogins)
             {
-                return Securitys.User.Users[user];
+                try
+                {
+                    var users = mLogins.Where(e => e.Value.Contains(loginId));
+                    if (users.Count() > 0)
+                    {
+                        var user = users.FirstOrDefault().Key;
+                        if (user != null && Securitys.User.Users.ContainsKey(user))
+                        {
+                            return Securitys.User.Users[user];
+                        }
+                    }
+                }
+                catch
+                {
+
+                }
             }
             return null;
         }
@@ -143,11 +187,21 @@ namespace DBDevelopService
         public bool CheckDatabase(string key,string database)
         {
             if (string.IsNullOrEmpty(database)) return true;
-            var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
-            if (Securitys.User.Users.ContainsKey(users))
+            lock (mLogins)
             {
-                var us = Securitys.User.Users[users];
-                return us.Databases.Contains(database);
+                try
+                {
+                    var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
+                    if (Securitys.User.Users.ContainsKey(users))
+                    {
+                        var us = Securitys.User.Users[users];
+                        return us.Databases.Contains(database);
+                    }
+                }
+                catch
+                {
+
+                }
             }
             return false;
         }
@@ -159,10 +213,20 @@ namespace DBDevelopService
         /// <returns></returns>
         public List<string> GetDatabase(string key)
         {
-            var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
-            if (Securitys.User.Users.ContainsKey(users))
+            lock (mLogins)
             {
-                return Securitys.User.Users[users].Databases;
+                try
+                {
+                    var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
+                    if (Securitys.User.Users.ContainsKey(users))
+                    {
+                        return Securitys.User.Users[users].Databases;
+                    }
+                }
+                catch
+                {
+
+                }
             }
             return new List<string>();
         }
@@ -174,11 +238,21 @@ namespace DBDevelopService
         /// <returns></returns>
         public bool IsAdmin(string key)
         {
-            var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
-            if (Securitys.User.Users.ContainsKey(users))
+            lock (mLogins)
             {
-                var us = Securitys.User.Users[users];
-                return us.IsAdmin;
+                try
+                {
+                    var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
+                    if (Securitys.User.Users.ContainsKey(users))
+                    {
+                        var us = Securitys.User.Users[users];
+                        return us.IsAdmin;
+                    }
+                }
+                catch
+                {
+
+                }
             }
             return false;
         }
@@ -190,11 +264,21 @@ namespace DBDevelopService
         /// <returns></returns>
         public bool HasNewDatabasePermission(string key)
         {
-            var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
-            if (Securitys.User.Users.ContainsKey(users))
+            lock (mLogins)
             {
-                var us = Securitys.User.Users[users];
-                return us.NewDatabase;
+                try
+                {
+                    var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
+                    if (Securitys.User.Users.ContainsKey(users))
+                    {
+                        var us = Securitys.User.Users[users];
+                        return us.NewDatabase;
+                    }
+                }
+                catch
+                {
+
+                }
             }
             return false;
         }
@@ -206,11 +290,21 @@ namespace DBDevelopService
         /// <returns></returns>
         public bool HasDeleteDatabasePermission(string key)
         {
-            var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
-            if (Securitys.User.Users.ContainsKey(users))
+            lock (mLogins)
             {
-                var us = Securitys.User.Users[users];
-                return us.DeleteDatabase;
+                try
+                {
+                    var users = mLogins.Where(e => e.Value.Contains(key)).FirstOrDefault().Key;
+                    if (Securitys.User.Users.ContainsKey(users))
+                    {
+                        var us = Securitys.User.Users[users];
+                        return us.DeleteDatabase;
+                    }
+                }
+                catch
+                {
+
+                }
             }
             return false;
         }
@@ -222,11 +316,21 @@ namespace DBDevelopService
         /// <param name="newName"></param>
         public void RenameLoginUser(string oldName,string newName)
         {
-            if(mLogins.ContainsKey(oldName)&&!mLogins.ContainsKey(newName))
+            lock (mLogins)
             {
-                var vv = mLogins[oldName];
-                mLogins.Remove(oldName);
-                mLogins.Add(newName, vv);
+                try
+                {
+                    if (mLogins.ContainsKey(oldName) && !mLogins.ContainsKey(newName))
+                    {
+                        var vv = mLogins[oldName];
+                        mLogins.Remove(oldName);
+                        mLogins.Add(newName, vv);
+                    }
+                }
+                catch
+                {
+
+                }
             }
         }
 
@@ -238,24 +342,34 @@ namespace DBDevelopService
         /// <returns></returns>
         public string Login(string userName,string password)
         {
-            if(LoginInner(userName,password))
+            try
             {
-                string sid = Guid.NewGuid().ToString();
-                string skey = userName;
                 lock (mLogins)
                 {
-                    if (!mLogins.ContainsKey(userName))
+                    if (LoginInner(userName, password))
                     {
-                        mLogins.Add(userName, new List<string>() { sid });
-                        mAvaiableKey.Add(sid);
-                    }
-                    else
-                    {
-                        mLogins[userName].Add(sid);
-                        mAvaiableKey.Add(sid);
+                        string sid = Guid.NewGuid().ToString();
+                        string skey = userName;
+                        lock (mLogins)
+                        {
+                            if (!mLogins.ContainsKey(userName))
+                            {
+                                mLogins.Add(userName, new List<string>() { sid });
+                                mAvaiableKey.Add(sid);
+                            }
+                            else
+                            {
+                                mLogins[userName].Add(sid);
+                                mAvaiableKey.Add(sid);
+                            }
+                        }
+                        return sid;
                     }
                 }
-                return sid;
+            }
+            catch
+            {
+
             }
             return string.Empty;
         }
@@ -268,20 +382,27 @@ namespace DBDevelopService
         {
             lock (mLogins)
             {
-                var user = mLogins.Where(e => e.Value.Contains(id));
-                if (user.Count() > 0)
+                try
                 {
-                    var userName = user.FirstOrDefault().Key;
-                    if (mLogins.ContainsKey(userName))
+                    var user = mLogins.Where(e => e.Value.Contains(id));
+                    if (user.Count() > 0)
                     {
-                        //var ids = mLogins[userName];
-                        if (mAvaiableKey.Contains(id))
+                        var userName = user.FirstOrDefault().Key;
+                        if (mLogins.ContainsKey(userName))
                         {
-                            mAvaiableKey.Remove(id);
+                            //var ids = mLogins[userName];
+                            if (mAvaiableKey.Contains(id))
+                            {
+                                mAvaiableKey.Remove(id);
+                            }
+                            mLogins[userName].Remove(id);
+                            //mLogins.Remove(userName);
                         }
-                        mLogins[userName].Remove(id);
-                        //mLogins.Remove(userName);
                     }
+                }
+                catch
+                {
+
                 }
             }
         }

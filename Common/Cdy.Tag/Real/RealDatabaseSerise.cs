@@ -254,46 +254,58 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
-        public void Save()
+        public bool Save()
         {
-            Save(PathHelper.helper.GetDataPath(this.Database.Name,this.Database.Name + ".xdb"));
+           return Save(PathHelper.helper.GetDataPath(this.Database.Name,this.Database.Name + ".xdb"));
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="sfile"></param>
-        public void Save(string sfile)
+        public bool Save(string sfile)
         {
-            XElement doc = new XElement("RealDatabase");
-            doc.SetAttributeValue("Name", Database.Name);
-            doc.SetAttributeValue("Version", Database.Version);
-            doc.SetAttributeValue("Auther", "cdy");
-            doc.SetAttributeValue("MaxId", Database.MaxId);
-            doc.SetAttributeValue("TagCount", Database.Tags.Count);
-            XElement xe = new XElement("Tags");
-            foreach(var vv in Database.ListAllRootTags())
+            bool re = true;
+            try
             {
-                xe.Add(vv.SaveToXML());
+                
+                XElement doc = new XElement("RealDatabase");
+                doc.SetAttributeValue("Name", Database.Name);
+                doc.SetAttributeValue("Version", Database.Version);
+                doc.SetAttributeValue("Auther", "cdy");
+                doc.SetAttributeValue("MaxId", Database.MaxId);
+                doc.SetAttributeValue("TagCount", Database.Tags.Count);
+                XElement xe = new XElement("Tags");
+                foreach (var vv in Database.ListAllRootTags())
+                {
+                    xe.Add(vv.SaveToXML());
+                }
+                doc.Add(xe);
+
+
+
+                xe = new XElement("Groups");
+                foreach (var vv in Database.Groups.Values)
+                {
+                    xe.Add(vv.SaveToXML());
+                }
+                doc.Add(xe);
+
+                //string sd = System.IO.Path.GetDirectoryName(sfile);
+                //if (!System.IO.Directory.Exists(sd))
+                //{
+                //    System.IO.Directory.CreateDirectory(sd);
+                //}
+                
+                 re = doc.SaveXMLToFile(sfile);
+                if(re) 
+                Database.IsDirty = false;
             }
-            doc.Add(xe);
-
-            
-
-            xe = new XElement("Groups");
-            foreach(var vv in Database.Groups.Values)
+            catch(Exception ex) 
             {
-                xe.Add(vv.SaveToXML());
+                LoggerService.Service.Erro("RealDataSerise", $"{ex.Message}  {ex.StackTrace}");
             }
-            doc.Add(xe);
-
-            string sd = System.IO.Path.GetDirectoryName(sfile);
-            if(!System.IO.Directory.Exists(sd))
-            {
-                System.IO.Directory.CreateDirectory(sd);
-            }
-            doc.Save(sfile);
-            Database.IsDirty = false;
+            return re;
         }
 
         /// <summary>

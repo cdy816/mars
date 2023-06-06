@@ -1,0 +1,20 @@
+使用密码:mars
+生成步骤：只要生成服务器证书即可
+
+1.生成CA 证书
+openssl genrsa -aes256 -out ca.key 2048
+openssl req -new -sha256 -key ca.key -out ca.csr -subj "/C=CN/ST=BJ/L=BJ/O=Cdy/OU=mars/CN=CA/emailAddress=cdy816@hotmail.com"
+openssl x509 -req -days 365000 -sha256 -extensions v3_ca -signkey ca.key -in ca.csr -out ca.cer
+
+2.生成服务器证书:
+openssl genrsa -aes256 -out server.key 2048
+openssl req -new -sha256 -key server.key -out server.csr -subj "/C=CN/ST=BJ/L=BJ/O=Cdy/OU=mars/CN=CA/emailAddress=cdy816@hotmail.com"
+openssl x509 -req -days 365000 -sha256 -extensions v3_req  -CA  ca.cer -CAkey ca.key  -CAserial ca.srl  -CAcreateserial -in server.csr -out server.cer
+openssl pkcs12 -export -out server.pfx -inkey server.key -in server.cer
+
+3.生成客户端证书
+openssl genrsa -aes256 -out client.key 2048
+openssl req -new -sha256 -key client.key  -out client.csr -subj "/C=CN/ST=BJ/L=BJ/O=Cdy/OU=mars/CN=CA/emailAddress=cdy816@hotmail.com"
+openssl x509 -req -days 365000 -sha256 -extensions v3_req  -CA  ca.cer -CAkey ca.key  -CAserial ca.srl  -CAcreateserial -in client.csr -out client.cer
+openssl pkcs12 -export -out client.pfx -inkey client.key -in client.cer
+

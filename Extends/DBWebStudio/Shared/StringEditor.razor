@@ -1,0 +1,54 @@
+﻿@using DBWebStudio.Data;
+@using System.ComponentModel;
+@if (IsEditMode && Editor != null)
+{
+    <div class="m-0">
+        @Editor
+    </div>
+}
+else
+{
+    if (Display != null)
+    {
+        @Display
+    }
+    else
+    {
+        <div class="mx-0" style="cursor:pointer" >@Value</div>
+    }
+}
+
+@code {
+
+    public bool IsEditMode{ get; set; }
+
+    [Parameter]
+    public ISelectable Target { get; set; }
+
+    [Parameter]
+    public string Value{ get; set; }
+
+    [Parameter]
+    public RenderFragment Editor{ get; set; }
+
+    [Parameter]
+    public RenderFragment Display { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Target != null)
+        {
+            Target.PropertyChanged -= PropertyChangedEventHandler;
+            Target.PropertyChanged += PropertyChangedEventHandler;
+        }
+    }
+
+    public void PropertyChangedEventHandler(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == "IsSelected")
+        {
+            IsEditMode = Target.IsSelected;
+            StateHasChanged();
+        }
+    }
+}

@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33516.290
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBWebStudio", "DBWebStudio.csproj", "{06B475FA-554D-4EBE-A922-6111704359F6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBDevelopClientApi", "..\..\Develop\DBDevelopClientApi\DBDevelopClientApi.csproj", "{05549198-F667-47A8-A861-3069A3648C9A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBWebMonitor", "..\DBWebMonitor\DBWebMonitor.csproj", "{448C442F-B666-4AF3-896B-6D79F1810677}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBHighApi.Client", "..\..\Proxy\DBHighApi.Client\DBHighApi.Client.csproj", "{B03A33BA-F9EF-4CE8-A26A-DF0796C56DF3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blazor.ECharts", "..\Blazor.ECharts\Blazor.ECharts.csproj", "{F716C996-8C41-435F-9B7A-E60581DA85B2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{8D410053-7DB4-4BD9-99FF-BBB15A109F3E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBRuntimeServer.Client", "..\..\RunTime\RuntimeService\DBRuntimeServer.Client\DBRuntimeServer.Client.csproj", "{2A6AE0EE-0F06-4D74-80A4-51EAD1F47EA5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{06B475FA-554D-4EBE-A922-6111704359F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06B475FA-554D-4EBE-A922-6111704359F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06B475FA-554D-4EBE-A922-6111704359F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06B475FA-554D-4EBE-A922-6111704359F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{05549198-F667-47A8-A861-3069A3648C9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{05549198-F667-47A8-A861-3069A3648C9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{05549198-F667-47A8-A861-3069A3648C9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{05549198-F667-47A8-A861-3069A3648C9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{448C442F-B666-4AF3-896B-6D79F1810677}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{448C442F-B666-4AF3-896B-6D79F1810677}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{448C442F-B666-4AF3-896B-6D79F1810677}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{448C442F-B666-4AF3-896B-6D79F1810677}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B03A33BA-F9EF-4CE8-A26A-DF0796C56DF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B03A33BA-F9EF-4CE8-A26A-DF0796C56DF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B03A33BA-F9EF-4CE8-A26A-DF0796C56DF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B03A33BA-F9EF-4CE8-A26A-DF0796C56DF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F716C996-8C41-435F-9B7A-E60581DA85B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F716C996-8C41-435F-9B7A-E60581DA85B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F716C996-8C41-435F-9B7A-E60581DA85B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F716C996-8C41-435F-9B7A-E60581DA85B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A6AE0EE-0F06-4D74-80A4-51EAD1F47EA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A6AE0EE-0F06-4D74-80A4-51EAD1F47EA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A6AE0EE-0F06-4D74-80A4-51EAD1F47EA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A6AE0EE-0F06-4D74-80A4-51EAD1F47EA5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B2CABA9B-7C17-43DF-91D2-CEA210AAD3C5}
+	EndGlobalSection
+EndGlobal

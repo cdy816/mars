@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace DBInRun
 {
@@ -16,8 +17,65 @@ namespace DBInRun
 
         static DateTime mStartTime = DateTime.Now;
 
+        static void ReadDefaultConfig()
+        {
+            try
+            {
+                string scfg = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location), "DbInRun.cfg");
+                if (System.IO.File.Exists(scfg))
+                {
+                    XElement xx = XElement.Load(scfg);
+                    if (xx.Attribute("EmbedMode") != null)
+                    {
+                        Runner4.EmbedMode = bool.Parse(xx.Attribute("EmbedMode").Value);
+                    }
+
+                    if (xx.Attribute("EnableMachineMonitor") != null)
+                    {
+                        Runner4.EnableMachineMonitor = bool.Parse(xx.Attribute("EnableMachineMonitor").Value);
+                    }
+
+                    if (xx.Attribute("HideLocalApiWindow") != null)
+                    {
+                        Runner4.HideLocalApiWindow = bool.Parse(xx.Attribute("HideLocalApiWindow").Value);
+                    }
+
+                    if(xx.Attribute("CachFlashTime")!=null)
+                    {
+                        LogStorageManager.LogSleepTime = int.Parse(xx.Attribute("CachFlashTime").Value);
+                        if (LogStorageManager.LogSleepTime <= 0)
+                        {
+                            LogStorageManager.LogSleepTime = 100;
+                        }
+                    }
+
+                    if (xx.Attribute("CachFlashSize") != null)
+                    {
+                        LogStorageManager.CachFlashSize = int.Parse(xx.Attribute("CachFlashSize").Value);
+                        if(LogStorageManager.CachFlashSize==0)
+                        {
+                            LogStorageManager.CachFlashSize = 5;
+                        }
+                    }
+
+                    if(xx.Attribute("CompressMode")!=null)
+                    {
+                        SeriseEnginer7.CompressMode = (SeriseEnginer7.ZipCompressMode)(int.Parse(xx.Attribute("CompressMode").Value));
+                    }
+
+                    //
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
         static void Main(string[] args)
         {
+            ReadDefaultConfig();
+
             Console.CancelKeyPress += Console_CancelKeyPress;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
             AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
@@ -28,8 +86,23 @@ namespace DBInRun
 
             Console.WriteLine(Res.Get("WelcomeMsg"));
             PrintLogo();
-
+            Cdy.Tag.Common.ProcessMemoryInfo.Instances.StartMonitor("DBInRun");
             Console.WriteLine(Res.Get("HelpMsg"));
+
+            if (args.Contains("/s"))
+            {
+                Cdy.Tag.Runner4.HideLocalApiWindow = false;
+            }
+
+            if (args.Contains("/e"))
+            {
+                Runner4.EmbedMode = true;
+            }
+
+            if(args.Contains("/g"))
+            {
+                Runner4.EnableMachineMonitor = true;
+            }
 
             if (args.Length>0 && args[0]== "start")
             {
@@ -44,7 +117,10 @@ namespace DBInRun
                     int port = 14330;
                     if (args.Length > 2)
                     {
-                        int.TryParse(args[2], out port);
+                        if(int.TryParse(args[2], out int lport))
+                        {
+                            port= lport;
+                        }
                     }
                     Cdy.Tag.Runner4.RunInstance.StartAsync(args[1], port);
                     stile = "DbInRun-" + args[1];
@@ -61,20 +137,27 @@ namespace DBInRun
                 {
                     WindowConsolHelper.MinWindow(stile);
                 }
+                
 
+                //Console.WriteLine("test main window title:", Process.GetCurrentProcess().MainWindowTitle);
             }
-         
+
+            
+
+
             while (!mIsClosed)
             {
                 Console.Write(">");
-                
-                while (!Console.KeyAvailable)
+                if (!Console.IsInputRedirected)
                 {
-                    if(mIsClosed)
+                    while (!Console.KeyAvailable)
                     {
-                        break;
+                        if (mIsClosed)
+                        {
+                            break;
+                        }
+                        Thread.Sleep(100);
                     }
-                    Thread.Sleep(100);
                 }
                 
                 if (mIsClosed)
@@ -82,7 +165,7 @@ namespace DBInRun
                     break;
                 }
 
-                string smd = Console.ReadLine();
+                string smd = Console.In.ReadLine();
 
                 if (string.IsNullOrEmpty(smd))
                 {
@@ -127,6 +210,7 @@ namespace DBInRun
                             Console.Title = "DbInRun-local";
                             dbname = "local";
                         }
+                        //Console.WriteLine("test main window title:", Process.GetCurrentProcess().MainWindowTitle);
                         Task.Run(() => {
                             StartMonitor(dbname);
                         });
@@ -193,7 +277,14 @@ namespace DBInRun
 
         private static void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
         {
-            Console.WriteLine(e.Exception.Message +" -> "+ e.Exception.StackTrace);
+            if ((e.Exception is System.Net.Sockets.SocketException)||(e.Exception.Message.Contains("System.Net.Sockets.Socket")))
+            {
+                //
+            }
+            else
+            {
+                Console.WriteLine(e.Exception.Message + " -> " + e.Exception.StackTrace);
+            }
             e.Exception.HResult = 0;
         }
 
@@ -202,8 +293,9 @@ namespace DBInRun
         /// </summary>
         private static void ListDatabase()
         {
-            string spath = System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
-            spath = System.IO.Path.Combine(spath, "Data");
+            //string spath = System.IO.Path.GetDirectoryName(typeof(Program).Assembly.Location);
+            //spath = System.IO.Path.Combine(spath, "Data");
+            string spath = PathHelper.helper.DataPath;
             StringBuilder sb = new StringBuilder();
             string stemp = "{0} {1}";
             foreach(var vv in System.IO.Directory.EnumerateDirectories(spath))
@@ -305,9 +397,9 @@ namespace DBInRun
                             }
                         }
                     }
-                    catch(Exception)
+                    catch(Exception ex)
                     {
-                        //Console.WriteLine(ex.Message);
+                        Console.WriteLine("StartMonitor"+ ex.Message);
                     }
                     
                 }

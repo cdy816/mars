@@ -136,7 +136,7 @@ namespace DBDevelopService.Controllers
         /// <summary>
         /// 
         /// </summary>
-        public List<string> Permissions { get; set; }
+        public List<string> Permissions { get; set; } = new List<string>();
 
     }
 
@@ -150,7 +150,7 @@ namespace DBDevelopService.Controllers
         /// <summary>
         /// 
         /// </summary>
-        public List<string> Permissions { get; set; }
+        public List<string> Permissions { get; set; } = new List<string>();
 
     }
 

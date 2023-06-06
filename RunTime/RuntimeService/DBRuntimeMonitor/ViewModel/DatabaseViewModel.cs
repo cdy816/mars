@@ -288,6 +288,14 @@ namespace DBRuntimeMonitor
                         mConnectTimer.Elapsed += MConnectTimer_Elapsed;
                         mConnectTimer.Start();
                     }
+
+                    if (mServerClient.HasAntAlarm(Model.DatabseName, out bool isgrpc, out int port))
+                    {
+                        Application.Current.Dispatcher.Invoke(new Action(() => {
+                            if(this.Children.Where(e=>e is AlarmNodeViewModel).Count()==0)
+                            this.Children.Add(new AlarmNodeViewModel() { IsGrpc = isgrpc, Port = port,Parent=this });
+                        }));
+                    }
                 }
                 catch
                 {

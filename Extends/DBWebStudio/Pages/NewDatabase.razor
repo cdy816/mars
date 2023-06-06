@@ -1,0 +1,72 @@
+﻿@page "/newdatabase"
+@layout SingalLayout
+@inject NavigationManager Navigation
+@inject MarsProxy mProxy;
+@inject IJSRuntime JS;
+
+<PageTitle>New database</PageTitle>
+<div class="container w-25  align-content-center justify-content-center" >
+    <div class="card  text-light align-content-center align-middle mt-5" style="background-color:rgba(100,100,100,0.4)">
+        <div class="card-header text-light">
+            <h5>数据库新建</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="formGroupExampleInput" class="form-label">名称:</label>
+                <input type="text" class="form-control" id="formGroupExampleInput" placeholder="数据库名称" @bind=Name>
+            </div>
+            <div class="mb-3">
+                <label for="formGroupExampleInput2" class="form-label">描述:</label>
+                <input type="text" class="form-control" id="formGroupExampleInput2" placeholder="数据库描述" @bind=Desc>
+            </div>
+            <div class="ms-0 me-0 mt-4 row justify-content-between">
+                <button class="btn btn-primary align-content-center col-2 " autofocus @onclick=NewClick>新建</button>
+                <button class="btn btn-secondary align-content-center col-2" @onclick=BackClick>返回</button>
+            </div>
+            @if (mHasErro)
+            {
+                <div class="mb-3 alert alert-warning">
+                    @mErroMsg
+                </div>
+            }
+        </div>
+       
+    </div>
+   
+</div>
+
+@code {
+    public string Name{ get; set; }
+    public string Desc{ get; set; }
+    private bool mHasErro = false;
+    private string mErroMsg = "";
+
+    private void NewClick()
+    {
+        if(string.IsNullOrEmpty(Name))
+        {
+            mErroMsg = "名称不可为空!";
+        }
+        if(mProxy.NewDatabase(Name,Desc))
+        {
+            mProxy.CurrentDatabase = Name;
+            Navigation.NavigateTo("/main");
+        }
+    }
+
+    private async void BackClick()
+    {
+        await JS.InvokeVoidAsync("window.history.back", null);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        if (!mProxy.IsLogin)
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+}

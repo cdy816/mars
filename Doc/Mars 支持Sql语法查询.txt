@@ -1,0 +1,51 @@
+1. DirectAccess驱动、DBGrpcApi、DBHighAPI、DBWebApi 接口均支持Sql语句查询
+a.DirectAccessDriver 驱动通过API 的开发类库DirectAccessDriver.ClientAPI 的DriverProxy类的QueryHisValueBySql 函数。
+该函数返回值有三种类型：
+HisQueryTableResult  历史数据
+List<double> 统计值
+Dictionary<int, TagRealValue> 实时值
+
+b.DBGrpcApi 接口， 通过开发帮助类库的 DBGrpcApi.Client 的Client 类的ReadValueBySql 函数。
+该函数返回值有三种类型：
+
+List<List<string>>  历史数据
+string[] 统计值
+List<RealTagValueWithTimer2> 实时值
+
+
+c.DBHighApi 接口， 通过开发帮助类库的 DBHighApi.Client 的ApiClient 类的QueryValueBySql 函数。
+该函数返回值有三种类型：
+
+HisQueryTableResult  历史数据
+List<double> 统计值
+Dictionary<int, TagRealValue> 实时值
+
+d.DBWebAPI 接口，通过 Http  Get模式请求 URL地址：http://localhost:14331/HisData/GetValueBySql
+
+传入JSON 字符串格式，示例：
+{
+  "token": "7b16fbd484fb477a8cb708ab137b761e",
+  "sql":"select tag1 from a where time>='2023-04-29 0:0:0' and time < '2023-04-29 23:59:59'"
+}
+
+2.Sql 语句格式
+支持简单Sql语句查询，并不支持全部Sql 语法。
+Sql 语句结构
+
+select (变量) from (Area) where (条件)
+
+(变量):具体变量的名称，或者* （Area包含的所有变量），或者变量的统计函数（count(tag1)）
+(Area)：变量所属的Area，对于查询历史仅支持一个Area内的变量的联合查询。
+
+
+sql 语法示例：
+select * from a
+select * from a where time>='2023-04-29 0:0:0' and time < '2023-04-29 23:59:59'"
+select * from a where time>='2023-04-29 0:0:0' and time < '2023-04-29 23:59:59' and tag1=10 and tag2=20"
+select tag1,tag2 from a where time>='2023-04-29 0:0:0' and time < '2023-04-29 23:59:59'"
+select count(tag1),sum(tag2) from a where time>='2023-04-29 0:0:0' and time < '2023-04-29 23:59:59'"
+
+a. Sql包括完整的 time >='' and time<'' 则表示查询、统计此处指定的时间段内的历史值。
+b. 如果Where语句中没有包括 time >='' and time<'' 格式的内容，则会返回要查询变量的实时值。
+c. 如果Where语句中只包括包括 time >='' 内容，系统则会自动添加time<datetime.now。
+d. 支持的统计函数有，count（计数）,sum（求和）,max（最大值）,min（最小值）,avg （平局值）

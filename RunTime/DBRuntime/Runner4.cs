@@ -6,6 +6,7 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
+using Cdy.Tag.Consume;
 using Cdy.Tag.Driver;
 using DBRuntime;
 using DBRuntime.His;
@@ -13,9 +14,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.Loader;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Cdy.Tag
 {
@@ -27,11 +32,17 @@ namespace Cdy.Tag
 
         #region ... Variables  ...
 
+        public static bool EmbedMode = false;
+
+        public static bool EnableMachineMonitor = false;
+
         public static string CurrentDatabase = "";
 
         public static string CurrentDatabaseVersion = "";
 
         public static string CurrentDatabaseLastUpdateTime = "";
+
+        public static bool HideLocalApiWindow = true;
 
         /// <summary>
         /// 
@@ -53,11 +64,11 @@ namespace Cdy.Tag
 
         private RealEnginer realEnginer;
 
-        private HisEnginer4 hisEnginer;
+        private HisEnginer5 hisEnginer;
 
         private CompressEnginer4 compressEnginer;
 
-        private SeriseEnginer6 seriseEnginer;
+        private SeriseEnginer7 seriseEnginer;
 
         private DataFileManager mHisFileManager;
 
@@ -67,7 +78,20 @@ namespace Cdy.Tag
 
         private bool mIsStarted = false;
 
+        private Dictionary<string, SubProcessStruct> mSubProcess = new Dictionary<string, SubProcessStruct>();
 
+        private Dictionary<string, IEmbedProxy> mEmbedProxys = new Dictionary<string, IEmbedProxy>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public struct SubProcessStruct
+        {
+            public string Name { get; set; }
+            public Action CloseAction { get; set; }
+
+           public  Process Process { get; set; }
+        }
 
         #endregion ...Variables...
 
@@ -83,6 +107,7 @@ namespace Cdy.Tag
         static Runner4()
         {
             RDDCManager.Manager.StartTime = DateTime.UtcNow;
+            SeriseEnginer7.StartTime = DateTime.Now;
         }
 
         /// <summary>
@@ -177,29 +202,53 @@ namespace Cdy.Tag
 
                 if (mDatabase.Setting.EnableWebApi)
                 {
-                    if (!CheckProcessExist("DbWebApi"))
+                    if(HasEmbedMode("DbWebApi") && EmbedMode)
+                    {
+                        StartEmbedProcess("DbWebApi");
+                    }
+                    else if (!CheckProcessExist("DbWebApi"))
                     {
                         string sfile = System.IO.Path.Combine(spath, "DbWebApi", "DbWebApi");
                         StartProcess(sfile);
                     }
                 }
+                else if(mSubProcess.ContainsKey("DbWebApi"))
+                {
+                    StopProcess(mSubProcess["DbWebApi"]);
+                }
 
                 if (mDatabase.Setting.EnableGrpcApi)
                 {
-                    if (!CheckProcessExist("DBGrpcApi"))
+                    if (HasEmbedMode("DBGrpcApi") && EmbedMode)
+                    {
+                        StartEmbedProcess("DBGrpcApi");
+                    }
+                    else if(!CheckProcessExist("DBGrpcApi"))
                     {
                         string sfile = System.IO.Path.Combine(spath, "DBGrpcApi");
                         StartProcess(sfile);
                     }
                 }
+                else if (mSubProcess.ContainsKey("DBGrpcApi"))
+                {
+                    StopProcess(mSubProcess["DBGrpcApi"]);
+                }
 
                 if (mDatabase.Setting.EnableHighApi)
                 {
-                    if (!CheckProcessExist("DBHighApi"))
+                    if (HasEmbedMode("DBHighApi") && EmbedMode)
+                    {
+                        StartEmbedProcess("DBHighApi");
+                    }
+                    else if (!CheckProcessExist("DBHighApi"))
                     {
                         string sfile = System.IO.Path.Combine(spath, "DBHighApi");
                         StartProcess(sfile);
                     }
+                }
+                else if (mSubProcess.ContainsKey("DBHighApi"))
+                {
+                    StopProcess(mSubProcess["DBHighApi"]);
                 }
 
                 if (mDatabase.Setting.EnableOpcServer)
@@ -208,6 +257,34 @@ namespace Cdy.Tag
                     {
                         string sfile = System.IO.Path.Combine(spath, "DbOpcServer", "DBOpcServer");
                         StartProcess(sfile);
+                    }
+                }
+                else if (mSubProcess.ContainsKey("DBOpcServer"))
+                {
+                    StopProcess(mSubProcess["DBOpcServer"]);
+                }
+
+                if (EnableMachineMonitor && !CheckProcessExist("DBGuardian"))
+                {
+                    string sfile = System.IO.Path.Combine(spath,"DBGuardian");
+                    StartProcess(sfile);
+                }
+                
+                if (HasAlarmRunner())
+                {
+                    if (!CheckProcessExist("InAntRun"))
+                    {
+                        string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "Ant", "InAntRun");
+                        StartProcess(sfile, this.Database.Name);
+                    }
+                }
+
+                if(HasSpiderRunner())
+                {
+                    if (!CheckProcessExist("InSpiderRun"))
+                    {
+                        string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "Spider", "InSpiderRun");
+                        StartProcess(sfile, this.Database.Name);
                     }
                 }
             }
@@ -220,14 +297,245 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        private bool HasAlarmRunner()
+        {
+            string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "Ant", "InAntRun.dll");
+            return System.IO.File.Exists(sfile);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private bool HasSpiderRunner()
+        {
+            string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "Spider", "InSpiderRun.dll");
+            return System.IO.File.Exists(sfile);
+        }
+
+        /// <summary>
+        /// 监测相同区域的变量，历史记录配置是否相同
+        /// </summary>
+        private void CheckAreaTagKeepSame()
+        {
+            var areas = this.mRealDatabase.ListAreas();
+            foreach(var vv in areas)
+            {
+                if(!string.IsNullOrEmpty(vv))
+                CheckAreaTagKeepSame(vv);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="area"></param>
+        private void CheckAreaTagKeepSame(string area)
+        {
+            var tags = this.mRealDatabase.GetTagByArea(area);
+            HisTag histag = null;
+            if(tags.Count>1)
+            {
+                histag = this.mHisDatabase.GetHisTagById(tags[0].Id);
+                for(int i=1;i<tags.Count;i++)
+                {
+                    var htag = this.mHisDatabase.GetHisTagById(tags[i].Id);
+                    if((histag==null && htag!=null)||(histag!=null && htag==null))
+                    {
+                        PrintErroForAreaTagKeepSame(tags);
+                        return;
+                    }
+                    else if(histag==null&&htag ==null)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        if (histag.CompressType != htag.CompressType || histag.Type != htag.Type || histag.Type == RecordType.ValueChanged)
+                        {
+                            PrintErroForAreaTagKeepSame(tags);
+                            return;
+                        }
+                        if(histag.Type == RecordType.Driver && histag.MaxValueCountPerSecond != htag.MaxValueCountPerSecond)
+                        {
+                            PrintErroForAreaTagKeepSame(tags);
+                            return;
+                        }
+                        if(histag.Type == RecordType.Timer && histag.Circle != htag.Circle)
+                        {
+                            PrintErroForAreaTagKeepSame(tags);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void PrintErroForAreaTagKeepSame(List<Tagbase> tags)
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            int i = 0;
+            foreach(var vv in tags)
+            {
+                stringBuilder.Append(vv.ToString()+",");
+                i++;
+                if (i > 10) break;
+            }
+            LoggerService.Service.Erro("Runner4", $"{stringBuilder.ToString()}... 具有相同区域{tags[0].Area} 但是历史配置不同，可能会导致数据丢失。");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void StopLocalApi()
+        {
+            try
+            {
+                foreach (var vv in mSubProcess)
+                {
+                    StopProcess(vv.Value);
+                }
+            }
+            catch
+            {
+
+            }
+            mSubProcess.Clear();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void StopEmbedApi()
+        {
+            foreach(var vv in mEmbedProxys)
+            {
+                try
+                {
+                    vv.Value.Stop();
+                }
+                catch
+                {
+
+                }
+            }
+            mEmbedProxys.Clear();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        private void StopProcess(SubProcessStruct sp)
+        {
+            try
+            {
+                if (sp.CloseAction != null)
+                {
+                    sp.CloseAction();
+                }
+                else if (sp.Process != null)
+                {
+                    sp.Process.StandardInput.WriteLine("exit");
+                    sp.Process.StandardInput.Flush();
+                    sp.Process.WaitForExit(1000*60);
+
+                    //if (!sp.Process.WaitForExit(10))
+                    //{
+                    //    sp.Process.Kill();
+                    //}
+                }
+                else
+                {
+                    var vps = Process.GetProcessesByName(sp.Name);
+                   
+                    if (vps != null && vps.Length > 0)
+                    {
+                        vps.First().Kill();
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         private bool CheckProcessExist(string name)
         {
-            return Process.GetProcessesByName(name).Length > 0;
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return Process.GetProcessesByName(name).Length > 0;
+            else
+            {
+                return Common.ProcessMemoryInfo.IsExist(name);
+            }
         }
 
-        private void StartProcess(string file)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool HasEmbedMode(string name)
+        {
+            string spath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Config", "EmbedProxy.cfg");
+            if (System.IO.File.Exists(spath))
+            {
+                XElement xx = XElement.Load(spath);
+                var els = xx.Elements().Where(e => e.Attribute("Name").Value == name);
+                if(els.Any())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public IEmbedProxy StartEmbedProcess(string name)
+        {
+            if(mEmbedProxys.ContainsKey(name))
+            {
+                return mEmbedProxys[name];
+            }
+
+            string spath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location),"Config","EmbedProxy.cfg");
+            if(System.IO.File.Exists(spath))
+            {
+                XElement xx = XElement.Load(spath);
+                var els = xx.Elements().Where(e => e.Attribute("Name").Value == name);
+                if(els.Any())
+                {
+                    XElement xxx = els.First();
+                    string cls = xxx.Attribute("MainClass").Value;
+                    string dll = xxx.Attribute("File").Value;
+                    string sdllpath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), dll);
+                    if (System.IO.File.Exists(sdllpath) && !string.IsNullOrEmpty(cls) &&!string.IsNullOrEmpty(dll))
+                    {
+                        try
+                        {
+                            var ass =Assembly.LoadFrom(sdllpath);
+                           var re =  ass.CreateInstance(cls) as IEmbedProxy;
+                            re.Init();
+                            re.Start();
+                            mEmbedProxys.Add(name, re);
+                        }
+                        catch(Exception ex)
+                        {
+                            LoggerService.Service.Warn("Runner4", $"Start embed process {ex.Message} {ex.StackTrace}");
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        private void StartProcess(string file,string arg="",Action close=null)
         {
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
@@ -236,24 +544,61 @@ namespace Cdy.Tag
                     var vfile = file;
                     ProcessStartInfo pinfo = new ProcessStartInfo();
                     pinfo.FileName = vfile + ".exe";
-                    pinfo.Arguments = "/m";
-                    pinfo.RedirectStandardOutput = false;
-                    pinfo.RedirectStandardInput = false;
-                    pinfo.UseShellExecute = true;
-                    pinfo.WindowStyle = ProcessWindowStyle.Minimized;
-                    Process.Start(pinfo);
+                    pinfo.Arguments = string.IsNullOrEmpty(arg)?"/m":arg+" "+"/m";
+                    pinfo.RedirectStandardOutput = true;
+                    pinfo.RedirectStandardInput = true;
+                   
+                    //pinfo.RedirectStandardError = true;
+                    pinfo.CreateNoWindow = true;
+                    pinfo.UseShellExecute = false;
+
+                    Process sp = new Process();
+                    sp.StartInfo = pinfo;
+                    sp.OutputDataReceived += Vpp_OutputDataReceived;
+                    sp.Start();
+                    sp.BeginOutputReadLine();
+
+                    if(HideLocalApiWindow)
+                    {
+                        pinfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    }
+                    else
+                    {
+                        pinfo.WindowStyle = ProcessWindowStyle.Minimized;
+                    }
+                  
+                    //var vpp =  Process.Start(pinfo);
+                 
+                    string sname = System.IO.Path.GetFileNameWithoutExtension(pinfo.FileName);
+                    if (!mSubProcess.ContainsKey(sname))
+                        mSubProcess.Add(sname, new SubProcessStruct() { Name = sname, CloseAction = close,Process=sp });
                 }
             }
             else
             {
                 if (System.IO.File.Exists(file + ".dll"))
                 {
-                    ProcessStartInfo info = new ProcessStartInfo("dotnet", $"{file}.dll /m") { RedirectStandardOutput = false, RedirectStandardInput = false, RedirectStandardError = false, UseShellExecute = true };
-                    Process.Start(info);
+                    string sarg = string.IsNullOrEmpty(arg) ? "/m" : arg + " " + "/m";
+                    ProcessStartInfo info = new ProcessStartInfo("dotnet", $"{file}.dll {sarg}") { RedirectStandardOutput = true, RedirectStandardInput = true, RedirectStandardError = true, UseShellExecute = false,CreateNoWindow=true };
+                    string sname = System.IO.Path.GetFileNameWithoutExtension(file + ".dll");
+
+                    Process sp = new Process();
+                    sp.StartInfo = info;
+                    sp.OutputDataReceived += Vpp_OutputDataReceived;
+                    sp.Start();
+                    sp.BeginOutputReadLine();
+
+                    //var vpp = Process.Start(info);
+                    if (!mSubProcess.ContainsKey(sname))
+                        mSubProcess.Add(sname, new SubProcessStruct() { Name = sname, CloseAction = close,Process=sp });
                 }
             }
         }
 
+        private void Vpp_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            Console.WriteLine((sender as Process).ProcessName +  "  " + e.Data);
+        }
 
         /// <summary>
         /// 
@@ -304,6 +649,7 @@ namespace Cdy.Tag
             CurrentDatabase = mRealDatabase.Name;
             CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
 
+            CheckAreaTagKeepSame();
             sw.Stop();
             LoggerService.Service.Info("LoadDatabase", "加载数据库 " +mDatabaseName +" 花费: " + sw.ElapsedMilliseconds.ToString() +" ms");
         }
@@ -624,6 +970,12 @@ namespace Cdy.Tag
                 //CurrentDatabase = db.Name;
                 CurrentDatabaseLastUpdateTime = mRealDatabase.UpdateTime;
 
+                if (mDatabase.Setting.RealDataServerPort != db.Setting.RealDataServerPort)
+                {
+                    StopLocalApi();
+                }
+                mDatabase.Setting = db.Setting;
+
                 if (mNeedPause)
                 {
                     compressEnginer.ReInitCompress(hisEnginer.CurrentMemory);
@@ -706,7 +1058,7 @@ namespace Cdy.Tag
 
                 ServiceLocator.Locator.Registor("DatabaseLocation", PathHelper.helper.GetDatabasePath(mDatabase.Name));
 
-                hisEnginer = new HisEnginer4(mHisDatabase, realEnginer);
+                hisEnginer = new HisEnginer5(mHisDatabase, realEnginer);
                 hisEnginer.MergeMemoryTime = mHisDatabase.Setting.DataBlockDuration * 60;
                 //hisEnginer.LogManager = new LogManager3() { Database = mDatabaseName,Parent=hisEnginer };
                 hisEnginer.WorkMode = mDatabase.Setting.HisWorkMode;
@@ -725,15 +1077,15 @@ namespace Cdy.Tag
                 compressEnginer.Init();
                 ServiceLocator.Locator.Registor<IDataCompress3>(compressEnginer);
 
-                seriseEnginer = new SeriseEnginer6() { DatabaseName = database };
+                seriseEnginer = new SeriseEnginer7() { DatabaseName = database };
                 seriseEnginer.FileDuration = mHisDatabase.Setting.FileDataDuration;
                 seriseEnginer.BlockDuration = mHisDatabase.Setting.DataBlockDuration;
                 seriseEnginer.TagCountOneFile = mHisDatabase.Setting.TagCountOneFile;
                 seriseEnginer.DataSeriser = mHisDatabase.Setting.DataSeriser;
-                SeriseEnginer6.HisDataPathPrimary = mHisDatabase.Setting.HisDataPathPrimary;
-                SeriseEnginer6.HisDataPathBack = mHisDatabase.Setting.HisDataPathBack;
-                SeriseEnginer6.HisDataKeepTimeInPrimaryPath = mHisDatabase.Setting.HisDataKeepTimeInPrimaryPath;
-                SeriseEnginer6.KeepNoZipFileDays = mHisDatabase.Setting.KeepNoZipFileDays;
+                SeriseEnginer7.HisDataPathPrimary = mHisDatabase.Setting.HisDataPathPrimary;
+                SeriseEnginer7.HisDataPathBack = mHisDatabase.Setting.HisDataPathBack;
+                SeriseEnginer7.HisDataKeepTimeInPrimaryPath = mHisDatabase.Setting.HisDataKeepTimeInPrimaryPath;
+                SeriseEnginer7.KeepNoZipFileDays = mHisDatabase.Setting.KeepNoZipFileDays;
                 seriseEnginer.Init();
                 ServiceLocator.Locator.Registor<IDataSerialize4>(seriseEnginer);
 
@@ -780,14 +1132,14 @@ namespace Cdy.Tag
             ServiceLocator.Locator.Registor<IRuntimeSecurity>(mSecurityRunner);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public void ReStart()
-        {
-            Stop(false);
-            StartAsync(mDatabaseName,mPort);
-        }
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        //public void ReStart()
+        //{
+        //    Stop(false);
+        //    StartAsync(mDatabaseName,mPort);
+        //}
 
         /// <summary>
         /// 
@@ -806,6 +1158,7 @@ namespace Cdy.Tag
             LoggerService.Service.EnableLogger = true;
             LoggerService.Service.Info("Runner", " 数据库 " + database+" 开始启动");
 
+           
 
             RDDCManager.Manager.Load(database);
             RDDCManager.Manager.Start();
@@ -818,7 +1171,10 @@ namespace Cdy.Tag
             }
 
             //检查恢复数据
-            HisDataRestore.Instance.CheckAndRestore();
+            var cre = HisDataRestore.Instance.CheckAndRestore();
+
+            hisEnginer.LoadTagLastUpdateTime(cre);
+
 
             mPort = port;
             if(mPort < 1)
@@ -847,6 +1203,7 @@ namespace Cdy.Tag
             }
 
             StartLocalApi();
+
             mIsStarted = true;
             LoggerService.Service.Info("Runner", " 数据库 " + database + " 启动完成");
         }
@@ -915,7 +1272,26 @@ namespace Cdy.Tag
         /// </summary>
         public  void Stop(bool ignorDispose=true)
         {
+            LoggerService.Service.Warn("DbRunner", $"Start stop database ....");
             LoggerService.Service.EnableLogger = true;
+
+            try
+            {
+                if (EmbedMode)
+                {
+                    StopEmbedApi();
+                    StopLocalApi();
+                }
+                else
+                {
+                    StopLocalApi();
+                }
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("Api", $"{ex.Message} {ex.StackTrace}");
+            }
+
             try
             {
                 realEnginer.CachDataToDisk();
@@ -942,8 +1318,14 @@ namespace Cdy.Tag
             {
                 LoggerService.Service.Warn("DriverManager", $"{ex.Message} {ex.StackTrace}");
             }
-
-            HisQueryManager.Instance.StartMonitor();
+            try
+            {
+                HisQueryManager.Instance.StopMonitor();
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Service.Warn("HisQueryManager", $"{ex.Message} {ex.StackTrace}");
+            }
 
             try
             {
@@ -955,8 +1337,26 @@ namespace Cdy.Tag
                 LoggerService.Service.Warn("HisEnginer", $"{ex.Message} {ex.StackTrace}");
             }
 
-            compressEnginer.Stop();
-            seriseEnginer.Stop();
+            try
+            {
+                compressEnginer.Stop();
+                
+            }
+            catch(Exception ex)
+            {
+                LoggerService.Service.Warn("CompressEnginer", $"{ex.Message} {ex.StackTrace}");
+            }
+
+            try
+            {
+                seriseEnginer.Stop();
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Service.Warn("SeriseEnginer", $"{ex.Message} {ex.StackTrace}");
+            }
+
+          
             if (!ignorDispose)
             {
                 hisEnginer.Dispose();
@@ -965,6 +1365,8 @@ namespace Cdy.Tag
             }
 
             mIsStarted = false;
+
+            LoggerService.Service.Warn("DbRunner", $"Stop database  completely....");
         }
 
 

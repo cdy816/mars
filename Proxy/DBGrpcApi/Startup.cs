@@ -15,6 +15,7 @@ namespace DBGrpcApi
     {
 
         public static string Server = "";
+        public static bool IsRunningEmbed = false;
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
@@ -45,12 +46,16 @@ namespace DBGrpcApi
                 });
             });
 
-            DatabaseRunner.Manager.Load();
-            if(!string.IsNullOrEmpty(Server))
+            if (!IsRunningEmbed)
             {
-                DatabaseRunner.Manager.Ip = Server;
+                DatabaseRunner.Manager.Load();
+                if (!string.IsNullOrEmpty(Server))
+                {
+                    DatabaseRunner.Manager.Ip = Server;
+                }
+                DatabaseRunner.Manager.Start();
             }
-            DatabaseRunner.Manager.Start();
+            
         }
     }
 }

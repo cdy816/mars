@@ -128,6 +128,7 @@ namespace DBRunTime.ServiceApi
 
         public const byte SyncSecuritySetting = 32;
 
+        public const byte RealTagMemoryInfo = 33;
 
         /// <summary>
         /// 
@@ -156,6 +157,42 @@ namespace DBRunTime.ServiceApi
         public const byte SetRealDataToLastData = 120;
 
         public const byte RequestComplexTagRealValue = 14;
+
+
+        /// <summary>
+        /// 根据时间间隔查询数据的历史记录，忽略系统退出的影响
+        /// </summary>
+        public const byte RequestHisDataByTimeSpanByIgnorClosedQuality = 11;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestHisDatasByTimePointByIgnorClosedQuality = 10;
+
+        /// <summary>
+        /// 请求变量状态数据
+        /// </summary>
+        public const byte RequestStateData = 6;
+
+        /// <summary>
+        /// 请求变量扩展字段
+        /// </summary>
+        public const byte RequestExtendField2 = 7;
+
+        /// <summary>
+        /// 设置状态数据
+        /// </summary>
+        public const byte SetStateData = 8;
+
+        /// <summary>
+        /// 设置扩展数据
+        /// </summary>
+        public const byte SetExtendField2Data = 9;
+
+        /// <summary>
+        /// 通过SQL查询历史
+        /// </summary>
+        public const byte ReadHisValueBySQL = 140;
     }
 
     public class ApiClient : SocketClient2
@@ -323,6 +360,11 @@ namespace DBRunTime.ServiceApi
                         ProcessHisDataCallBack(cid, datas);
                         //hisRequreEvent.Set();
                         break;
+                    case ApiFunConst.RealTagMemoryInfo:
+                        mRealSyncData?.UnlockAndReturn();
+                        mRealSyncData = datas;
+                        SyncDataEvent.Set();
+                        break;
                     case ApiFunConst.SyncRealTagConfig:
                         mRealSyncData?.UnlockAndReturn();
                         mRealSyncData = datas;
@@ -441,7 +483,7 @@ namespace DBRunTime.ServiceApi
                 }
                 mUser = username;
                 mPass = password;
-                int size = username.Length + password.Length + 9;
+                int size = username.Length*2 + password.Length*2 + 9;
                 var mb = GetBuffer(ApiFunConst.TagInfoRequest, size);
                 mb.Write(ApiFunConst.Login);
                 mb.Write(username);
@@ -485,12 +527,19 @@ namespace DBRunTime.ServiceApi
         /// </summary>
         public void Hart()
         {
-            //LoggerService.Service.Info("Api Client", "Hart");
-            int size = 2;
-            var mb = GetBuffer(ApiFunConst.TagInfoRequest, size);
-            mb.Write(ApiFunConst.Hart);
-            mb.Write(byte.MaxValue);
-            SendData(mb);
+            try
+            {
+                //LoggerService.Service.Info("Api Client", "Hart");
+                int size = 2;
+                var mb = GetBuffer(ApiFunConst.TagInfoRequest, size);
+                mb.Write(ApiFunConst.Hart);
+                mb.Write(byte.MaxValue);
+                SendData(mb);
+            }
+            catch
+            {
+
+            }
         }
 
         private object mSyncLocker = new object();
@@ -743,7 +792,7 @@ namespace DBRunTime.ServiceApi
         {
             LoggerService.Service.Info("Api Client", "GetRunnerDatabase");
 
-            if (!CheckLogin()) return String.Empty;
+            //if (!CheckLogin()) return String.Empty;
             lock (mLoginLock)
             {
                 if (mInfoRequreData != null)
@@ -752,7 +801,7 @@ namespace DBRunTime.ServiceApi
                     mInfoRequreData = null;
                 }
 
-                if (IsLogin)
+                //if (IsLogin)
                 {
                     var mb = GetBuffer(ApiFunConst.TagInfoRequest, 8 + 1);
                     mb.Write(ApiFunConst.GetRunnerDatabase);
@@ -782,9 +831,69 @@ namespace DBRunTime.ServiceApi
             return string.Empty;
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="MemoryLen">内存大小</param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Dictionary<int,long> GetRealTagMemoryInfo(out int MemoryLen, int timeout = 50000)
+        {
+            string filename = string.Empty;
+            LoggerService.Service.Info("Api Client", "GetRealTagMemoryInfo");
+            lock (mSyncLocker)
+            {
+                if (mRealSyncData != null)
+                {
+                    mRealSyncData.UnlockAndReturn();
+                    mRealSyncData = null;
+                }
+
+                var mb = GetBuffer(ApiFunConst.TagInfoRequest, 1 + 9);
+                mb.Write(ApiFunConst.RealTagMemoryInfo);
+                mb.Write(LoginId);
+                this.SyncDataEvent.Reset();
+                SendData(mb);
+
+                if (SyncDataEvent.WaitOne(timeout))
+                {
+                    try
+                    {
+                        if ((this.mRealSyncData.WriteIndex - mRealSyncData.ReadIndex) > 0)
+                        {
+                            try
+                            {
+                                MemoryLen = this.mRealSyncData.ReadInt();
+                                int count = mRealSyncData.ReadInt();
+                                Dictionary<int, long> re = new Dictionary<int, long>(count);
+                                for(int i=0;i<count; i++)
+                                {
+                                    re.Add(mRealSyncData.ReadInt(), mRealSyncData.ReadLong());
+                                }
+                                return re;
+                            }
+                            catch (Exception ex)
+                            {
+                                LoggerService.Service.Warn("ApiClient", "GetRealdatabase: " + ex.Message + "  " + ex.StackTrace);
+                            }
+
+                        }
+                    }
+                    finally
+                    {
+                        mRealSyncData?.UnlockAndReturn();
+                        mRealSyncData = null;
+                    }
+                }
+            }
+            MemoryLen = 0;
+            return null;
+        }
+
         #region RealData
 
-       
+
 
         /// <summary>
         /// 
@@ -1016,6 +1125,87 @@ namespace DBRunTime.ServiceApi
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public List<short> GetStateData(List<int> ids, int timeout = 5000)
+        {
+            lock (mRealDataLock)
+            {
+                if (!CheckLogin()) return null;
+
+                var vid = GetRealRequreId();
+
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4 + 4);
+                mb.Write(ApiFunConst.RequestStateData);
+                mb.Write(this.LoginId);
+                mb.Write(vid);
+
+                mb.Write(ids.Count);
+
+                for (int i = 0; i < ids.Count; i++)
+                {
+                    mb.Write(ids[i]);
+                }
+                var re = SendAndWait(vid, mb, timeout);
+                if(re!=null)
+                {
+                    List<short> rd = new List<short>();
+                    int count = re.ReadInt();
+                    for(int i=0;i<count;i++)
+                    {
+                        rd.Add(re.ReadShort());
+                    }
+                    return rd;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public List<long> GetExtendField2Data(List<int> ids, int timeout = 5000)
+        {
+            lock (mRealDataLock)
+            {
+                if (!CheckLogin()) return null;
+
+                var vid = GetRealRequreId();
+
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + ids.Count * 4 + 4);
+                mb.Write(ApiFunConst.RequestExtendField2);
+                mb.Write(this.LoginId);
+                mb.Write(vid);
+
+                mb.Write(ids.Count);
+
+                for (int i = 0; i < ids.Count; i++)
+                {
+                    mb.Write(ids[i]);
+                }
+                var re = SendAndWait(vid, mb, timeout);
+                if (re != null)
+                {
+                    List<long> rd = new List<long>();
+                    int count = re.ReadInt();
+                    for (int i = 0; i < count; i++)
+                    {
+                        rd.Add(re.ReadLong());
+                    }
+                    return rd;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
 
 
         /// <summary>
@@ -1339,6 +1529,97 @@ namespace DBRunTime.ServiceApi
             }
             return false;
         }
+        /// <summary>
+        /// 设置变量的状态
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagStateValue(Dictionary<int,short> values, int timeout = 5000)
+        {
+            lock (mRealSetDataLock)
+            {
+                if (!CheckLogin()) return false;
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, values.Count*6+ 8 + 30);
+                mb.Write(ApiFunConst.SetStateData);
+                mb.Write(this.LoginId);
+                mb.Write(values.Count);
+                foreach(var value in values)
+                {
+                    mb.Write(value.Key);
+                    mb.Write(value.Value);
+                }
+                realSetRequreEvent.Reset();
+                SendData(mb);
+
+                if (realSetRequreEvent.WaitOne(timeout))
+                {
+                    if (this.mRealSetResponseData.WriteIndex - mRealSetResponseData.ReadIndex > 0)
+                    {
+                        try
+                        {
+                            return mRealSetResponseData.ReadByte() > 0;
+                        }
+                        finally
+                        {
+                            mRealSetResponseData?.UnlockAndReturn();
+                            mRealSetResponseData = null;
+                        }
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 设置变量的扩展属性2
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public bool SetTagExtendField2Value(Dictionary<int, long> values, int timeout = 5000)
+        {
+            lock (mRealSetDataLock)
+            {
+                if (!CheckLogin()) return false;
+                var mb = GetBuffer(ApiFunConst.RealDataRequestFun, values.Count * 12 + 8 + 30);
+                mb.Write(ApiFunConst.SetExtendField2Data);
+                mb.Write(this.LoginId);
+                mb.Write(values.Count);
+                foreach (var value in values)
+                {
+                    mb.Write(value.Key);
+                    mb.Write(value.Value);
+                }
+                realSetRequreEvent.Reset();
+                SendData(mb);
+
+                if (realSetRequreEvent.WaitOne(timeout))
+                {
+                    if (this.mRealSetResponseData.WriteIndex - mRealSetResponseData.ReadIndex > 0)
+                    {
+                        try
+                        {
+                            return mRealSetResponseData.ReadByte() > 0;
+                        }
+                        finally
+                        {
+                            mRealSetResponseData?.UnlockAndReturn();
+                            mRealSetResponseData = null;
+                        }
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
 
         /// <summary>
         /// 
@@ -1587,6 +1868,107 @@ namespace DBRunTime.ServiceApi
         }
 
         /// <summary>
+        /// 通过SQL语句查询历史数据
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="timeout"></param>
+        /// <returns>HisQueryTableResult或者List<double> </returns>
+        public object QueryValueBySql(string sql, int timeout = 5000)
+        {
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                if (!CheckLogin()) return null;
+            }
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + sql.Length + 4);
+            mb.Write(ApiFunConst.ReadHisValueBySQL);
+            mb.Write(this.LoginId);
+            mb.Write(sql);
+            mb.Write(vid);
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+
+            lock (mHisDataCallBack)
+            {
+                mHisDataCallBack.Add(vid, (data) => {
+                    re = data;
+                    try
+                    {
+                        hisRequreEvent.Set();
+                    }
+                    catch
+                    {
+                        data?.UnlockAndReturn();
+                    }
+                });
+            }
+
+            SendData(mb);
+            try
+            {
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    var byt = re.ReadByte();
+                    if (ApiFunConst.ReadHisValueBySQL == byt)
+                    {
+                        var typ = re.ReadByte();
+                        if (typ == 0)
+                        {
+                            Cdy.Tag.HisQueryTableResult rel = new HisQueryTableResult();
+                            string smeta = re.ReadString();
+                            rel.FromStringToMeta(smeta);
+                            int dsize = re.ReadInt();
+                            rel.Init2(dsize);
+                            re.CopyTo(rel.Address, re.ReadIndex, 0, dsize);
+                            re.UnlockAndReturn();
+                            return rel;
+                        }
+                        else if (typ == 1) 
+                        {
+                            List<double> ltmp = new List<double>();
+                            int dsize = re.ReadInt();
+                            for (int i = 0; i < dsize; i++)
+                            {
+                                ltmp.Add(re.ReadDouble());
+                            }
+                            re.UnlockAndReturn();
+                            return ltmp;
+                        }
+                        else if (typ == 2)
+                        {
+                            //实时值
+                            return re;
+                        }
+                    }
+                    else
+                    {
+                        re.UnlockAndReturn();
+                    }
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                    }
+
+                }
+                return null;
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
+
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="id"></param>
@@ -1736,6 +2118,81 @@ namespace DBRunTime.ServiceApi
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="times"></param>
+        /// <param name="matchType"></param>
+        /// <returns></returns>
+        public ByteBuffer QueryHisValueAtTimesByIgnorSystemExit(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType matchType, int timeout = 5000)
+        {
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                if (!CheckLogin()) return null;
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5 + 4);
+            mb.Write(ApiFunConst.RequestHisDatasByTimePointByIgnorClosedQuality);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write((byte)matchType);
+            mb.Write(times.Count);
+            for (int i = 0; i < times.Count; i++)
+            {
+                mb.Write(times[i].Ticks);
+            }
+            mb.Write(vid);
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+            try
+            {
+                lock (mHisDataCallBack)
+                {
+                    mHisDataCallBack.Add(vid, (data) =>
+                    {
+                        re = data;
+                        try
+                        {
+                            hisRequreEvent.Set();
+                        }
+                        catch
+                        {
+                            data?.UnlockAndReturn();
+                        }
+                    });
+                }
+                SendData(mb);
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    return re;
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            return re;
+                        }
+                    }
+                }
+                return null;
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
 
 
         /// <summary>
@@ -1904,23 +2361,84 @@ namespace DBRunTime.ServiceApi
             {
                 hisRequreEvent.Dispose();
             }
-
-            //this.hisRequreEvent.Reset();
-            //SendData(mb);
-            //if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.WriteIndex - mHisRequreData.ReadIndex > 1)
-            //{
-            //    try
-            //    {
-            //        return mHisRequreData;
-            //    }
-            //    finally
-            //    {
-            //        mHisRequreData = null;
-            //    }
-            //}
-            //return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="span"></param>
+        /// <param name="matchType"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public ByteBuffer QueryHisValueForTimeSpanByIgnorSystemExit(int id, DateTime startTime, DateTime endTime, TimeSpan span, QueryValueMatchType matchType, int timeout = 5000)
+        {
+            var vid = 0;
+            ByteBuffer re = null;
+            lock (mHisDataLock)
+            {
+                vid = mHisRequreCount;
+                mHisRequreCount++;
+                if (!CheckLogin()) return null;
+            }
+
+            var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 24 + 5 + 4);
+            mb.Write(ApiFunConst.RequestHisDataByTimeSpanByIgnorClosedQuality);
+            mb.Write(this.LoginId);
+            mb.Write(id);
+            mb.Write((byte)matchType);
+            mb.Write(startTime.Ticks);
+            mb.Write(endTime.Ticks);
+            mb.Write(span.Ticks);
+            mb.Write(vid);
+
+            ManualResetEvent hisRequreEvent = new ManualResetEvent(false);
+            hisRequreEvent.Reset();
+            try
+            {
+                lock (mHisDataCallBack)
+                {
+                    mHisDataCallBack.Add(vid, (data) =>
+                    {
+                        re = data;
+                        try
+                        {
+                            hisRequreEvent.Set();
+                        }
+                        catch
+                        {
+                            data?.UnlockAndReturn();
+                        }
+                    });
+                }
+                SendData(mb);
+                if (hisRequreEvent.WaitOne(timeout) && re != null && re.WriteIndex - re.ReadIndex > 1)
+                {
+                    return re;
+                }
+                else
+                {
+                    lock (mHisDataCallBack)
+                    {
+                        if (mHisDataCallBack.ContainsKey(vid))
+                        {
+                            mHisDataCallBack.Remove(vid);
+                        }
+                        else
+                        {
+                            return re;
+                        }
+                    }
+                }
+                return null;
+            }
+            finally
+            {
+                hisRequreEvent.Dispose();
+            }
+        }
 
         /// <summary>
         /// 

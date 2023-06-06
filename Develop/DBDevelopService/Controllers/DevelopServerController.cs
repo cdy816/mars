@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Cdy.Tag;
+using Cdy.Tag.Common.Common;
 using Microsoft.AspNetCore.Mvc;
 
 /// <summary>
@@ -70,7 +72,7 @@ namespace DBDevelopService.Controllers
         /// <returns></returns>
         private bool HasNewDatabasePermission(string id)
         {
-            return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.HasNewDatabasePermission(id);
+            return SecurityManager.Manager.CheckKeyAvaiable(id) && (SecurityManager.Manager.HasNewDatabasePermission(id)|| SecurityManager.Manager.IsAdmin(id));
         }
 
         /// <summary>
@@ -80,7 +82,7 @@ namespace DBDevelopService.Controllers
         /// <returns></returns>
         private bool HasDeleteDatabasePerssion(string id)
         {
-            return SecurityManager.Manager.CheckKeyAvaiable(id) && SecurityManager.Manager.HasDeleteDatabasePermission(id);
+            return SecurityManager.Manager.CheckKeyAvaiable(id) && (SecurityManager.Manager.HasDeleteDatabasePermission(id)|| SecurityManager.Manager.IsAdmin(id));
         }
 
         #region database
@@ -93,7 +95,7 @@ namespace DBDevelopService.Controllers
         [HttpPost]
         public object NewDatabase([FromBody] WebApiNewDatabaseRequest request)
         {
-            if (!IsAdmin(request.Id) && !HasNewDatabasePermission(request.Id))
+            if (!HasNewDatabasePermission(request.Id))
             {
                 return new ResultResponse() { ErroMsg = "权限不足",HasErro=true };
             }
@@ -113,6 +115,44 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
+        /// 删除数据库
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object RemoveDatabase([FromBody] WebApiDatabaseRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database) || !HasDeleteDatabasePerssion(request.Id))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                if (!ServiceLocator.Locator.Resolve<IDatabaseManager>().IsRunning(request.Database))
+                {
+                    var re = DbManager.Instance.RemoveDB(request.Database);
+                    if (re)
+                    {
+                        return new ResultResponse() { ErroMsg = "删除成功!", HasErro = false };
+                    }
+                    else
+                    {
+                        return new ResultResponse() { ErroMsg = "删除失败!", HasErro = true };
+                    }
+                }
+                else
+                {
+                    return new ResultResponse() { ErroMsg = "数据库正在运行，请先停止运行!", HasErro = true };
+                }
+            }
+            else
+            {
+                return new ResultResponse() { ErroMsg = "数据库不经存在!", HasErro = true };
+            }
+        }
+
+        /// <summary>
         /// 枚举数据库
         /// </summary>
         /// <param name="request"></param>
@@ -125,9 +165,13 @@ namespace DBDevelopService.Controllers
                 return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
             }
             List<Database> re = new List<Database>();
+            var user = SecurityManager.Manager.GetUser(request.Id);
             foreach (var vv in DbManager.Instance.ListDatabase())
             {
-                re.Add(new Database() { Name = vv, Desc = DbManager.Instance.GetDatabase(vv).Desc });
+                if (CheckLoginId(request.Id,vv))
+                {
+                    re.Add(new Database() { Name = vv, Desc = DbManager.Instance.GetDatabase(vv).Desc });
+                }
             }
             return new ResultResponse() { Result = re };
         }
@@ -164,7 +208,7 @@ namespace DBDevelopService.Controllers
         [HttpPost]
         public  object Start([FromBody] WebApiDatabaseRequest request)
         {
-            if (!IsAdmin(request.Id))
+            if (!CheckLoginId(request.Id,request.Database))
             {
                 return new ResultResponse() { ErroMsg = "权限不足",HasErro=true };
             }
@@ -179,7 +223,7 @@ namespace DBDevelopService.Controllers
         [HttpPost]
         public object Stop([FromBody] WebApiDatabaseRequest request)
         {
-            if (!IsAdmin(request.Id))
+            if (!CheckLoginId(request.Id, request.Database))
             {
                 return new ResultResponse() { ErroMsg = "权限不足",HasErro=true };
             }
@@ -194,7 +238,7 @@ namespace DBDevelopService.Controllers
         [HttpPost]
         public object ReRun([FromBody] WebApiDatabaseRequest request)
         {
-            if (!IsAdmin(request.Id))
+            if (!CheckLoginId(request.Id, request.Database))
             {
                 return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
             }
@@ -248,7 +292,7 @@ namespace DBDevelopService.Controllers
         [HttpPost]
         public object GetTagGroup([FromBody] WebApiDatabaseRequest request)
         {
-            if (!CheckLoginId(request.Id))
+            if (!CheckLoginId(request.Id,request.Database))
             {
                 return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
             }
@@ -256,11 +300,15 @@ namespace DBDevelopService.Controllers
 
             var db = DbManager.Instance.GetDatabase(request.Database);
 
+            if(db!=null&&db.RealDatabase==null)
+            {
+                DbManager.Instance.CheckAndContinueLoadDatabase(db);
+            }
+
             if (db != null && db.RealDatabase != null && db.RealDatabase.Groups != null)
             {
                 lock (db)
                 {
-                    DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     foreach (var vv in db.RealDatabase.Groups)
                     {
                         re.Add(new TagGroup() { Name = vv.Key, Parent = vv.Value.Parent != null ? vv.Value.Parent.FullName : "" });
@@ -294,14 +342,18 @@ namespace DBDevelopService.Controllers
                     DbManager.Instance.CheckAndContinueLoadDatabase(db);
                     var vtg = db.RealDatabase.Groups.ContainsKey(request.ParentName) ? db.RealDatabase.Groups[request.ParentName] : null;
 
-                    int i = 1;
-                    while (db.RealDatabase.HasChildGroup(vtg, name))
+                    if(db.RealDatabase.HasChildGroup(vtg, name))
                     {
-                        name = request.Name + i;
-                        i++;
+                        return new ResultResponse() { ErroMsg = "变量组重复", HasErro = true,Result=false };
                     }
+                    //int i = 1;
+                    //while (db.RealDatabase.HasChildGroup(vtg, name))
+                    //{
+                    //    name = request.Name + i;
+                    //    i++;
+                    //}
 
-                    string ntmp = name;
+                    //string ntmp = name;
 
                     if (!string.IsNullOrEmpty(parentName))
                     {
@@ -309,10 +361,10 @@ namespace DBDevelopService.Controllers
                     }
 
                     db.RealDatabase.CheckAndAddGroup(name);
-                    return new ResultResponse() { Result = ntmp };
+                    return new ResultResponse() { Result = true };
                 }
             }
-            return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true };
+            return new ResultResponse() { ErroMsg = "数据库不存在", HasErro = true,Result=false };
         }
 
         /// <summary>
@@ -436,7 +488,7 @@ namespace DBDevelopService.Controllers
                             string[] ss = vv.Value.Split(" ", StringSplitOptions.RemoveEmptyEntries);
                             foreach (var vvv in ss)
                             {
-                                btmp |= (tag.Name.Contains(vvv) || tag.Desc.Contains(vvv));
+                                btmp |= (tag.FullName.Contains(vvv) || tag.Desc.Contains(vvv));
                             }
                             re = re && btmp;
                             //re = re && (tag.Name.Contains(vv.Value) || tag.Desc.Contains(vv.Value));
@@ -602,6 +654,18 @@ namespace DBDevelopService.Controllers
                         if (cc >= from && cc < (from + PageCount))
                         {
                             WebApiTag tag = new WebApiTag() { RealTag = WebApiRealTag.CreatFromTagbase(vv) };
+                            if(!string.IsNullOrEmpty(vv.Parent))
+                            {
+                                if(vv.Group!=null && vv.FullName.StartsWith(vv.Group+"."))
+                                {
+                                    tag.RealTag.Name = vv.FullName.Substring(vv.Group.Length+1);
+                                }
+                                else
+                                {
+                                    tag.RealTag.Name = vv.FullName;
+                                }
+                                
+                            }
 
                             if (db.HisDatabase.HisTags.ContainsKey(vv.Id))
                             {
@@ -1034,6 +1098,129 @@ namespace DBDevelopService.Controllers
             return new ResultResponse() { Result = false };
         }
 
+        /// <summary>
+        /// 获取Proxy接口使能状态
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetDatabaseProxyApiSetting([FromBody] WebApiDatabaseRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                return new ProxyApiResponse() { EnableGrpcApi=db.Setting.EnableGrpcApi,EnableHighApi=db.Setting.EnableHighApi,EnableOpcServer=db.Setting.EnableOpcServer,EnableWebApi=db.Setting.EnableWebApi  };
+            }
+            return new ResultResponse() { Result = false };
+        }
+
+
+        /// <summary>
+        /// 使能Proxy接口
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object UpdateDatabaseProxyApiSetting([FromBody] WebApiProxyApiUpdateRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                db.Setting.EnableGrpcApi = request.EnableGrpcApi;
+                db.Setting.EnableHighApi = request.EnableHighApi;
+                db.Setting.EnableOpcServer = request.EnableOpcServer;
+                db.Setting.EnableWebApi = request.EnableWebApi;
+                return new ResultResponse() { Result = true };
+            }
+            return new ResultResponse() { Result = false };
+        }
+
+        /// <summary>
+        /// 获取驱动配置参数
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetDriverSetting([FromBody] WebApiDatabaseRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new WebApiGetDriverSettingResponse() { ErroMsg = "权限不足", HasErro = true, Result = false };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                WebApiGetDriverSettingResponse res = new WebApiGetDriverSettingResponse() { Result = true };
+                foreach (var vd in Cdy.Tag.DriverManager.Manager.Drivers)
+                {
+                    
+                    var config = vd.Value.GetConfig(request.Database);
+                    if (config != null)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        foreach (var vv in config)
+                        {
+                            sb.Append(vv.Key + ":" + vv.Value + ",");
+                        }
+                        sb.Length = sb.Length > 0 ? sb.Length - 1 : sb.Length;
+                        res.Settings.Add(vd.Key, sb.ToString());
+                    }
+                }
+              return res;
+            }
+            return new WebApiGetDriverSettingResponse() { Result = false,HasErro=true,ErroMsg="数据库不存在" };
+        }
+
+        /// <summary>
+        /// 更新Driver配置参数
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object UpdateDatabaseDriverSetting([FromBody] WebApiUpdateDriverSettingRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null)
+            {
+                foreach(var vv in request.Settings)
+                {
+                    if (DriverManager.Manager.Drivers.ContainsKey(vv.Key))
+                    {
+                        var dd = DriverManager.Manager.Drivers[vv.Key];
+                        string sval = vv.Value;
+                        if (!string.IsNullOrEmpty(sval))
+                        {
+                            Dictionary<string, string> dtmp = new Dictionary<string, string>();
+                            string[] ss = sval.Split(new char[] { ',' });
+                            foreach (var vvv in ss)
+                            {
+                                string[] svv = vvv.Split(new char[] { ':' });
+                                if (!dtmp.ContainsKey(svv[0]))
+                                {
+                                    dtmp.Add(svv[0], svv[1]);
+                                }
+                            }
+                            dd.UpdateConfig(request.Database, dtmp);
+                        }
+                    }
+                }
+                return new ResultResponse() { Result = true };
+            }
+            return new ResultResponse() { Result = false };
+        }
+
         #endregion
 
         #region database user
@@ -1247,6 +1434,32 @@ namespace DBDevelopService.Controllers
             return new ResultResponse() { Result = true };
         }
 
+        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        private bool IsApiUser(string user)
+        {
+            return user == "Admin";
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="user"></param>
+        /// <param name="password"></param>
+        private void SaveApiUser(string database,string user,string password)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(user + "," + password);
+            string spath = System.IO.Path.Combine(PathHelper.helper.DataPath, database, "ApiUser.sdb");
+            System.IO.File.WriteAllText(spath, Md5Helper.Encode(sb.ToString()));
+        }
+
         /// <summary>
         /// 修改数据库用户密码
         /// </summary>
@@ -1266,6 +1479,10 @@ namespace DBDevelopService.Controllers
                 if (uss.ContainsKey(request.UserName))
                 {
                     uss[request.UserName].Password = request.Password;
+                    if(IsApiUser(request.UserName))
+                    {
+                        SaveApiUser(db.Name,request.UserName, request.Password);
+                    }
                 }
             }
             return new ResultResponse() { Result = true };
@@ -1374,6 +1591,27 @@ namespace DBDevelopService.Controllers
                 }
             }
             return new ResultResponse() { Result = true };
+        }
+
+        /// <summary>
+        /// 获取数据库的权限配置
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetAllDatabasePermission([FromBody] WebApiDatabaseRequest request)
+        {
+            if (!CheckLoginId(request.Id, request.Database))
+            {
+                return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
+            }
+            List<UserPermission> re = new List<UserPermission>();
+            var db = DbManager.Instance.GetDatabase(request.Database);
+            if (db != null && db.Security != null && db.Security.Permission != null)
+            {
+                re.AddRange(db.Security.Permission.Permissions.Values);
+            }
+            return new ResultResponse() { Result = re };
         }
 
         #endregion
@@ -1511,6 +1749,25 @@ namespace DBDevelopService.Controllers
         }
 
         /// <summary>
+        /// 获取当前登录账户的配置信息
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public object GetCurrentUserConfig([FromBody] RequestBase request)
+        {
+            var user= SecurityManager.Manager.GetUser(request.Id);
+            if (user != null)
+            {
+                return new ResultResponse() { Result = new WebApiSystemUserItem() { UserName = user.Name, IsAdmin = user.IsAdmin, NewDatabase = user.NewDatabase,Databases=user.Databases } };
+            }
+            else
+            {
+                return new ResultResponse() { ErroMsg = "未找到用户", HasErro = true };
+            }
+        }
+
+        /// <summary>
         /// 删除开发用户
         /// </summary>
         /// <param name="request"></param>
@@ -1539,7 +1796,7 @@ namespace DBDevelopService.Controllers
         [HttpPost]
         public object ResetTagId([FromBody] WebApiResetTagIdsRequest request)
         {
-            if (!IsAdmin(request.Id))
+            if (!CheckLoginId(request.Id, request.Database))
             {
                 return new ResultResponse() { ErroMsg = "权限不足", HasErro = true };
             }

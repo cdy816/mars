@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>mrdbwm.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="InnerJS\jquery\jquery.d.ts" />
+    <None Remove="InnerJS\jquery\jqueryui.d.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="mrdbwm.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AntDesign" Version="0.15.0" />
+    <PackageReference Include="AntDesign.Charts" Version="0.3.1" />
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="5.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Proxy\DBHighApi.Client\DBHighApi.Client.csproj" />
+    <ProjectReference Include="..\..\RunTime\RuntimeService\DBRuntimeServer.Client\DBRuntimeServer.Client.csproj" />
+    <ProjectReference Include="..\Blazor.ECharts\Blazor.ECharts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="InnerJS\jquery\jquery.d.ts" />
+    <TypeScriptCompile Include="InnerJS\jquery\jqueryui.d.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Shared\TreeGroupView.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+    <Content Update="wwwroot\css\bootstrap\bootstrap.min.css">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="wwwroot\css\bootstrap\bootstrap.min.css.map">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="mars.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

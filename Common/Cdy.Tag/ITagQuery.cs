@@ -17,6 +17,11 @@ namespace Cdy.Tag
     /// </summary>
     public interface ITagManager
     {
+        string Name
+        {
+            get;
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -51,6 +56,8 @@ namespace Cdy.Tag
         /// <param name="tagnames"></param>
         /// <returns></returns>
         IEnumerable<Tagbase> GetTagsByName(IEnumerable<string> tagnames);
+
+        List<Tagbase> GetTagByArea(string area);
 
         /// <summary>
         /// 

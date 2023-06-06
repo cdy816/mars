@@ -53,6 +53,8 @@ namespace Cdy.Tag
 
         private int mRefCount = 0;
 
+        private long mUsedSize = 0;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -80,6 +82,7 @@ namespace Cdy.Tag
             mHandles = handle;
             mAllocSize = size;
             mSize = size;
+            mUsedSize = mSize;
             mHandleValue = mHandles.ToInt64();
         }
 
@@ -198,6 +201,14 @@ namespace Cdy.Tag
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public long UsedSize
+        {
+            get { return mUsedSize;}
+            set { mUsedSize = value; }  
+        }
 
         #endregion ...Properties...
 
@@ -214,6 +225,7 @@ namespace Cdy.Tag
             mHandles = handle;
             mAllocSize = size;
             mSize = size;
+            mUsedSize = mSize;
             mHandleValue = mHandles.ToInt64();
         }
 
@@ -297,6 +309,7 @@ namespace Cdy.Tag
             mHandles = Marshal.AllocHGlobal(new IntPtr(size));
             mHandleValue = mHandles.ToInt64();
             mAllocSize = size;
+            mUsedSize = size;
         }
 
 

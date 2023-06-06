@@ -561,11 +561,12 @@ namespace Cdy.Tag
         /// <param name="ptr"></param>
         /// <param name="ofs"></param>
         /// <param name="val"></param>
-        public static unsafe void WriteString(void* ptr,long ofs,string val)
+        public static unsafe int WriteString(void* ptr,long ofs,string val)
         {
             var bts = Encoding.UTF8.GetBytes(val);
             WriteUShort(ptr,ofs,(ushort)bts.Length);
             WriteBytes(ptr,2,bts);
+            return bts.Length + 2;
         }
 
         /// <summary>
@@ -607,6 +608,39 @@ namespace Cdy.Tag
             }
             else
             {
+                return String.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ptr"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public static unsafe string ReadString(void* ptr, long offset,out int size)
+        {
+            var len = ReadUShort(ptr, offset);
+           
+            if (len > 0)
+            {
+                size = len;
+                var byts = System.Buffers.ArrayPool<byte>.Shared.Rent(len);
+                try
+                {
+
+                    ReadBytes(ptr, offset, byts, len);
+                   
+                    return Encoding.UTF8.GetString(byts, 0, len);
+                }
+                finally
+                {
+                    System.Buffers.ArrayPool<byte>.Shared.Return(byts);
+                }
+            }
+            else
+            {
+                size = 0;
                 return String.Empty;
             }
         }
@@ -1027,6 +1061,30 @@ namespace Cdy.Tag
                 // this method is documented to throw AccessViolationException on any AV
                 throw new AccessViolationException();
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe int ReadInt32(byte[] value,int start)
+        {
+            return ReadInt32(value.AsMemory(start, 4).Pin().Pointer, 0);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe Int64 ReadInt64(byte[] value, int start)
+        {
+            return ReadInt64(value.AsMemory(start, 8).Pin().Pointer, 0);
         }
 
         /// <summary>

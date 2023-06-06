@@ -116,6 +116,7 @@ namespace DBDevelopService
 
         private void EnableDevCerts()
         {
+            Process.Start(new ProcessStartInfo() { FileName = "dotnet", Arguments = "dev-certs https --clean" }).WaitForExit();
             Process.Start(new ProcessStartInfo() { FileName = "dotnet", Arguments = "dev-certs https --trust" });
         }
 
@@ -165,8 +166,27 @@ namespace DBDevelopService
                    }
                    else
                    {
-                       webBuilder.UseUrls(serverUrl);
+                       string spath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "mars.pfx");
+                       if (System.IO.File.Exists(spath))
+                       {
+                           webBuilder.UseKestrel(options =>
+                           {
+                               options.ListenAnyIP(mPort, listenOps =>
+                               {
+                                   listenOps.UseHttps(callback =>
+                                   {
+                                       callback.AllowAnyClientCertificate();
+                                       callback.ServerCertificate = new System.Security.Cryptography.X509Certificates.X509Certificate2(spath, "mars");
+                                   });
+                               });
+                           });
+                       }
+                       else
+                       {
+                           webBuilder.UseUrls(serverUrl);
+                       }
                    }
+                   
                    webBuilder.UseStartup<Startup>();
                });
 

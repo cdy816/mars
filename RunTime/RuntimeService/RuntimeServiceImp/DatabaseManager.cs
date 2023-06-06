@@ -36,7 +36,8 @@ namespace RuntimeServiceImp
         /// </summary>
         public DatabaseManager()
         {
-            DatabasePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Data");
+            DatabasePath = PathHelper.helper.DataPath;
+           // DatabasePath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location), "Data");
         }
 
         /// <summary>
@@ -75,7 +76,7 @@ namespace RuntimeServiceImp
                 if (!string.IsNullOrEmpty(spath))
                 {
                     System.IO.DriveInfo dinfo = new System.IO.DriveInfo(System.IO.Path.GetPathRoot(spath));
-                    return new Tuple<double, double,string>(dinfo.AvailableFreeSpace/1024.0/1024/1024, dinfo.TotalSize / 1024.0 / 1024 / 1024,dinfo.Name);
+                    return new Tuple<double, double,string>((dinfo.TotalSize - dinfo.AvailableFreeSpace)/1024.0/1024/1024, dinfo.TotalSize / 1024.0 / 1024 / 1024,dinfo.Name);
                 }
             }
             return new Tuple<double, double,string>(0, 0,"");
@@ -123,7 +124,7 @@ namespace RuntimeServiceImp
             {
                 string spath = mDatabaseItems[database].HisDataPath;
                 System.IO.DriveInfo dinfo = new System.IO.DriveInfo(System.IO.Path.GetPathRoot(spath));
-                return new Tuple<double, double,string>(dinfo.AvailableFreeSpace / 1024.0 / 1024 / 1024, dinfo.TotalSize / 1024.0 / 1024 / 1024,dinfo.Name);
+                return new Tuple<double, double,string>((dinfo.TotalSize - dinfo.AvailableFreeSpace) / 1024.0 / 1024 / 1024, dinfo.TotalSize / 1024.0 / 1024 / 1024,dinfo.Name);
                
             }
             return new Tuple<double, double,string>(0,0,"");
@@ -138,11 +139,14 @@ namespace RuntimeServiceImp
         {
             lock (mLockObj)
             {
-                if (IsDatabaseRun(name, out bool isdbrun))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    return true;
+                    if (IsDatabaseRun(name, out bool isdbrun))
+                    {
+                        return true;
+                    }
+                    else if (!isdbrun) return false;
                 }
-                else if (!isdbrun) return false;
 
                 using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
                 {

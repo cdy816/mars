@@ -1,0 +1,85 @@
+﻿@inject IJSRuntime JS;
+@inject RuntimeClient client;
+@page "/logmonitor"
+
+<PageTitle>系统运行日志</PageTitle>
+<div class="d-flex flex-row" style="width:100%;height:100%" >
+    <div class="card  text-light h-100 flex-fill" style="background-color:rgba(100,100,100,0.2)">
+        <div class="card-header">
+            系统日志查询
+        </div>
+        <div class="card-body">
+            <div class="hstack mb-2">
+                <div class="col-3  m-1 p-0 hstack" style="width:250px">
+                    <span class="text-light  p-1" style="width:120px" >日志类型</span>
+                    <select class="form-select mx-1 form-select-sm bg-opacity-25" @bind=mCurrentLogType >
+                        @foreach (var vv in mLogTypes)
+                        {
+                            <option value="@vv" class="text-dark">@vv</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-3  m-1 p-0 hstack" style="width:280px">
+                    <span class=" text-light  p-1 mx-1" style="width:100px" >开始时间</span>
+                    <AntDesign.DatePicker TValue="DateTime?" ShowTime="true" ShowToday="true" Value="@mStartTime"  />
+                </div>
+
+                <div class="col-3  m-1 p-0 hstack" style="width:280px">
+                    <span class="text-light  p-1 mx-1" style="width:100px">结束时间</span>
+                    <AntDesign.DatePicker TValue="DateTime?" ShowTime="true" ShowToday="true" Value="@mEndTime"  />
+                </div>
+
+                <button type="button" class="col-1 btn btn-success ms-2 py-0" onclick="@(()=>{ProcessQuery();})">查询</button>
+            </div>
+            <textarea class="form-control text-light" readonly id="ta" @ref=taa Style="height:95%;background-color:rgba(100,100,100,0.2);font-size:small">
+
+            </textarea>
+        </div>
+       
+     </div>
+  
+</div>
+@code {
+    private string[] mLogTypes = new string[] {"DBInRun","DBInStudioServer","DBGrpcApi","DBHighApi","DbWebApi","DbOpcServer" };
+
+    private string mCurrentLogType = "DBInRun";
+
+    private DateTime mStartTime;
+    private DateTime mEndTime;
+
+    private ElementReference taa;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        mStartTime = DateTime.Today;
+        mEndTime = DateTime.Today.AddDays(1);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    private void ProcessQuery()
+    {
+        var msgs = client.GetLogs(mStartTime, mEndTime, mCurrentLogType);
+        foreach(var vv in msgs)
+        {
+            AppendMsg(vv);
+        }
+    }
+
+    DBWebStudio.InnerJsHelper helper;
+    private async void AppendMsg(string text)
+    {
+        if(helper==null)
+        {
+            helper = new DBWebStudio.InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+        helper.ClearTextAreaValue(taa);
+        helper.AppendTextAreaValue(taa, text);
+    }
+}

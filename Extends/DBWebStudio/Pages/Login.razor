@@ -1,0 +1,59 @@
+﻿@page "/"
+@layout SingalLayout
+@inject NavigationManager Navigation
+@inject MarsProxy mProxy;
+
+<PageTitle>登录</PageTitle>
+<div class="container w-25 align-items-center justify-content-center" >
+    <div class="card  text-light" style="background-color:rgba(100,100,100,0.4)">
+        <div class="card-header text-light">
+            <h5>用户登录</h5>
+        </div>
+        <div class="card-body">
+            <div class="mt-3 form-floating">
+                <input type="text" class="form-control bg-transparent  text-white" id="formGroupExampleInput" placeholder="用户名" @bind=UserName>
+                <label for="formGroupExampleInput" class="form-label">用户名</label>
+            </div>
+            <div class="mt-3 form-floating">
+                <input type="password" class="form-control bg-transparent text-white" id="formGroupExampleInput2" placeholder="密 码" @bind=Password>
+                <label for="formGroupExampleInput2" class="form-label">密 码</label>
+            </div>
+            <div class="mt-3 d-grid">
+                <button class="btn btn-primary col-6 mx-auto" @onclick=LoginClick>登录</button>
+            </div>
+            @if (mHasErro)
+            {
+                <div class="mt-3 mb-3 alert alert-warning">
+                    @mErroMsg
+                </div>
+            }
+           
+        </div>
+       
+    </div>
+   
+</div>
+
+@code {
+    public string UserName{ get; set; }
+    public string Password{ get; set; }
+    private bool mHasErro=false;
+    private string mErroMsg;
+
+
+    private void LoginClick()
+    {
+        if(mProxy.Login(UserName,Password))
+        {
+            mHasErro = false;
+            Navigation.NavigateTo("/databaseselect");
+        }
+        else
+        {
+            mHasErro = true;
+            mErroMsg = "用户名、密码错误！";
+        }
+    }
+
+    
+}

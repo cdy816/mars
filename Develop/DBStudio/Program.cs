@@ -24,6 +24,20 @@ namespace DBStudio
         static bool mIsExited = false;
 
         static object mLockObj = new object();
+        static Program pg;
+
+        private Dictionary<string, SubProcessStruct> mSubProcess = new Dictionary<string, SubProcessStruct>();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public struct SubProcessStruct
+        {
+            public string Name { get; set; }
+            public Action CloseAction { get; set; }
+
+            public Process Process { get; set; }
+        }
 
         /// <summary>
         /// 
@@ -118,12 +132,12 @@ namespace DBStudio
             //注册日志
             ServiceLocator.Locator.Registor<ILog>(new ConsoleLogger());
 
-            Program pg = new Program();
+            pg = new Program();
             Config.Instance.Load();
             ServiceLocator.Locator.Registor(typeof(DBDevelopService.IDatabaseManager), pg);
 
             ValueConvertManager.manager.Init();
-
+                     
             if (!DBDevelopService.DbManager.Instance.IsLoaded)
                 DBDevelopService.DbManager.Instance.PartLoad();
 
@@ -148,19 +162,34 @@ namespace DBStudio
             {
                 webPort = int.Parse(args[1]);
             }
-            WindowConsolHelper.DisbleQuickEditMode();
 
-            if (isNeedMinMode)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                WindowConsolHelper.MinWindow("DBInStudioServer");
+                WindowConsolHelper.DisbleQuickEditMode();
+
+                if (isNeedMinMode)
+                {
+                    WindowConsolHelper.MinWindow("DBInStudioServer");
+                }
             }
+            
+            Cdy.Tag.Common.ProcessMemoryInfo.Instances.StartMonitor("DBInStudioServer");
 
             Console.CancelKeyPress += Console_CancelKeyPress;
 
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
-            
             DBDevelopService.Service.Instanse.Start(port, webPort,Config.Instance.IsGrpcEnable,Config.Instance.IsWebApiEnable);
+
+            ////检查启动报警服务
+            //if(HasAlarmDeveloper())
+            //{
+            //    string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "Ant", "InAntStuidoServer");
+            //    StartProcess(sfile);
+            //}
+
+            pg.StartLocalSubProcess();
 
             Thread.Sleep(100);
 
@@ -206,11 +235,80 @@ namespace DBStudio
             }
             DBDevelopService.Service.Instanse.Stop();
 
+            pg.StopLocalSubProcess();
+
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             LoggerService.Service.Erro("GrpcDBService", e.ExceptionObject.ToString());
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
+        {
+           pg.StopLocalSubProcess();
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private static bool HasAlarmDeveloper()
+        {
+            string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "Ant", "InAntStuidoServer.dll");
+            return System.IO.File.Exists(sfile);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sname"></param>
+        /// <returns></returns>
+        private static bool IsProcessRun(string sname)
+        {
+            var pps = Process.GetProcessesByName(sname);
+            return pps!=null && pps.Any();
+        }
+
+        private static void StartProcess(string file, string arg = "")
+        {
+            string ssname =System.IO.Path.GetFileName(file);
+            if(IsProcessRun(ssname))
+            {
+                return;
+            }
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                if (System.IO.File.Exists(file + ".exe"))
+                {
+                    var vfile = file;
+                    ProcessStartInfo pinfo = new ProcessStartInfo();
+                    pinfo.FileName = vfile + ".exe";
+                    pinfo.Arguments = string.IsNullOrEmpty(arg) ? "/m" : arg + " " + "/m";
+                    //pinfo.RedirectStandardOutput = true;
+                    //pinfo.RedirectStandardInput = true;
+                    //pinfo.RedirectStandardError = true;
+                    pinfo.CreateNoWindow = false;
+                    pinfo.UseShellExecute = true;
+                    pinfo.WindowStyle = ProcessWindowStyle.Minimized;
+                    Process.Start(pinfo);
+                    string sname = System.IO.Path.GetFileNameWithoutExtension(pinfo.FileName);
+                }
+            }
+            else
+            {
+                if (System.IO.File.Exists(file + ".dll"))
+                {
+                    string sarg = string.IsNullOrEmpty(arg) ? "/m" : arg + " " + "/m";
+                    ProcessStartInfo info = new ProcessStartInfo("dotnet", $"{file}.dll {sarg}") { RedirectStandardOutput = false, RedirectStandardInput = false, RedirectStandardError = false, UseShellExecute = true };
+                    string sname = System.IO.Path.GetFileNameWithoutExtension(file + ".dll");
+                    Process.Start(info);
+                }
+            }
         }
 
 
@@ -399,6 +497,10 @@ namespace DBStudio
                         else
                         {
                             ReLoadDatabase(db.Name);
+                            if (HasAlarmDeveloper())
+                            {
+                                ReLoadAntDatabase(name);
+                            }
                         }
                     }
                     //else if (cmsg == "restart")
@@ -504,8 +606,9 @@ namespace DBStudio
             catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                return false;
             }
-            return false;
+            return true;
         }
 
         /// <summary>
@@ -1480,7 +1583,58 @@ namespace DBStudio
         }
 
         /// <summary>
-        /// 
+        /// 热重启Ant
+        /// </summary>
+        /// <param name="name"></param>
+        public static bool ReLoadAntDatabase(string name)
+        {
+            lock (mLockObj)
+            {
+                using (var client = new NamedPipeClientStream(".", "Ant" + name, PipeDirection.InOut))
+                {
+                    try
+                    {
+                        client.Connect(2000);
+                        client.WriteByte(1);
+                        client.FlushAsync();
+
+                        var res = 0;
+                        if (OperatingSystem.IsWindows())
+                        {
+                            client.WaitForPipeDrain();
+                            res = client.ReadByte();
+                        }
+                        else
+                        {
+                            int count = 0;
+                            res = client.ReadByte();
+                            while (res == -1)
+                            {
+                                res = client.ReadByte();
+                                count++;
+                                if (count > 20) break;
+                                Thread.Sleep(100);
+                            }
+                        }
+                        if (res == 1)
+                        {
+                            Console.WriteLine(string.Format(Res.Get("RerundatabaseSucessful"), name));
+                        }
+                        return true;
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(string.Format(Res.Get("Rerundatabasefail"), name));
+                        //Console.WriteLine("ReRun database " + name + "  failed. " + ex.Message + "  " + ex.StackTrace);
+                    }
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 热重启Mars
         /// </summary>
         /// <param name="name"></param>
         public static bool ReLoadDatabase(string name)
@@ -1539,24 +1693,35 @@ namespace DBStudio
         {
             lock (mLockObj)
             {
-                if(IsDatabaseRun(name,out bool isdbrun))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    return true;
-                }
-                else if(!isdbrun) return false;
-
-                using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
-                {
-                    try
+                    if (IsDatabaseRun(name, out bool isdbrun))
                     {
-                        client.Connect(1000);
-                        client.Close();
                         return true;
                     }
-                    catch (Exception)
+                    else if (!isdbrun) return false;
+                }
+
+                try
+                {
+                    using (var client = new NamedPipeClientStream(".", name, PipeDirection.InOut))
                     {
-                        return false;
+                        try
+                        {
+                            client.Connect(1000);
+                            client.Close();
+                            return true;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Connect to {name} failed.{ex.Message}");
+                            return false;
+                        }
                     }
+                }
+                catch
+                {
+                    return false;
                 }
             }
         }
@@ -1569,6 +1734,7 @@ namespace DBStudio
         /// <returns></returns>
         public static bool IsDatabaseRun(string database, out bool isdbrun)
         {
+            
             var pps = System.Diagnostics.Process.GetProcessesByName("DbInRun");
             if (pps != null && pps.Length > 0)
             {
@@ -1629,7 +1795,12 @@ namespace DBStudio
             }
             else
             {
-               return ReLoadDatabase(name);
+               bool re = ReLoadDatabase(name);
+                if(HasAlarmDeveloper())
+                {
+                    ReLoadAntDatabase(name);
+                }
+                return re;
             }
         }
 
@@ -1641,6 +1812,183 @@ namespace DBStudio
         public bool IsRunning(string name)
         {
             return CheckStart(name);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void StartLocalSubProcess()
+        {
+            try
+            {
+                string spath = System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location);
+
+                if (HasAlarmRunner())
+                {
+                    if (!CheckProcessExist("InAntStuidoServer"))
+                    {
+                        string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "Ant", "InAntStuidoServer");
+                        StartProcessInner(sfile);
+                    }
+                }
+
+                if (HasSpiderRunner())
+                {
+                    if (!CheckProcessExist("InSpiderStudioServer"))
+                    {
+                        string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "Spider", "InSpiderStudioServer");
+                        StringBuilder args = new StringBuilder();
+                        args.Append("Sec=" +  System.IO.Path.Combine(PathHelper.helper.DataPath, "Sec.sdb"));
+                        //string sdd = System.IO.Path.Combine(PathHelper.helper.DataPath, "Spider");
+                        //args.Append("WorkPath="+sdd);
+                        StartProcessInner(sfile,args.ToString());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+
+        public void StopLocalSubProcess()
+        {
+            try
+            {
+                foreach (var vv in mSubProcess)
+                {
+                    StopProcess(vv.Value);
+                }
+            }
+            catch
+            {
+
+            }
+            mSubProcess.Clear();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        private void StopProcess(SubProcessStruct sp)
+        {
+            try
+            {
+                if (sp.CloseAction != null)
+                {
+                    sp.CloseAction();
+                }
+                else if (sp.Process != null)
+                {
+                    sp.Process.StandardInput.WriteLine("exit");
+                    sp.Process.StandardInput.Flush();
+                    sp.Process.WaitForExit(1000 * 60);
+                }
+                else
+                {
+                    var vps = Process.GetProcessesByName(sp.Name);
+
+                    if (vps != null && vps.Length > 0)
+                    {
+                        vps.First().Kill();
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private bool HasAlarmRunner()
+        {
+            string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "Ant", "InAntStuidoServer.dll");
+            return System.IO.File.Exists(sfile);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private bool HasSpiderRunner()
+        {
+            string sfile = System.IO.Path.Combine(PathHelper.helper.AppPath, "Spider", "InSpiderStudioServer.dll");
+            return System.IO.File.Exists(sfile);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private bool CheckProcessExist(string name)
+        {
+            return Process.GetProcessesByName(name).Length > 0;
+        }
+
+        private void StartProcessInner(string file, string arg = "", Action close = null)
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                if (System.IO.File.Exists(file + ".exe"))
+                {
+                    var vfile = file;
+                    ProcessStartInfo pinfo = new ProcessStartInfo();
+                    pinfo.FileName = vfile + ".exe";
+                    pinfo.Arguments = string.IsNullOrEmpty(arg) ? "/m" : arg + " " + "/m";
+                    pinfo.RedirectStandardOutput = true;
+                    pinfo.RedirectStandardInput = true;
+
+                    //pinfo.RedirectStandardError = true;
+                    pinfo.CreateNoWindow = true;
+                    pinfo.UseShellExecute = false;
+
+                    Process sp = new Process();
+                    sp.StartInfo = pinfo;
+                    sp.OutputDataReceived += Sp_OutputDataReceived;
+                    sp.Start();
+                    sp.BeginOutputReadLine();
+
+                    pinfo.WindowStyle = ProcessWindowStyle.Hidden;
+
+                    //var vpp =  Process.Start(pinfo);
+
+                    string sname = System.IO.Path.GetFileNameWithoutExtension(pinfo.FileName);
+                    if (!mSubProcess.ContainsKey(sname))
+                        mSubProcess.Add(sname, new SubProcessStruct() { Name = sname, CloseAction = close, Process = sp });
+                }
+            }
+            else
+            {
+                if (System.IO.File.Exists(file + ".dll"))
+                {
+                    string sarg = string.IsNullOrEmpty(arg) ? "/m" : arg + " " + "/m";
+                    ProcessStartInfo info = new ProcessStartInfo("dotnet", $"{file}.dll {sarg}") { RedirectStandardOutput = true, RedirectStandardInput = true, RedirectStandardError = true, UseShellExecute = false, CreateNoWindow = true };
+                    string sname = System.IO.Path.GetFileNameWithoutExtension(file + ".dll");
+
+                    Process sp = new Process();
+                    sp.StartInfo = info;
+                    sp.OutputDataReceived += Sp_OutputDataReceived;
+                    sp.Start();
+                    sp.BeginOutputReadLine();
+
+                    //var vpp = Process.Start(info);
+                    if (!mSubProcess.ContainsKey(sname))
+                        mSubProcess.Add(sname, new SubProcessStruct() { Name = sname, CloseAction = close, Process = sp });
+                }
+            }
+        }
+
+        private void Sp_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            Console.WriteLine((sender as Process).ProcessName + "  " + e.Data);
         }
     }
 }

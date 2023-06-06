@@ -1,0 +1,64 @@
+﻿<select class="form-select text-light  bg-white bg-opacity-25  py-0" @bind=@Value >
+    @foreach(var vv in Items)
+    {
+        <option value="@vv" class="text-dark p-1">@vv</option>
+    }
+</select>
+@code {
+    private string mValue;
+
+    [Parameter]
+    public string Value
+    {
+        get { return mValue; }
+        set
+        {
+            if (mValue != value)
+            {
+                mValue = value;
+                ValueChanged.InvokeAsync(mValue);
+
+                mIndexValue = Items.IndexOf(mValue);
+                IndexValueChanged.InvokeAsync(mIndexValue);
+            }
+        }
+    }
+
+    private int mIndexValue = 0;
+
+    [Parameter]
+    public int IndexValue
+    {
+        get { return mIndexValue; }
+        set
+        {
+            if (mIndexValue != value)
+            {
+                mIndexValue = value;
+                if (Items != null)
+                {
+                    mValue = Items[mIndexValue];
+                    ValueChanged.InvokeAsync(mValue);
+                }
+                IndexValueChanged.InvokeAsync(mIndexValue);
+            }
+        }
+    }
+
+    [Parameter]
+    public List<string> Items { get; set; }
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> IndexValueChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> SelectedChanged { get; set; }
+
+    public void OnSelectChanged()
+    {
+        SelectedChanged.InvokeAsync();
+    }
+}

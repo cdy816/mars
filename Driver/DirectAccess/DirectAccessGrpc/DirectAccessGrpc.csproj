@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <ApplicationIcon>mrdbdg.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -13,11 +14,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="mrdbdg.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.42.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Common\Cdy.Tag.Common\Cdy.Tag.Common.csproj" />
+    <ProjectReference Include="..\..\..\Common\Cdy.Tag.Consume\Cdy.Tag.Consume.csproj" />
     <ProjectReference Include="..\DirectAccessDriver.ClientApi\DirectAccessDriver.ClientApi.csproj" />
   </ItemGroup>
 

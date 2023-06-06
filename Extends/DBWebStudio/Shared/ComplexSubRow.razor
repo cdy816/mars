@@ -1,0 +1,310 @@
+﻿@using DBWebStudio.Data;
+@inject MarsProxy mProxy;
+
+@{
+    if (Model.RealTagMode is Cdy.Tag.ComplexTag)
+    {
+        int i = 1;
+        foreach (RowTagViewModel vv in Model.SubItems)
+        {
+            <tr class="tr" onclick="@(()=>SelectRow(vv))" @key=@vv.UName>
+                <td scope="row" style="width:48px">
+                    <StringEditor Value="@((IndexStart+"-"+(i++)).ToString())" Target="@vv">
+                    </StringEditor>
+                </td>
+                <td scope="row" style="width:48px">
+                    <StringEditor Value="@(vv.Id.ToString())" Target="@vv">
+                    </StringEditor>
+                </td>
+                <td scope="row">
+                    <StringEditor Value="@vv.Name" Target="@vv">
+                    </StringEditor>
+                </td>
+                <td scope="row">
+                    <StringEditor Value="@vv.TypeString" Target="@vv">
+                    </StringEditor>
+                </td>
+                <td scope="row">
+                    @if (!(vv.RealTagMode is Cdy.Tag.ComplexTag))
+                    {
+                        <StringEditor Value="@vv.ReadWriteModeString" Target="@vv">
+                        </StringEditor>
+                    }
+                </td>
+                <td scope="row" style="min-width:32px">
+                     @if (!(vv.RealTagMode is Cdy.Tag.ComplexTag))
+                     {
+                        <StringEditor Value="@vv.ConvertString" Target="@vv">
+                        </StringEditor>
+                    }
+                    else
+                    {
+                        <span>--</span>
+                    }
+                </td>
+                <td scope="row">
+                    @if ((vv.RealTagMode is Cdy.Tag.NumberTagBase))
+                    {
+                        <StringEditor Value="@(IsMaxValue(vv.RealTagMode,vv.MaxValue)?"最大值":vv.MaxValue.ToString())" Target="@vv">
+                        </StringEditor>
+                    }
+                    else
+                    {
+                        <span>--</span>
+                    }
+                </td>
+                <td scope="row">
+                    @if ((vv.RealTagMode is Cdy.Tag.NumberTagBase))
+                    {
+                        <StringEditor Value="@(IsMinValue(vv.RealTagMode,vv.MinValue)?"最小值":vv.MinValue.ToString())" Target="@vv">
+                        </StringEditor>
+                    }
+                    else
+                    {
+                        <span>--</span>
+                    }
+                </td>
+                <td scope="row">
+                    @if ((vv.RealTagMode is Cdy.Tag.NumberTagBase))
+                    {
+                        <StringEditor Value="@(vv.Precision.ToString())" Target="@vv">
+                        </StringEditor>
+                    }
+                    else
+                    {
+                        <span>--</span>
+                    }
+                </td>
+                <td scope="row">
+                    <StringEditor Value="@(vv.Unit)" Target="@vv">
+                    </StringEditor>
+
+                </td>
+                <td scope="row">
+                    @if (!(vv.RealTagMode is Cdy.Tag.ComplexTag))
+                    {
+                        <input class="form-check-input" type="checkbox" @bind=@vv.HasHisTag disabled />
+                    }
+                    else
+                    {
+                        <span>--</span>
+                    }
+                </td>
+                <td scope="row">
+                    @if (!(vv.RealTagMode is Cdy.Tag.ComplexTag))
+                    {
+                        <StringEditor Value="@vv.DriverName" Target="@vv">
+                            <Editor>
+                            <CustomSelect Items="@(vv.DriverList.ToList())" Value="@(vv.DriverName)" />
+                        </Editor>
+                        </StringEditor>
+                    }
+                    else
+                    {
+                        <span>--</span>
+                    }
+                </td>
+                <td scope="row">
+                    @if (!(vv.RealTagMode is Cdy.Tag.ComplexTag))
+                    {
+                        <StringEditor Value="@vv.RegistorName" Target="@vv">
+                            <Editor>
+                            <CustomSelect Items="@(vv.RegistorList.ToList())" Value="@(vv.RegistorName)" />
+                            </Editor>
+                        </StringEditor>
+                    }
+                    else
+                    {
+                        <span>--</span>
+                    }
+                </td>
+                <td scope="row">
+                    <StringEditor Value="@vv.Area" Target="@vv">
+                        <Editor>
+                            <input type="text" style="width:128px" class="form-control px-0  bg-white bg-opacity-25  text-light  py-0" @bind=@vv.Area />
+                        </Editor>
+                    </StringEditor>
+
+                </td>
+                <td scope="row">
+                    <StringEditor Value="@vv.Desc" Target="@vv">
+                        <Editor>
+                            <input type="text" class="form-control  px-0  bg-white bg-opacity-25  text-light  py-0" @bind=@vv.Desc />
+                        </Editor>
+                    </StringEditor>
+
+                </td>
+                <td scope="row">
+                    <StringEditor Value="@vv.ExtendField1" Target="@vv">
+                        <Editor>
+                            <input type="text" class="form-control  px-0  bg-white bg-opacity-25  text-light  py-0" @bind=@vv.ExtendField1 />
+                        </Editor>
+                    </StringEditor>
+
+                </td>
+            </tr>
+            if (vv == LastSelect && vv.HasHisTag)
+            {
+                <tr>
+                    <td colspan="2"></td>
+                    <td colspan="14">
+                        <div class="hstack">
+                            <div class="col-3 input-group ms-0 me-2 p-0" style="width:auto">
+                                <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0" id="basic-addon1">记录类型</span>
+                                <CustomSelect @key=@(vv.Name+"record") Items="@(vv.RecordTypeList.ToList())" @bind-IndexValue="@vv.RecordType" />
+                            </div>
+                            @if (vv.RecordType == 0)
+                            {
+                                <div class="col-3 input-group mx-2 p-0" style="width:auto">
+                                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0">周期</span>
+                                    <input type="text" class="form-control   bg-white bg-opacity-25  text-light  py-0" placeholder="周期" @bind=vv.CompressCircle>
+                                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0">ms</span>
+                                </div>
+                            }
+                            else if (vv.RecordType == 1)
+                            {
+
+                            }
+                            else
+                            {
+                                <div class="col-3 input-group mx-2 p-0" style="width:auto">
+                                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0" id="basic-addon1">每秒记录变量个数:</span>
+                                    <input type="text" style="width:48px" class="form-control   bg-white bg-opacity-25  text-light  py-0" placeholder="个数" @bind=vv.MaxValueCountPerSecond>
+                                </div>
+                            }
+                            <div class="col-3 input-group mx-2 p-0" style="width:auto">
+                                <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0" id="basic-addon1">压缩类型</span>
+                                <CustomSelect IndexValue="@(vv.CompressType)" Items="@(vv.CompressTypeList.ToList())" />
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+            if(vv == LastSelect && vv.RealTagMode is Cdy.Tag.ComplexTag)
+            {
+                <ComplexSubRow  Model="@vv" IndexStart="@IndexStart" />
+            }
+        }
+    }
+}
+@code {
+
+    [Parameter]
+    public RowTagViewModel Model{ get; set; }
+
+    [Parameter]
+    public RowTagViewModel LastSelect{ get; set; }
+
+    [Parameter]
+    public int IndexStart{ get; set; }
+    
+    private List<string> mTypes;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        mTypes = TagViewModel.mTagTypeList.ToList();
+        base.OnParametersSet();
+    }
+
+    private void SelectRow(RowTagViewModel model)
+    {
+        if (LastSelect != model)
+        {
+            if (LastSelect != null)
+            {
+                //mLastSelect.Proxy = mProxy;
+                LastSelect.IsSelected = false;
+            }
+            LastSelect = model;
+            if (LastSelect != null)
+            {
+                LastSelect.Proxy = mProxy;
+                LastSelect.IsSelected = true;
+            }
+            StateHasChanged();
+        }
+    }
+
+    private bool IsMaxValue(Cdy.Tag.Tagbase tag, double dval)
+    {
+        if (tag is Cdy.Tag.DoubleTag)
+        {
+            return dval == double.MaxValue;
+        }
+        else if (tag is Cdy.Tag.FloatTag)
+        {
+            return dval == float.MaxValue;
+        }
+        else if (tag is Cdy.Tag.IntTag)
+        {
+            return dval == int.MaxValue;
+        }
+        else if (tag is Cdy.Tag.UIntTag)
+        {
+            return dval == uint.MaxValue;
+        }
+        else if (tag is Cdy.Tag.LongTag)
+        {
+            return dval == long.MaxValue;
+        }
+        else if (tag is Cdy.Tag.ULongTag)
+        {
+            return dval == ulong.MaxValue;
+        }
+        else if (tag is Cdy.Tag.ShortTag)
+        {
+            return dval == short.MaxValue;
+        }
+        else if (tag is Cdy.Tag.UShortTag)
+        {
+            return dval == ushort.MaxValue;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private bool IsMinValue(Cdy.Tag.Tagbase tag, double dval)
+    {
+        if (tag is Cdy.Tag.DoubleTag)
+        {
+            return dval == double.MinValue;
+        }
+        else if (tag is Cdy.Tag.FloatTag)
+        {
+            return dval == float.MinValue;
+        }
+        else if (tag is Cdy.Tag.IntTag)
+        {
+            return dval == int.MinValue;
+        }
+        else if (tag is Cdy.Tag.UIntTag)
+        {
+            return dval == uint.MinValue;
+        }
+        else if (tag is Cdy.Tag.LongTag)
+        {
+            return dval == long.MinValue;
+        }
+        else if (tag is Cdy.Tag.ULongTag)
+        {
+            return dval == ulong.MinValue;
+        }
+        else if (tag is Cdy.Tag.ShortTag)
+        {
+            return dval == short.MinValue;
+        }
+        else if (tag is Cdy.Tag.UShortTag)
+        {
+            return dval == ushort.MinValue;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}

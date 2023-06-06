@@ -5,12 +5,16 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace Cdy.Tag
 {
     /// <summary>
     /// 日志本地存储管理
+    /// 其他模块首先将数据填充到内存里，防止不断的写磁盘导致程序阻塞
+    /// 定时将内存里的数据写入到磁盘上
     /// </summary>
     public class LogStorageManager
     {
@@ -29,6 +33,14 @@ namespace Cdy.Tag
 
         private Dictionary<int, Dictionary<DateTime, LogRegion>> mManualLogs = new Dictionary<int, Dictionary<DateTime, LogRegion>>();
 
+        private Thread mSaveThread;
+
+        private bool mIsClosed = false;
+
+        public static int LogSleepTime = 1000;
+
+        public static int CachFlashSize = 5;
+
         #endregion ...Variables...
 
         #region ... Events     ...
@@ -45,12 +57,96 @@ namespace Cdy.Tag
 
         #region ... Methods    ...
 
+        #region 消息序列化
+
+        /// <summary>
+        /// 启动
+        /// </summary>
+        public void Start()
+        {
+            mSaveThread = new Thread(FlushToDisk);
+            mSaveThread.IsBackground = true;
+            mSaveThread.Start();
+        }
+
+        /// <summary>
+        /// 停止
+        /// </summary>
+        public void Stop()
+        {
+            mIsClosed = true;
+            while (mSaveThread.IsAlive) Thread.Sleep(1);
+        }
+
+        /// <summary>
+        /// 将消息队列中的数据存储到磁盘内
+        /// </summary>
+        private void FlushToDisk()
+        {
+            List<LogRegion> lr = new List<LogRegion>();
+            while (!mIsClosed)
+            {
+                lock (mLogs)
+                {
+                    foreach (var vv in mLogs)
+                    {
+                        foreach (var vvv in vv.Value)
+                        {
+                            lr.Add(vvv.Value);
+                        }
+                    }
+                }
+
+                foreach(var vv in lr)
+                {
+                    try
+                    {
+                        vv.FlushMemoryToDisk();
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                lr.Clear();
+
+                lock (mManualLogs)
+                {
+                    foreach (var vv in mManualLogs)
+                    {
+                        foreach (var vvv in vv.Value)
+                        {
+                            lr.Add(vvv.Value);
+                        }
+                    }
+                }
+
+                foreach (var vv in lr)
+                {
+                    try
+                    {
+                        vv.FlushMemoryToDisk();
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                lr.Clear();
+
+                ReleaseManualLogs();
+                Thread.Sleep(LogSleepTime);
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="time"></param>
         /// <returns></returns>
-        public LogRegion GetSystemLog(DateTime time, int id)
+        public LogRegion GetExistSystemLog(DateTime time, int id)
         {
             if (!LogRegion.Enable) return null;
 
@@ -64,13 +160,36 @@ namespace Cdy.Tag
                     {
                         return mLogs[id][tm];
                     }
-                    else
-                    {
-                        var lr = new LogRegion(Convert.ToInt64(ServiceLocator.Locator.Resolve("CachMemorySize"))) { Time = tm, AreaName = "system", Id = (byte)id };
-                        lr.Init();
-                        mLogs[id].Add(tm, lr);
-                        return lr;
-                    }
+                }
+            }
+            return null;
+        }
+
+        //private object GetSystemLogLocker = new object();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public LogRegion GetSystemLog(DateTime time, int id)
+        {
+            if (!LogRegion.Enable) return null;
+
+            DateTime tm = time.Date.AddHours(time.Hour).AddMinutes((time.Minute / 5) * 5);
+
+            lock (mLogs)
+            {
+                if (mLogs.ContainsKey(id) && mLogs[id].ContainsKey(tm))
+                {
+                    return mLogs[id][tm];
+                }
+                else if (mLogs.ContainsKey(id))
+                {
+                    var lr = new LogRegion(Convert.ToInt64(ServiceLocator.Locator.Resolve("CachMemorySize"))) { Time = tm, AreaName = "system", Id = (byte)id };
+                    lr.Init();
+                    mLogs[id].Add(tm, lr);
+                    return lr;
                 }
                 else
                 {
@@ -78,10 +197,10 @@ namespace Cdy.Tag
                     var lr = new LogRegion(Convert.ToInt64(ServiceLocator.Locator.Resolve("CachMemorySize"))) { Time = tm, AreaName = "system", Id = (byte)id };
                     lr.Init();
                     dd.Add(tm, lr);
-                    mLogs.Add(id, dd);
+                    if (!mLogs.ContainsKey(id))
+                        mLogs.Add(id, dd);
                     return lr;
                 }
-
             }
         }
 
@@ -98,7 +217,7 @@ namespace Cdy.Tag
             {
                 foreach (var log in mLogs)
                 {
-                    if(log.Value.ContainsKey(tm))
+                    if (log.Value.ContainsKey(tm))
                     {
                         yield return log.Value[tm];
                     }
@@ -142,19 +261,16 @@ namespace Cdy.Tag
 
             lock (mManualLogs)
             {
-                if (mManualLogs.ContainsKey(id))
+                if (mManualLogs.ContainsKey(id) && mManualLogs[id].ContainsKey(tm))
                 {
-                    if (mManualLogs[id].ContainsKey(tm))
-                    {
-                        return mManualLogs[id][tm];
-                    }
-                    else
-                    {
-                        var lr = new LogRegion(Convert.ToInt64(ServiceLocator.Locator.Resolve("ManualTagCachMemorySize"))) { Time = tm, AreaName = "manual", Id = (byte)id };
-                        lr.Init();
-                        mManualLogs[id].Add(tm, lr);
-                        return lr;
-                    }
+                    return mManualLogs[id][tm];
+                }
+                else if (mManualLogs.ContainsKey(id))
+                {
+                    var lr = new LogRegion(Convert.ToInt64(ServiceLocator.Locator.Resolve("ManualTagCachMemorySize"))) { Time = tm, AreaName = "manual", Id = (byte)id };
+                    lr.Init();
+                    mManualLogs[id].Add(tm, lr);
+                    return lr;
                 }
                 else
                 {
@@ -162,10 +278,10 @@ namespace Cdy.Tag
                     var lr = new LogRegion(Convert.ToInt64(ServiceLocator.Locator.Resolve("ManualTagCachMemorySize"))) { Time = tm, AreaName = "manual", Id = (byte)id };
                     lr.Init();
                     dd.Add(tm, lr);
-                    mManualLogs.Add(id, dd);
+                    if (!mManualLogs.ContainsKey(id))
+                        mManualLogs.Add(id, dd);
                     return lr;
                 }
-
             }
         }
 
@@ -177,16 +293,15 @@ namespace Cdy.Tag
 
             lock (mManualLogs)
             {
-                if (mManualLogs.ContainsKey(id))
+                if (mManualLogs.ContainsKey(id)&& mManualLogs[id].ContainsKey(tm))
                 {
-                    if (mManualLogs[id].ContainsKey(tm))
-                    {
-                        return mManualLogs[id][tm];
-                    }
+                    return mManualLogs[id][tm];
                 }
             }
             return null;
         }
+
+        private object ReleaseSystemLogLocker = new object();
 
         /// <summary>
         /// 
@@ -196,18 +311,37 @@ namespace Cdy.Tag
         public void ReleaseSystemLog(DateTime time,int id)
         {
             if (LogRegion.Enable)
-                lock (mLogs)
+            {
+                lock (ReleaseSystemLogLocker)
                 {
-                    var vv = GetSystemLog(time, id);
+                    var vv = GetExistSystemLog(time, id);
                     if (vv.RefCount <= 0)
                     {
                         try
                         {
-                            if (mLogs.ContainsKey(id) && mLogs[id].ContainsKey(vv.Time))
+                            LogRegion lr = null;
+                            lock (mLogs)
                             {
-                                mLogs[id][vv.Time].Dispose();
-                                mLogs[id][vv.Time].Clear();
-                                mLogs[id].Remove(vv.Time);
+                                if(mLogs.ContainsKey(id) && mLogs[id].ContainsKey(vv.Time))
+                                lr = mLogs[id][vv.Time];
+                            }
+
+                            if (lr!=null)
+                            {
+                                lr.Dispose();
+                                lr.Clear();
+                                lock (mLogs)
+                                {
+                                    try
+                                    {
+                                        if (mLogs.ContainsKey(id))
+                                            mLogs[id].Remove(vv.Time);
+                                    }
+                                    catch
+                                    {
+
+                                    }
+                                }
                             }
                         }
                         catch
@@ -216,6 +350,7 @@ namespace Cdy.Tag
                         }
                     }
                 }
+            }
         }
 
         /// <summary>
@@ -238,22 +373,33 @@ namespace Cdy.Tag
                     }
 
                 }
-                foreach (var vv in lr)
+                if (lr.Count > 0)
                 {
-                    vv.Dispose();
-                    vv.Clear();
-                    try
+                    foreach (var vv in lr)
                     {
-                        if (mLogs.ContainsKey(vv.Id))
-                            mLogs[vv.Id].Remove(vv.Time);
-                    }
-                    catch
-                    {
+                        vv.Dispose();
+                        vv.Clear();
+                        lock (mLogs)
+                        {
+                            try
+                            {
+                                if (mLogs.ContainsKey(vv.Id))
+                                    mLogs[vv.Id].Remove(vv.Time);
+                            }
+                            catch
+                            {
 
+                            }
+                           
+                        }
+
+                        
                     }
                 }
             }
         }
+
+        private object mManualLocker= new object();
 
         /// <summary>
         /// 
@@ -263,7 +409,7 @@ namespace Cdy.Tag
         public LogStorageManager IncManualRef(DateTime time,int id)
         {
             if (!LogRegion.Enable) return this;
-            lock (mManualLogs)
+            lock (mManualLocker)
                 GetManualLog(time,id).RefCount++;
             return this;
         }
@@ -276,13 +422,15 @@ namespace Cdy.Tag
         public LogStorageManager DecManualRef(DateTime time, int id)
         {
             if (!LogRegion.Enable) return this;
-            lock (mManualLogs)
+            lock (mManualLocker)
             {
                 var re = GetExistManualLog(time, id);
                 if (re != null) re.RefCount--;
             }
             return this;
         }
+
+        private object ReleaseManualLogLocker = new object();
 
         /// <summary>
         /// 
@@ -292,16 +440,36 @@ namespace Cdy.Tag
         public LogStorageManager ReleaseManualLog(DateTime time,int id)
         {
             if (!LogRegion.Enable) return this;
-            lock (mManualLogs)
+            lock (ReleaseManualLogLocker)
             {
                 var vv = GetExistManualLog(time,id);
-                if (vv!=null && vv.RefCount <= 0)
+                DateTime dnow = DateTime.Now;
+                if (vv!=null && vv.RefCount <= 0 && (dnow - vv.CreatTime).TotalMinutes>5)
                 {
-                    if (mManualLogs.ContainsKey(id) && mManualLogs[id].ContainsKey(vv.Time))
+                    LogRegion lr = null;
+                    lock (mManualLogs)
                     {
-                        mManualLogs[id][vv.Time].Dispose();
-                        mManualLogs[id][vv.Time].Clear();
-                        mManualLogs[id].Remove(vv.Time);
+                        if(mManualLogs.ContainsKey(id) && mManualLogs[id].ContainsKey(vv.Time))
+                        {
+                            lr = mManualLogs[id][vv.Time];
+                        }
+                    }
+
+                    if (lr!=null)
+                    {
+                        lr.Dispose();
+                        lr.Clear();
+                        lock (mManualLogs)
+                        {
+                            try
+                            {
+                                if (mManualLogs.ContainsKey(id))
+                                    mManualLogs[id].Remove(vv.Time);
+                            }catch
+                            {
+
+                            }
+                        }
                     }
                 }
             }
@@ -318,11 +486,12 @@ namespace Cdy.Tag
             List<LogRegion> list = new List<LogRegion>();
             lock (mManualLogs)
             {
+                DateTime time = DateTime.Now;
                 foreach (var region in mManualLogs.Values)
                 {
                     foreach(var vv in region)
                     {
-                        if(vv.Value.RefCount<=0)
+                        if(vv.Value.RefCount<= 0 && (time - vv.Value.CreatTime).TotalMinutes > 5)
                         {
                             list.Add(vv.Value);
                         }
@@ -332,7 +501,17 @@ namespace Cdy.Tag
 
             foreach (var vv in list)
             {
-                mManualLogs[vv.Id].Remove(vv.Time);
+                lock (mManualLogs)
+                {
+                    try
+                    {
+                        mManualLogs[vv.Id].Remove(vv.Time);
+                    }
+                    catch
+                    {
+
+                    }
+                }
                 vv.Dispose();
                 vv.Clear();
             }
@@ -357,15 +536,17 @@ namespace Cdy.Tag
 
             foreach (var vv in mLogs)
             {
-                foreach(var vvv in vv.Value)
+                foreach (var vvv in vv.Value)
                 {
                     vvv.Value.Dispose();
                     vvv.Value.Clear();
-                    
+
                 }
             }
-            mLogs.Clear();
-            mManualLogs.Clear();
+            lock (mLogs)
+                mLogs.Clear();
+            lock (mManualLogs)
+                mManualLogs.Clear();
         }
 
         /// <summary>
@@ -419,6 +600,7 @@ namespace Cdy.Tag
         
         System.IO.MemoryMappedFiles.MemoryMappedFile mmf;
         System.IO.MemoryMappedFiles.MemoryMappedViewAccessor accessor;
+        MemoryMappedViewStream mViewStream;
 
         private long mCalSize = 1;
 
@@ -430,7 +612,20 @@ namespace Cdy.Tag
         /// 
         /// </summary>
         public static bool Enable { get; set; } = true;
-       
+
+        private MarshalMemoryBlock mCachMemroy1;
+        
+        private MarshalMemoryBlock mCachMemroy2;
+
+        private MarshalMemoryBlock mCurrentMemory;
+
+        private bool mIsFlushBusy = false;
+
+        private bool mIsWriteBusy = false;
+
+        private bool mIsDisposed = false;
+
+        private static object mLocker = new object();
 
         #endregion ...Variables...
 
@@ -468,17 +663,17 @@ namespace Cdy.Tag
         public DateTime Time { get; set; }
 
         /// <summary>
-        /// 
+        /// 记录的当前位置
         /// </summary>
         public int Position { get; set; }
 
         /// <summary>
-        /// 
+        /// 分区名称
         /// </summary>
         public string AreaName { get; set; }
 
         /// <summary>
-        /// 
+        /// 引用统计
         /// </summary>
         public int RefCount { get; set; }
 
@@ -493,44 +688,131 @@ namespace Cdy.Tag
         /// </summary>
         public string  FileName { get; set; }
 
+        public DateTime CreatTime { get; set; }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
 
+        /// <summary>
+        /// 初始化
+        /// </summary>
         public void Init()
         {
-            Init(mCalSize);
+            CreatTime=DateTime.Now;
+            int msize = (int)(((mCalSize / LogStorageManager.CachFlashSize / 1024) + 1) * 1024);
+            if(msize==0)
+            {
+                msize = 1024;
+            }
+            mCachMemroy1 = new MarshalMemoryBlock(msize, msize);
+            mCachMemroy2 = new MarshalMemoryBlock(msize, msize);
+            mCurrentMemory = mCachMemroy1;
+
+            Task.Run(() => {
+                Init(mCalSize);
+            });
+        }
+
+
+        private void SwitchMemroyBlock()
+        {
+            lock (mLock)
+            {
+                if (mCurrentMemory == mCachMemroy1)
+                {
+                    mCurrentMemory = mCachMemroy2;
+                }
+                else
+                {
+                    mCurrentMemory = mCachMemroy1;
+                }
+            }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="size"></param>
-        public void Init(long size)
+        public void FlushMemoryToDisk()
         {
+           
+            mIsFlushBusy = true;
+            if (mIsDisposed || !mIsInited)
+            {
+                mIsFlushBusy = false;
+                return;
+            }
+            
+            try
+            {
+                var mm = mCurrentMemory;
+                if (mm != null && mm.Position > 0 && !mm.IsDisposed && mViewStream != null)
+                {
+                    SwitchMemroyBlock();
+                    CheckAndResize(mm.Position + Position);
+                    mm.WriteToStream(mViewStream);
+                    Position += (int)mm.Position;
+                    mm.Clear();
+                }
+            }
+            catch
+            {
+
+            }
+            mIsFlushBusy = false;
+        }
+
+        private bool mIsInited = false;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="size"></param>
+        private void Init(long size)
+        {
+            mIsInited = false;
             if (!Enable) return;
 
             if (accessor != null)
             {
                 accessor.Dispose();
             }
+            
+            if (mViewStream != null)
+            {
+                mViewStream.Dispose();
+            }
+            
             if (mmf != null)
             {
                 mmf.Dispose();
             }
 
-            string spath = System.IO.Path.Combine(ServiceLocator.Locator.Resolve("DatabaseLocation").ToString(),"Cache");
-
-            if(!System.IO.Directory.Exists(spath))
+            lock (mLocker)
             {
-                System.IO.Directory.CreateDirectory(spath);
+                try
+                {
+                    string spath = System.IO.Path.Combine(ServiceLocator.Locator.Resolve("DatabaseLocation").ToString(), "Cache");
+
+                    if (!System.IO.Directory.Exists(spath))
+                    {
+                        System.IO.Directory.CreateDirectory(spath);
+                    }
+
+                    spath = System.IO.Path.Combine(spath, AreaName + Time.ToString("yyyyMMddHHmm") + Id + ".ch");
+
+                    mmf = MemoryMappedFile.CreateFromFile(spath, FileMode.OpenOrCreate, null, size);
+                    accessor = mmf.CreateViewAccessor(0, size);
+                    mViewStream = mmf.CreateViewStream();
+                    mCalSize = size;
+                }
+                catch
+                {
+
+                }
             }
 
-            spath = System.IO.Path.Combine(spath, AreaName + Time.ToString("yyyyMMddHHmm")+ Id + ".ch");
-            
-            mmf = MemoryMappedFile.CreateFromFile(spath, FileMode.OpenOrCreate, null, size);
-            accessor = mmf.CreateViewAccessor(0, size);
-            mCalSize = size;
+            mIsInited = true;
 
         }
 
@@ -567,7 +849,8 @@ namespace Cdy.Tag
         /// </summary>
         public void Flush()
         {
-            accessor.Flush();
+            accessor?.Flush();
+            mViewStream?.Flush();
         }
 
         /// <summary>
@@ -584,299 +867,429 @@ namespace Cdy.Tag
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="id"></param>
-        /// <param name="time"></param>
-        /// <param name="quality"></param>
-        /// <param name="value"></param>
-        public void Append<T>(int id,DateTime time,byte quality, params T[] value)
-        {
-            if (!Enable) return;
-            lock (mLock)
-            {
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="id"></param>
+        ///// <param name="time"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="value"></param>
+        //public void Append<T>(int id,DateTime time,byte quality, params T[] value)
+        //{
+        //    if (!Enable) return;
+        //    lock (mLock)
+        //    {
 
-                var tsize = 39;
+        //        var tsize = 39;
                 
-                if(typeof(T) == typeof(string))
-                {
-                    tsize = 15 + 256;
-                }
+        //        if(typeof(T) == typeof(string))
+        //        {
+        //            tsize = 15 + 256;
+        //        }
 
-                CheckAndResize(Position+ tsize);
+        //        CheckAndResize(Position+ tsize);
 
-                byte type = GetDataType<T>();
-                var sname = typeof(T).Name.ToLower();
-                accessor.Write(Position, id);
-                Position += 4;
-                accessor.Write(Position,time.Ticks);
-                Position += 8;
-                accessor.Write(Position, GetDataType<T>());
-                Position += 1;
-                switch (type)
-                {
-                    case 0:
-                        accessor.Write(Position,Convert.ToBoolean(value[0]));
-                        Position += 1;
-                        break;
-                    case 1:
-                        accessor.Write(Position, Convert.ToByte(value[0]));
-                        Position += 1;
-                        break;
-                    case 2:
-                        accessor.Write(Position, Convert.ToInt16(value[0]));
-                        Position += 2;
-                        break;
-                    case 3:
-                        accessor.Write(Position, Convert.ToUInt16(value[0]));
-                        Position += 2;
-                        break;
-                    case 4:
-                        accessor.Write(Position, Convert.ToInt32(value[0]));
-                        Position += 4;
-                        break;
-                    case 5:
-                        accessor.Write(Position, Convert.ToUInt32(value[0]));
-                        Position += 4;
-                        break;
-                    case 6:
-                        accessor.Write(Position, Convert.ToInt64(value[0]));
-                        Position += 8;
-                        break;
-                    case 7:
-                        accessor.Write(Position, Convert.ToUInt64(value[0]));
-                        Position += 8;
-                        break;
-                    case 8:
-                        accessor.Write(Position, Convert.ToSingle(value[0]));
-                        Position += 4;
-                        break;
-                    case 9:
-                        accessor.Write(Position, Convert.ToDouble(value[0]));
-                        Position += 8;
-                        break;
-                    case 10:
-                        accessor.Write(Position, Convert.ToDateTime(value[0]).Ticks);
-                        Position += 8;
-                        break;
-                    case 11:
-                        var bs = Encoding.UTF8.GetBytes(value[0] != null ? value[0].ToString() : "");
-                        accessor.WriteArray<byte>(Position,bs,0,bs.Length);
-                        Position += 256;
-                        break;
-                    case 12:
-                        accessor.Write(Position, Convert.ToInt32(value[0]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToInt32(value[1]));
-                        Position += 4;
-                        break;
-                    case 13:
-                        accessor.Write(Position, Convert.ToUInt32(value[0]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToUInt32(value[1]));
-                        Position += 4;
-                        break;
-                    case 14:
-                        accessor.Write(Position, Convert.ToInt32(value[0]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToInt32(value[1]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToInt32(value[2]));
-                        Position += 4;
-                        break;
-                    case 15:
-                        accessor.Write(Position, Convert.ToUInt32(value[0]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToUInt32(value[1]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToUInt32(value[2]));
-                        Position += 4;
-                        break;
-                    case 16:
-                        accessor.Write(Position, Convert.ToInt64(value[0]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToInt64(value[1]));
-                        Position += 8;
-                        break;
-                    case 17:
-                        accessor.Write(Position, Convert.ToUInt64(value[0]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToUInt64(value[1]));
-                        Position += 8;
-                        break;
-                    case 18:
-                        accessor.Write(Position, Convert.ToInt64(value[0]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToInt64(value[1]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToInt64(value[2]));
-                        Position += 8;
-                        break;
-                    case 19:
-                        accessor.Write(Position, Convert.ToUInt64(value[0]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToUInt64(value[1]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToUInt64(value[2]));
-                        Position += 8;
-                        break;
-                }
-                accessor.Write(Position, quality);
-                Position += 1;
-                accessor.Write(Position, (byte)1);
-                Position += 1;
-            }
-        }
+        //        byte type = GetDataType<T>();
+        //        var sname = typeof(T).Name.ToLower();
+        //        accessor.Write(Position, id);
+        //        Position += 4;
+        //        accessor.Write(Position,time.Ticks);
+        //        Position += 8;
+        //        accessor.Write(Position, GetDataType<T>());
+        //        Position += 1;
+        //        switch (type)
+        //        {
+        //            case 0:
+        //                accessor.Write(Position,Convert.ToBoolean(value[0]));
+        //                Position += 1;
+        //                break;
+        //            case 1:
+        //                accessor.Write(Position, Convert.ToByte(value[0]));
+        //                Position += 1;
+        //                break;
+        //            case 2:
+        //                accessor.Write(Position, Convert.ToInt16(value[0]));
+        //                Position += 2;
+        //                break;
+        //            case 3:
+        //                accessor.Write(Position, Convert.ToUInt16(value[0]));
+        //                Position += 2;
+        //                break;
+        //            case 4:
+        //                accessor.Write(Position, Convert.ToInt32(value[0]));
+        //                Position += 4;
+        //                break;
+        //            case 5:
+        //                accessor.Write(Position, Convert.ToUInt32(value[0]));
+        //                Position += 4;
+        //                break;
+        //            case 6:
+        //                accessor.Write(Position, Convert.ToInt64(value[0]));
+        //                Position += 8;
+        //                break;
+        //            case 7:
+        //                accessor.Write(Position, Convert.ToUInt64(value[0]));
+        //                Position += 8;
+        //                break;
+        //            case 8:
+        //                accessor.Write(Position, Convert.ToSingle(value[0]));
+        //                Position += 4;
+        //                break;
+        //            case 9:
+        //                accessor.Write(Position, Convert.ToDouble(value[0]));
+        //                Position += 8;
+        //                break;
+        //            case 10:
+        //                accessor.Write(Position, Convert.ToDateTime(value[0]).Ticks);
+        //                Position += 8;
+        //                break;
+        //            case 11:
+        //                var bs = Encoding.UTF8.GetBytes(value[0] != null ? value[0].ToString() : "");
+        //                short len = (short)Math.Min(bs.Length, 256);
+        //                accessor.Write(Position, len);
+        //                Position += 2;
+        //                accessor.WriteArray<byte>(Position, bs, 0, len);
+        //                Position += 254;
+        //                break;
+        //            case 12:
+        //                accessor.Write(Position, Convert.ToInt32(value[0]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToInt32(value[1]));
+        //                Position += 4;
+        //                break;
+        //            case 13:
+        //                accessor.Write(Position, Convert.ToUInt32(value[0]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToUInt32(value[1]));
+        //                Position += 4;
+        //                break;
+        //            case 14:
+        //                accessor.Write(Position, Convert.ToInt32(value[0]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToInt32(value[1]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToInt32(value[2]));
+        //                Position += 4;
+        //                break;
+        //            case 15:
+        //                accessor.Write(Position, Convert.ToUInt32(value[0]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToUInt32(value[1]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToUInt32(value[2]));
+        //                Position += 4;
+        //                break;
+        //            case 16:
+        //                accessor.Write(Position, Convert.ToInt64(value[0]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToInt64(value[1]));
+        //                Position += 8;
+        //                break;
+        //            case 17:
+        //                accessor.Write(Position, Convert.ToUInt64(value[0]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToUInt64(value[1]));
+        //                Position += 8;
+        //                break;
+        //            case 18:
+        //                accessor.Write(Position, Convert.ToInt64(value[0]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToInt64(value[1]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToInt64(value[2]));
+        //                Position += 8;
+        //                break;
+        //            case 19:
+        //                accessor.Write(Position, Convert.ToUInt64(value[0]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToUInt64(value[1]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToUInt64(value[2]));
+        //                Position += 8;
+        //                break;
+        //        }
+        //        accessor.Write(Position, quality);
+        //        Position += 1;
+        //        accessor.Write(Position, (byte)1);
+        //        Position += 1;
+        //    }
+        //}
 
         /// <summary>
-        /// 
+        /// 追加数据
         /// </summary>
         /// <param name="type"></param>
         /// <param name="id"></param>
         /// <param name="time"></param>
         /// <param name="quality"></param>
         /// <param name="value"></param>
-        public void Append(TagType type,int id, DateTime time, byte quality, params object[] value)
+        public void Append(TagType type, int id, DateTime time, byte quality, params object[] value)
         {
             if (!Enable) return;
+           
             lock (mLock)
             {
-
-                var tsize = 39;
-
-                if (type == TagType.String)
+                mIsWriteBusy = true;
+                if (mIsDisposed || mCurrentMemory == null || mCurrentMemory.IsDisposed)
                 {
-                    tsize = 15 + 256;
+                    mIsWriteBusy = false;
+                    return;
                 }
 
-                CheckAndResize(Position + tsize);
-                accessor.Write(Position, id);
-                Position += 4;
-                accessor.Write(Position, time.Ticks);
-                Position += 8;
-                accessor.Write(Position, (byte)type);
-                Position += 1;
-                switch (type)
+              
+                try
                 {
-                    case TagType.Bool:
-                        accessor.Write(Position, Convert.ToBoolean(value[0]));
-                        Position += 1;
-                        break;
-                    case TagType.Byte:
-                        accessor.Write(Position, Convert.ToByte(value[0]));
-                        Position += 1;
-                        break;
-                    case TagType.Short:
-                        accessor.Write(Position, Convert.ToInt16(value[0]));
-                        Position += 2;
-                        break;
-                    case TagType.UShort:
-                        accessor.Write(Position, Convert.ToUInt16(value[0]));
-                        Position += 2;
-                        break;
-                    case TagType.Int:
-                        accessor.Write(Position, Convert.ToInt32(value[0]));
-                        Position += 4;
-                        break;
-                    case TagType.UInt:
-                        accessor.Write(Position, Convert.ToUInt32(value[0]));
-                        Position += 4;
-                        break;
-                    case TagType.Long:
-                        accessor.Write(Position, Convert.ToInt64(value[0]));
-                        Position += 8;
-                        break;
-                    case TagType.ULong:
-                        accessor.Write(Position, Convert.ToUInt64(value[0]));
-                        Position += 8;
-                        break;
-                    case TagType.Float:
-                        accessor.Write(Position, Convert.ToSingle(value[0]));
-                        Position += 4;
-                        break;
-                    case TagType.Double:
-                        accessor.Write(Position, Convert.ToDouble(value[0]));
-                        Position += 8;
-                        break;
-                    case TagType.DateTime:
-                        accessor.Write(Position, Convert.ToDateTime(value[0]).Ticks);
-                        Position += 8;
-                        break;
-                    case TagType.String:
-                        var bs = Encoding.UTF8.GetBytes(value[0] != null ? value[0].ToString() : "");
-                        accessor.WriteArray<byte>(Position, bs, 0, bs.Length);
-                        Position += 256;
-                        break;
-                    case TagType.IntPoint:
-                        accessor.Write(Position, Convert.ToInt32(value[0]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToInt32(value[1]));
-                        Position += 4;
-                        break;
-                    case TagType.UIntPoint:
-                        accessor.Write(Position, Convert.ToUInt32(value[0]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToUInt32(value[1]));
-                        Position += 4;
-                        break;
-                    case TagType.IntPoint3:
-                        accessor.Write(Position, Convert.ToInt32(value[0]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToInt32(value[1]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToInt32(value[2]));
-                        Position += 4;
-                        break;
-                    case TagType.UIntPoint3:
-                        accessor.Write(Position, Convert.ToUInt32(value[0]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToUInt32(value[1]));
-                        Position += 4;
-                        accessor.Write(Position, Convert.ToUInt32(value[2]));
-                        Position += 4;
-                        break;
-                    case TagType.LongPoint:
-                        accessor.Write(Position, Convert.ToInt64(value[0]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToInt64(value[1]));
-                        Position += 8;
-                        break;
-                    case TagType.ULongPoint:
-                        accessor.Write(Position, Convert.ToUInt64(value[0]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToUInt64(value[1]));
-                        Position += 8;
-                        break;
-                    case TagType.LongPoint3:
-                        accessor.Write(Position, Convert.ToInt64(value[0]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToInt64(value[1]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToInt64(value[2]));
-                        Position += 8;
-                        break;
-                    case TagType.ULongPoint3:
-                        accessor.Write(Position, Convert.ToUInt64(value[0]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToUInt64(value[1]));
-                        Position += 8;
-                        accessor.Write(Position, Convert.ToUInt64(value[2]));
-                        Position += 8;
-                        break;
+                    var tsize = 39;
+
+                    if (type == TagType.String)
+                    {
+                        tsize = 15 + 256;
+                    }
+                    mCurrentMemory.CheckAndResize(mCurrentMemory.Position + tsize);
+                    //CheckAndResize(mCurrentMemory.Position + tsize);
+                    mCurrentMemory.Write(id);
+                    mCurrentMemory.Write(time.Ticks);
+                    mCurrentMemory.Write((byte)type);
+                    switch (type)
+                    {
+                        case TagType.Bool:
+                            mCurrentMemory.Write(Convert.ToByte(value[0]));
+                            break;
+                        case TagType.Byte:
+                            mCurrentMemory.Write(Convert.ToByte(value[0]));
+                            break;
+                        case TagType.Short:
+                            mCurrentMemory.Write(Convert.ToInt16(value[0]));
+                            break;
+                        case TagType.UShort:
+                            mCurrentMemory.Write(Convert.ToUInt16(value[0]));
+                            break;
+                        case TagType.Int:
+                            mCurrentMemory.Write(Convert.ToInt32(value[0]));
+                            break;
+                        case TagType.UInt:
+                            mCurrentMemory.Write(Convert.ToUInt32(value[0]));
+                            break;
+                        case TagType.Long:
+                            mCurrentMemory.Write(Convert.ToInt64(value[0]));
+                            break;
+                        case TagType.ULong:
+                            mCurrentMemory.Write(Convert.ToUInt64(value[0]));
+                            break;
+                        case TagType.Float:
+                            mCurrentMemory.Write(Convert.ToSingle(value[0]));
+                            break;
+                        case TagType.Double:
+                            mCurrentMemory.Write(Convert.ToDouble(value[0]));
+                            break;
+                        case TagType.DateTime:
+                            mCurrentMemory.Write(Convert.ToDateTime(value[0]).Ticks);
+                            break;
+                        case TagType.String:
+                            var bs = Encoding.UTF8.GetBytes(value[0] != null ? value[0].ToString() : "");
+                            short len = (short)Math.Min(bs.Length, 256);
+                            mCurrentMemory.Write(len);
+                            mCurrentMemory.WriteBytes(mCurrentMemory.Position, bs, 0, len);
+                            break;
+                        case TagType.IntPoint:
+                            mCurrentMemory.Write(Convert.ToInt32(value[0]));
+                            mCurrentMemory.Write(Convert.ToInt32(value[1]));
+                            break;
+                        case TagType.UIntPoint:
+                            mCurrentMemory.Write(Convert.ToUInt32(value[0]));
+                            mCurrentMemory.Write(Convert.ToUInt32(value[1]));
+                            break;
+                        case TagType.IntPoint3:
+                            mCurrentMemory.Write(Convert.ToInt32(value[0]));
+                            mCurrentMemory.Write(Convert.ToInt32(value[1]));
+                            mCurrentMemory.Write(Convert.ToInt32(value[2]));
+                            break;
+                        case TagType.UIntPoint3:
+                            mCurrentMemory.Write(Convert.ToUInt32(value[0]));
+                            mCurrentMemory.Write(Convert.ToUInt32(value[1]));
+                            mCurrentMemory.Write(Convert.ToUInt32(value[2]));
+                            break;
+                        case TagType.LongPoint:
+                            mCurrentMemory.Write(Convert.ToInt64(value[0]));
+                            mCurrentMemory.Write(Convert.ToInt64(value[1]));
+                            break;
+                        case TagType.ULongPoint:
+                            mCurrentMemory.Write(Convert.ToUInt64(value[0]));
+                            mCurrentMemory.Write(Convert.ToUInt64(value[1]));
+                            break;
+                        case TagType.LongPoint3:
+                            mCurrentMemory.Write(Convert.ToInt64(value[0]));
+                            mCurrentMemory.Write(Convert.ToInt64(value[1]));
+                            mCurrentMemory.Write(Convert.ToInt64(value[2]));
+                            break;
+                        case TagType.ULongPoint3:
+                            mCurrentMemory.Write(Convert.ToUInt64(value[0]));
+                            mCurrentMemory.Write(Convert.ToUInt64(value[1]));
+                            mCurrentMemory.Write(Convert.ToUInt64(value[2]));
+                            break;
+                    }
+                    mCurrentMemory.Write(quality);
+                    mCurrentMemory.Write((byte)1);
                 }
-                accessor.Write(Position, quality);
-                Position += 1;
-                accessor.Write(Position, (byte)1);
-                Position += 1;
+                catch
+                {
+
+                }
+                mIsWriteBusy = false;
             }
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="type"></param>
+        ///// <param name="id"></param>
+        ///// <param name="time"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="value"></param>
+        //public void Append(TagType type,int id, DateTime time, byte quality, params object[] value)
+        //{
+        //    if (!Enable) return;
+        //    lock (mLock)
+        //    {
+
+        //        var tsize = 39;
+
+        //        if (type == TagType.String)
+        //        {
+        //            tsize = 15 + 256;
+        //        }
+
+        //        CheckAndResize(Position + tsize);
+        //        accessor.Write(Position, id);
+        //        Position += 4;
+        //        accessor.Write(Position, time.Ticks);
+        //        Position += 8;
+        //        accessor.Write(Position, (byte)type);
+        //        Position += 1;
+        //        switch (type)
+        //        {
+        //            case TagType.Bool:
+        //                accessor.Write(Position, Convert.ToBoolean(value[0]));
+        //                Position += 1;
+        //                break;
+        //            case TagType.Byte:
+        //                accessor.Write(Position, Convert.ToByte(value[0]));
+        //                Position += 1;
+        //                break;
+        //            case TagType.Short:
+        //                accessor.Write(Position, Convert.ToInt16(value[0]));
+        //                Position += 2;
+        //                break;
+        //            case TagType.UShort:
+        //                accessor.Write(Position, Convert.ToUInt16(value[0]));
+        //                Position += 2;
+        //                break;
+        //            case TagType.Int:
+        //                accessor.Write(Position, Convert.ToInt32(value[0]));
+        //                Position += 4;
+        //                break;
+        //            case TagType.UInt:
+        //                accessor.Write(Position, Convert.ToUInt32(value[0]));
+        //                Position += 4;
+        //                break;
+        //            case TagType.Long:
+        //                accessor.Write(Position, Convert.ToInt64(value[0]));
+        //                Position += 8;
+        //                break;
+        //            case TagType.ULong:
+        //                accessor.Write(Position, Convert.ToUInt64(value[0]));
+        //                Position += 8;
+        //                break;
+        //            case TagType.Float:
+        //                accessor.Write(Position, Convert.ToSingle(value[0]));
+        //                Position += 4;
+        //                break;
+        //            case TagType.Double:
+        //                accessor.Write(Position, Convert.ToDouble(value[0]));
+        //                Position += 8;
+        //                break;
+        //            case TagType.DateTime:
+        //                accessor.Write(Position, Convert.ToDateTime(value[0]).Ticks);
+        //                Position += 8;
+        //                break;
+        //            case TagType.String:
+        //                var bs = Encoding.UTF8.GetBytes(value[0] != null ? value[0].ToString() : "");
+        //                short len = (short)Math.Min(bs.Length, 256);
+        //                accessor.Write(Position, len);
+        //                Position += 2;
+        //                accessor.WriteArray<byte>(Position, bs, 0, len);
+        //                Position += 254;
+        //                break;
+        //            case TagType.IntPoint:
+        //                accessor.Write(Position, Convert.ToInt32(value[0]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToInt32(value[1]));
+        //                Position += 4;
+        //                break;
+        //            case TagType.UIntPoint:
+        //                accessor.Write(Position, Convert.ToUInt32(value[0]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToUInt32(value[1]));
+        //                Position += 4;
+        //                break;
+        //            case TagType.IntPoint3:
+        //                accessor.Write(Position, Convert.ToInt32(value[0]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToInt32(value[1]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToInt32(value[2]));
+        //                Position += 4;
+        //                break;
+        //            case TagType.UIntPoint3:
+        //                accessor.Write(Position, Convert.ToUInt32(value[0]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToUInt32(value[1]));
+        //                Position += 4;
+        //                accessor.Write(Position, Convert.ToUInt32(value[2]));
+        //                Position += 4;
+        //                break;
+        //            case TagType.LongPoint:
+        //                accessor.Write(Position, Convert.ToInt64(value[0]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToInt64(value[1]));
+        //                Position += 8;
+        //                break;
+        //            case TagType.ULongPoint:
+        //                accessor.Write(Position, Convert.ToUInt64(value[0]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToUInt64(value[1]));
+        //                Position += 8;
+        //                break;
+        //            case TagType.LongPoint3:
+        //                accessor.Write(Position, Convert.ToInt64(value[0]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToInt64(value[1]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToInt64(value[2]));
+        //                Position += 8;
+        //                break;
+        //            case TagType.ULongPoint3:
+        //                accessor.Write(Position, Convert.ToUInt64(value[0]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToUInt64(value[1]));
+        //                Position += 8;
+        //                accessor.Write(Position, Convert.ToUInt64(value[2]));
+        //                Position += 8;
+        //                break;
+        //        }
+        //        accessor.Write(Position, quality);
+        //        Position += 1;
+        //        accessor.Write(Position, (byte)1);
+        //        Position += 1;
+        //    }
+        //}
 
         //private long mCount = 0;
 
         /// <summary>
-        /// 
+        /// 追加数据
         /// </summary>
         /// <param name="type"></param>
         /// <param name="id"></param>
@@ -889,32 +1302,103 @@ namespace Cdy.Tag
 
             lock (mLock)
             {
+                mIsWriteBusy = true;
                 //Console.WriteLine($"Record {id} {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")} ");
-
-                var tsize = 39;
-
-                if (type == TagType.String)
+                if (mIsDisposed || mCurrentMemory == null || mCurrentMemory.IsDisposed)
                 {
-                    tsize = 15 + 256;
+                    mIsWriteBusy = false;
+                    return;
                 }
+                
+              
+                try
+                {
+                    var tsize = 39;
 
-                CheckAndResize(Position + tsize);
-                accessor.Write(Position, id);
-                Position += 4;
-                accessor.Write(Position, time.Ticks);
-                Position += 8;
-                accessor.Write(Position, (byte)type);
-                Position += 1;
-                accessor.WriteArray<byte>(Position,value,0,value.Length);
-                Position+=value.Length;
-                accessor.Write(Position, quality);
-                Position += 1;
-                accessor.Write(Position, (byte)1);
-                Position += 1;
-                //mCount++;
+                    if (type == TagType.String)
+                    {
+                        tsize = 15 + 256;
+                    }
 
+                    mCurrentMemory.CheckAndResize(mCurrentMemory.Position + tsize);
+                    //CheckAndResize(mCurrentMemory.Position + tsize);
+                    mCurrentMemory.Write(id);
+                    mCurrentMemory.Write(time.Ticks);
+                    mCurrentMemory.Write((byte)type);
+
+                    if (type == TagType.String)
+                    {
+                        mCurrentMemory.Write((short)value.Length);
+                        mCurrentMemory.WriteBytes(mCurrentMemory.Position, value, 0, value.Length);
+                    }
+                    else
+                    {
+                        mCurrentMemory.WriteBytes(mCurrentMemory.Position, value, 0, value.Length);
+                    }
+
+                    mCurrentMemory.Write(quality);
+                    mCurrentMemory.Write((byte)1);
+                }
+                catch
+                {
+
+                }
+                mIsWriteBusy = false;
             }
         }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="type"></param>
+        ///// <param name="id"></param>
+        ///// <param name="time"></param>
+        ///// <param name="quality"></param>
+        ///// <param name="value"></param>
+        //public void Append(TagType type, int id, DateTime time, byte quality, byte[] value)
+        //{
+        //    if (!Enable) return;
+
+        //    lock (mLock)
+        //    {
+        //        //Console.WriteLine($"Record {id} {DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff")} ");
+
+        //        var tsize = 39;
+
+        //        if (type == TagType.String)
+        //        {
+        //            tsize = 15 + 256;
+        //        }
+
+        //        CheckAndResize(Position + tsize);
+        //        accessor.Write(Position, id);
+        //        Position += 4;
+        //        accessor.Write(Position, time.Ticks);
+        //        Position += 8;
+        //        accessor.Write(Position, (byte)type);
+        //        Position += 1;
+
+        //        if(type== TagType.String)
+        //        {
+        //            accessor.Write(Position, (short)value.Length);
+        //            Position += 2;
+        //            accessor.WriteArray<byte>(Position, value, 0, value.Length);
+        //            Position += 254;
+        //        }
+        //        else
+        //        {
+        //            accessor.WriteArray<byte>(Position, value, 0, value.Length);
+        //            Position += value.Length;
+        //        }
+
+        //        accessor.Write(Position, quality);
+        //        Position += 1;
+        //        accessor.Write(Position, (byte)1);
+        //        Position += 1;
+        //        //mCount++;
+
+        //    }
+        //}
 
         /// <summary>
         /// 读取
@@ -993,17 +1477,26 @@ namespace Cdy.Tag
                     break;
                 case TagType.Float:
                     value = accessor.ReadSingle(Position);
-                    Position += 8;
+                    Position += 4;
                     break;
                 case TagType.DateTime:
                     value = DateTime.FromBinary(accessor.ReadInt64(Position));
                     Position += 8;
                     break;
                 case TagType.String:
-                    var bts = new byte[256];
-                    accessor.ReadArray<byte>(Position, bts, 0, bts.Length);
-                    value = Encoding.UTF8.GetString(bts);
-                    Position += 256;
+                   var len =  accessor.ReadUInt16(Position);
+                    Position += 2;
+                    if (len > 0)
+                    {
+                        var bts = new byte[len];
+                        accessor.ReadArray<byte>(Position, bts, 0, bts.Length);
+                        value = Encoding.UTF8.GetString(bts);
+                    }
+                    else
+                    {
+                        value = "";
+                    }
+                    Position += 254;
                     break;
                 case TagType.IntPoint:
                     var ival1 = accessor.ReadInt32(Position);
@@ -1079,7 +1572,7 @@ namespace Cdy.Tag
         }
 
         /// <summary>
-        /// 
+        /// 读取所有
         /// </summary>
         /// <param name="type"></param>
         /// <param name="id"></param>
@@ -1103,90 +1596,126 @@ namespace Cdy.Tag
             }
         }
 
-        private byte GetDataType<T>()
-        {
-            var sname = typeof(T).Name.ToLower();
+        //private byte GetDataType<T>()
+        //{
+        //    var sname = typeof(T).Name.ToLower();
 
-            switch (sname)
-            {
-                case "boolean":
-                   return 0;
-                case "byte":
-                    return 1;
-                case "int16":
-                    return 2;
-                case "uint16":
-                    return 3;
-                case "int32":
-                    return 4;
-                case "uint32":
-                    return 5;
-                case "int64":
-                    return 6;
-                case "uint64":
-                    return 7;
-                case "single":
-                    return 8;
-                case "double":
-                    return 9;
-                case "datetime":
-                    return 10;
-                case "string":
-                    return 11;
-                case "intpointdata":
-                    return 12;
-                case "uintpointdata":
-                    return 13;
-                case "intpoint3data":
-                    return 14;
-                case "uintpoint3data":
-                    return 15;
-                case "longpointdata":
-                    return 16;
-                case "ulongpointdata":
-                    return 17;
-                case "longpoint3data":
-                    return 18;
-                case "ulongpoint3data":
-                    return 19;
-            }
+        //    switch (sname)
+        //    {
+        //        case "boolean":
+        //           return 0;
+        //        case "byte":
+        //            return 1;
+        //        case "int16":
+        //            return 2;
+        //        case "uint16":
+        //            return 3;
+        //        case "int32":
+        //            return 4;
+        //        case "uint32":
+        //            return 5;
+        //        case "int64":
+        //            return 6;
+        //        case "uint64":
+        //            return 7;
+        //        case "single":
+        //            return 8;
+        //        case "double":
+        //            return 9;
+        //        case "datetime":
+        //            return 10;
+        //        case "string":
+        //            return 11;
+        //        case "intpointdata":
+        //            return 12;
+        //        case "uintpointdata":
+        //            return 13;
+        //        case "intpoint3data":
+        //            return 14;
+        //        case "uintpoint3data":
+        //            return 15;
+        //        case "longpointdata":
+        //            return 16;
+        //        case "ulongpointdata":
+        //            return 17;
+        //        case "longpoint3data":
+        //            return 18;
+        //        case "ulongpoint3data":
+        //            return 19;
+        //    }
 
-            return 0;
-        }
+        //    return 0;
+        //}
 
         /// <summary>
-        /// 
+        /// 清空缓冲文件
         /// </summary>
         public void Clear()
         {
-            string spaty = System.IO.Path.Combine(ServiceLocator.Locator.Resolve("DatabaseLocation").ToString(), "Cache", AreaName + Time.ToString("yyyyMMddHHmm")+ Id + ".ch");
-            
-            if(!string.IsNullOrEmpty(FileName))
+            lock (mLocker)
             {
-                spaty = FileName;
-            }
+                try
+                {
+                    string spaty = System.IO.Path.Combine(ServiceLocator.Locator.Resolve("DatabaseLocation").ToString(), "Cache", AreaName + Time.ToString("yyyyMMddHHmm") + Id + ".ch");
 
-            if(System.IO.File.Exists(spaty))
-            {
-                System.IO.File.Delete(spaty);
+                    if (!string.IsNullOrEmpty(FileName))
+                    {
+                        spaty = FileName;
+                    }
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            if (System.IO.File.Exists(spaty))
+                            {
+                                System.IO.File.Delete(spaty);
+                            }
+                        }
+                        catch (Exception eex)
+                        {
+                            LoggerService.Service.Warn("LogStorageManager", $"{eex.Message} {eex.StackTrace}");
+                        }
+                    });
+
+                }
+                catch (Exception ex)
+                {
+                    LoggerService.Service.Warn("LogStorageManager", $"{ex.Message} {ex.StackTrace}");
+                }
             }
         }
 
+      
+
         /// <summary>
-        /// 
+        /// Dispose
         /// </summary>
         public void Dispose()
         {
+            while (mIsWriteBusy || mIsFlushBusy) Thread.Sleep(1);
+            mIsDisposed = true;
+
             if (accessor != null)
             {
                 accessor.Dispose();
                 accessor= null;
+            }
+            if(mViewStream!=null)
+            {
+                mViewStream.Dispose();
+                mViewStream = null;
             }
             if (mmf != null)
             {
                 mmf.Dispose();
                 mmf= null;
             }
+
+            mCachMemroy1?.Dispose();
+            mCachMemroy2?.Dispose();
+            mCachMemroy2 = null;
+            mCachMemroy1 = null;
+            mCurrentMemory = null;
         }
 
         #endregion ...Methods...

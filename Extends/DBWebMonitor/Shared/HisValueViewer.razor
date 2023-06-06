@@ -1,0 +1,570 @@
+﻿@using AntDesign.Charts;
+@using Blazor.ECharts.Options;
+@using Cdy.Tag;
+@inject MarsProxy mProxy;
+@using X = Blazor.ECharts.Options.Series.Line
+
+<div class="d-flex flex-column" style="min-width:800px" id="@Id">
+    <div class="hstack  m-2 align-items-center">
+        <span>历史数据查询方式</span>
+        <div class="hstack mx-2">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" @onclick="@(()=>IsOrignalValue=true)" checked="@IsOrignalValue">
+                <label class="form-check-label" for="flexRadioDefault1">
+                    原始值
+                </label>
+            </div>
+            <div class="form-check  mx-4">
+                <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" @onclick="@(()=>IsOrignalValue=false)" checked="@(!IsOrignalValue)">
+                <label class="form-check-label" for="flexRadioDefault2">
+                   数据拟合值
+                </label>
+            </div>
+        </div>
+        <div class="form-check  mx-4">
+            <input class="form-check-input" type="checkbox" id="flexCheckDefault" @bind=mIgnorSystemExit disabled="@(mIsOrignalValue)">
+            <label class="form-check-label" for="flexCheckDefault">
+               忽略系统退出对拟合的影响
+            </label>
+        </div>
+    </div>
+    <div class="hstack m-2">
+        <span class="me-2">开始时间</span>
+        <AntDesign.DatePicker TValue="DateTime?" ShowTime="true" ShowToday="true" Value="@mStartTime" DefaultValue="@(DateTime.Now.Date)" OnChange="OnStartTimeChange" />
+        <span class="m-2">结束时间</span>
+        <AntDesign.DatePicker TValue="DateTime?" ShowTime="true" ShowToday="true" Value="@mEndTime" DefaultValue="@(DateTime.Now.Date.AddDays(1))" OnChange="OnEndTimeChange" />
+
+        <button class="btn btn-primary py-0 mx-2" style="width:80px" disabled="@mIsBusy" onclick="@(()=>{ExecuteQuery(); })">查询</button>
+
+    </div>
+    <AntDesign.Tabs>
+        <AntDesign.TabPane Tab="曲线分析">
+            <div class="d-flex" style="height:400px">
+                <button class="btn btn-light" style="width:32px;height:400px" onclick="@(()=>PrevMove())">&lt;</button>
+                <div class="flex-fill" style="width:auto">
+                   @* <AntDesign.Charts.Line Config="@config" Data="@mAllValues" @ref=mLineChart>
+
+                    </AntDesign.Charts.Line>*@
+                    <Blazor.ECharts.Components.ELine Class="chart-fill" @ref=mLineChart Style="height:400px" >
+                       
+                    </Blazor.ECharts.Components.ELine>
+                </div>
+                
+                <button class="btn btn-light" style="width:32px;height:400px" onclick="@(()=>NextMove())">&gt;</button>
+            </div>
+           
+        </AntDesign.TabPane>
+        <AntDesign.TabPane Tab="详情列表">
+            <div class="mx-2 my-1" style="height:400px;overflow-y:auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">序号</th>
+                            <th scope="col">时间</th>
+                            <th scope="col">值</th>
+                            <th scope="col">质量</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int i = 1;
+                            foreach (var vv in mValues)
+                            {
+                                <tr class="tr">
+                                    <td scope="row" style="width:48px">
+                                        <span>@((i++).ToString())</span>
+                                    </td>
+                                    <td scope="row">
+                                        <span>@(vv.Time.ToString())</span>
+                                    </td>
+                                    <td scope="row">
+                                        <span>@vv.Value</span>
+                                    </td>
+                                    <td scope="row">
+                                        <span>@vv.Quality</span>
+                                    </td>
+                                   
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </AntDesign.TabPane>
+    </AntDesign.Tabs>
+</div>
+@code {
+    private bool mIsChanged=false;
+
+    private long mId;
+
+    [Parameter]
+    public long Id{
+        get { return mId; } 
+        set
+        {   
+            if (mId != value)
+            {
+                mId=value;
+                mIsChanged = true;
+            }
+        }
+    }
+
+    [Parameter]
+    public int TagId{ get; set; }
+
+    [Parameter]
+    public TagType TagType{ get; set; }
+
+    private bool mIsOrignalValue = true;
+    private bool mIgnorSystemExit = false;
+
+    public bool IsOrignalValue
+    {
+        get
+        {
+            return mIsOrignalValue;
+        }
+        set
+        {
+            mIsOrignalValue = value;
+        }
+    }
+
+    private DateTime mStartTime = DateTime.Now.Date;
+    private DateTime mEndTime = DateTime.Now.Date.AddDays(1);
+
+    // private AntDesign.Charts.Line mLineChart;
+
+    private Blazor.ECharts.Components.ELine mLineChart;
+
+    private void PrevMove()
+    {
+        mStartTime = mStartTime.AddHours(-12);
+        mEndTime = mEndTime.AddHours(-12);
+        ExecuteQuery();
+    }
+
+    private void NextMove()
+    {
+        mStartTime = mStartTime.AddHours(12);
+        mEndTime = mEndTime.AddHours(12);
+        ExecuteQuery();
+    }
+
+    private void OnStartTimeChange(AntDesign.DateTimeChangedEventArgs args)
+    {
+        if(args.Date!=null)
+            mStartTime = args.Date.Value;
+    }
+
+    private void OnEndTimeChange(AntDesign.DateTimeChangedEventArgs args)
+    {
+        if (args.Date != null)
+            mEndTime = args.Date.Value;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        if (mIsChanged)
+        {
+            mIsChanged = false;
+            mIsOrignalValue = true;
+            mIgnorSystemExit = false;
+            if (mLineChart != null)
+            {
+                mAllValues.Clear();
+                mValues.Clear();
+                //mLineChart.ChangeData(mAllValues);
+                ExecuteQuery();
+            }
+
+            StateHasChanged();
+        }
+    }
+
+
+    //LineConfig config = new LineConfig()
+    //    {
+    //        Padding = "auto",
+    //        AutoFit=true,
+    //        XField = "time",
+    //        YField = "value",
+    //        XAxis = new ValueCatTimeAxis() { Type = "time", Label = new BaseAxisLabel { Visible = true } },
+    //        Tooltip = new Tooltip(){Visible=true},
+    //        Smooth = true,
+
+    //    };
+
+    private EChartsOption<X.Line> option = new EChartsOption<X.Line>()
+        {
+            YAxis = new List<YAxis>()
+            {
+                new YAxis()
+                {
+                    Type = Blazor.ECharts.Options.Enum.AxisType.Value,
+                    SplitLine = new SplitLine()
+                    {
+                        Show = true,
+                    },
+                   
+                }
+            },
+            XAxis = new List<XAxis>()
+            {
+                new XAxis()
+                {
+                    Type = Blazor.ECharts.Options.Enum.AxisType.Category,
+                    SplitLine = new SplitLine()
+                    {
+                        Show = true
+                    },
+                    Name = "时间",
+                    BoundaryGap = false,
+                    AxisLabel = new AxisLabel() { Show = true },
+
+                }
+            },
+            Toolbox = new Toolbox()
+            {
+                Show = true,
+                Feature = new Feature() { SaveAsImage = new SaveAsImage() { Show = true }, DataZoom = new FeatureDataZoom() },
+                Top = 0
+            },
+            Tooltip=new Blazor.ECharts.Options.Tooltip{
+                  Trigger= Blazor.ECharts.Options.Enum.TooltipTrigger.Axis,
+                  AxisPointer = new TooltipAxisPointer(){Type = Blazor.ECharts.Options.Enum.AxisPointerType.Cross}   
+            },
+            Series = new List<object>()
+            {
+                new X.Line()
+                {
+                    Smooth=true,
+                    Name="值",
+                    ShowSymbol=false
+                }
+            },
+            Legend = new Blazor.ECharts.Options.Legend(){Show=false},
+            Title=new Blazor.ECharts.Options.Title(){Show=false,Padding="0 px"},
+            DataZoom = new List<object>()
+            {
+                new
+                {
+                    type= "inside",
+                    xAxisIndex=0,
+                    filterMode="filter"
+                },
+                // new
+                //{
+                //    type= "inside",
+                //    yAxisIndex=0,
+                //    filterMode="filter"
+                //}
+            }
+    };
+
+    #region query
+
+    private bool mIsBusy = false;
+
+    /// <summary>
+    ///
+    /// </summary>
+    public void ExecuteQuery()
+    {
+
+        if (!mIsBusy)
+        {
+            mIsBusy = true;
+            Task.Run(async () =>
+            {
+                mAllValues.Clear();
+                if (mIsOrignalValue)
+                {
+                    ExecuteQueryAll();
+                }
+                else 
+                {
+                    ExecuteQueryFitting();
+                }
+                mIsBusy = false;
+
+                (option.XAxis[0] as XAxis).Data = mAllValues.Select(e => e.name.ToString("yyyy-MM-dd HH:mm:ss"));
+                (option.Series[0] as X.Line).Data = mAllValues.Select(e => e.value);
+                await mLineChart.SetupOptionAsync(option);
+
+                //InvokeAsync(StateHasChanged);
+                //mLineChart.ChangeData(mAllValues, true);
+
+                await InvokeAsync(() =>
+                {
+                    mLineChart.Refresh();
+
+                    //mLineChart.UpdateChart();
+                    StateHasChanged();
+                });
+               
+               
+                //mLineChart.UpdateChart();
+            });
+        }
+    }
+
+    /// <summary>
+    /// 执行查询所有值
+    /// </summary>
+    private void ExecuteQueryAll()
+    {
+        switch (TagType)
+        {
+            case Cdy.Tag.TagType.Bool:
+                ExecuteQueryAll<bool>();
+                break;
+            case Cdy.Tag.TagType.Byte:
+                ExecuteQueryAll<byte>();
+                break;
+            case Cdy.Tag.TagType.DateTime:
+                ExecuteQueryAll<DateTime>();
+                break;
+            case Cdy.Tag.TagType.Double:
+                ExecuteQueryAll<double>();
+                break;
+            case Cdy.Tag.TagType.Float:
+                ExecuteQueryAll<float>();
+                break;
+            case Cdy.Tag.TagType.Int:
+                ExecuteQueryAll<int>();
+                break;
+            case Cdy.Tag.TagType.Long:
+                ExecuteQueryAll<long>();
+                break;
+            case Cdy.Tag.TagType.Short:
+                ExecuteQueryAll<short>();
+                break;
+            case Cdy.Tag.TagType.String:
+                ExecuteQueryAll<string>();
+                break;
+            case Cdy.Tag.TagType.UInt:
+                ExecuteQueryAll<uint>();
+                break;
+            case Cdy.Tag.TagType.ULong:
+                ExecuteQueryAll<ulong>();
+                break;
+            case Cdy.Tag.TagType.UShort:
+                ExecuteQueryAll<ushort>();
+                break;
+            case Cdy.Tag.TagType.IntPoint:
+                ExecuteQueryAll<IntPointData>();
+                break;
+            case Cdy.Tag.TagType.UIntPoint:
+                ExecuteQueryAll<UIntPointData>();
+                break;
+            case Cdy.Tag.TagType.IntPoint3:
+                ExecuteQueryAll<IntPoint3Data>();
+                break;
+            case Cdy.Tag.TagType.UIntPoint3:
+                ExecuteQueryAll<UIntPoint3Data>();
+                break;
+            case Cdy.Tag.TagType.LongPoint:
+                ExecuteQueryAll<LongPointData>();
+                break;
+            case Cdy.Tag.TagType.ULongPoint:
+                ExecuteQueryAll<ULongPointTag>();
+                break;
+            case Cdy.Tag.TagType.LongPoint3:
+                ExecuteQueryAll<LongPoint3Data>();
+                break;
+            case Cdy.Tag.TagType.ULongPoint3:
+                ExecuteQueryAll<ULongPoint3Data>();
+                break;
+        }
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    private void ExecuteQueryAll<T>()
+    {
+        var vals = mProxy?.QueryAllHisValue<T>(TagId, mStartTime, mEndTime);
+        if (vals != null && vals.Count > 0)
+        {
+            FillValues(vals);
+        }
+        else
+        {
+            FillNullValues(mStartTime, mEndTime, new TimeSpan(0, 0, (int)((mEndTime - mStartTime).TotalSeconds / 100)));
+        }
+    }
+
+    private int mFittingType = 0;
+    private int mTimeDuration = 1;
+
+    /// <summary>
+    /// 执行查询拟合值
+    /// </summary>
+    private void ExecuteQueryFitting()
+    {
+        switch (TagType)
+        {
+            case Cdy.Tag.TagType.Bool:
+                ExecuteQueryFitting<bool>();
+                break;
+            case Cdy.Tag.TagType.Byte:
+                ExecuteQueryFitting<byte>();
+                break;
+            case Cdy.Tag.TagType.DateTime:
+                ExecuteQueryFitting<DateTime>();
+                break;
+            case Cdy.Tag.TagType.Double:
+                ExecuteQueryFitting<double>();
+                break;
+            case Cdy.Tag.TagType.Float:
+                ExecuteQueryFitting<float>();
+                break;
+            case Cdy.Tag.TagType.Int:
+                ExecuteQueryFitting<int>();
+                break;
+            case Cdy.Tag.TagType.Long:
+                ExecuteQueryFitting<long>();
+                break;
+            case Cdy.Tag.TagType.Short:
+                ExecuteQueryFitting<short>();
+                break;
+            case Cdy.Tag.TagType.String:
+                ExecuteQueryFitting<string>();
+                break;
+            case Cdy.Tag.TagType.UInt:
+                ExecuteQueryFitting<uint>();
+                break;
+            case Cdy.Tag.TagType.ULong:
+                ExecuteQueryFitting<ulong>();
+                break;
+            case Cdy.Tag.TagType.UShort:
+                ExecuteQueryFitting<ushort>();
+                break;
+            case Cdy.Tag.TagType.IntPoint:
+                ExecuteQueryFitting<IntPointData>();
+                break;
+            case Cdy.Tag.TagType.UIntPoint:
+                ExecuteQueryFitting<UIntPointData>();
+                break;
+            case Cdy.Tag.TagType.IntPoint3:
+                ExecuteQueryFitting<IntPoint3Data>();
+                break;
+            case Cdy.Tag.TagType.UIntPoint3:
+                ExecuteQueryFitting<UIntPoint3Data>();
+                break;
+            case Cdy.Tag.TagType.LongPoint:
+                ExecuteQueryFitting<LongPointData>();
+                break;
+            case Cdy.Tag.TagType.ULongPoint:
+                ExecuteQueryFitting<ULongPointTag>();
+                break;
+            case Cdy.Tag.TagType.LongPoint3:
+                ExecuteQueryFitting<LongPoint3Data>();
+                break;
+            case Cdy.Tag.TagType.ULongPoint3:
+                ExecuteQueryFitting<ULongPoint3Data>();
+                break;
+        }
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    private void ExecuteQueryFitting<T>()
+    {
+        if (mIgnorSystemExit)
+        {
+            var vals = mProxy.QueryHisValueForTimeSpanByIgnorSystemExit<T>(TagId, mStartTime, mEndTime, new TimeSpan(0, 0, mTimeDuration), (QueryValueMatchType)mFittingType);
+            if (vals != null && vals.Count > 0)
+            {
+                FillValues(vals);
+            }
+        }
+        else
+        {
+            var vals = mProxy?.QueryHisValueForTimeSpan<T>(TagId, mStartTime, mEndTime, new TimeSpan(0, 0, mTimeDuration), (QueryValueMatchType)mFittingType);
+            if (vals != null && vals.Count > 0)
+            {
+                FillValues(vals);
+            }
+        }
+    }
+
+    private List<DoubleValuePoint> mAllValues = new List<DoubleValuePoint>();
+    private List<ValuePoint> mValues = new List<ValuePoint>();
+
+    private void FillValues<T>(HisQueryResult<T> points)
+    {
+        mValues.Clear();
+        mAllValues.Clear();
+        foreach (var vv in points.ListAvaiableValues())
+        {
+            mValues.Add(new ValuePoint() { Time = vv.Time.ToLocalTime(), Value = vv.Value, Quality = vv.Quality });
+        }
+
+        for (int i = 0; i < points.Count; i++)
+        {
+            var vv = points.GetValue(i, out DateTime time, out byte quality);
+            //mAllValues.Add(new { time = time.ToLocalTime(), value = Math.Round(Convert.ToDouble(vv),5) });
+            mAllValues.Add(new DoubleValuePoint() { name = time.ToLocalTime(), value = Math.Round(Convert.ToDouble(vv), 5), Quality = quality });
+        }
+
+    }
+
+    private void FillNullValues(DateTime startime, DateTime endtime, TimeSpan dur)
+    {
+        mAllValues.Clear();
+        DateTime dt = startime;
+        while (dt <= endtime)
+        {
+            //mAllValues.Add(new { time = dt, value = 0 });
+            mAllValues.Add(new DoubleValuePoint() { name = dt, value = 0, Quality = (byte)QualityConst.Null });
+            dt = dt.Add(dur);
+        }
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    public struct ValuePoint
+    {
+        /// <summary>
+        /// 时间
+        /// </summary>
+        public DateTime Time { get; set; }
+        /// <summary>
+        /// 值
+        /// </summary>
+        public object Value { get; set; }
+        /// <summary>
+        /// 质量戳
+        /// </summary>
+        public byte Quality { get; set; }
+
+    }
+
+    public struct DoubleValuePoint
+    {
+        /// <summary>
+        /// 时间
+        /// </summary>
+        public DateTime name { get; set; }
+        /// <summary>
+        /// 值
+        /// </summary>
+        public Double value { get; set; }
+        /// <summary>
+        /// 质量戳
+        /// </summary>
+        public byte Quality { get; set; }
+
+    }
+
+    #endregion
+}

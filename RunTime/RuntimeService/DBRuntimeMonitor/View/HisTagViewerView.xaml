@@ -34,6 +34,7 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" Height="32">
                 <RadioButton GroupName="rt" BorderBrush="{DynamicResource Window.Forground}" Background="Transparent" HorizontalAlignment="Left" Foreground="{DynamicResource Window.Forground}"  Grid.Column="7" IsChecked="{Binding IsOriginalValue}" Content="{local:ResMarker OriginalValue}" VerticalAlignment="Center" Margin="10,0" />
                 <RadioButton GroupName="rt" BorderBrush="{DynamicResource Window.Forground}" Background="Transparent" HorizontalAlignment="Left" Foreground="{DynamicResource Window.Forground}"  Grid.Column="8" IsChecked="{Binding IsFittingValue}" Content="{local:ResMarker FittingValue}" VerticalAlignment="Center" Margin="50,0" />
+                <CheckBox IsEnabled="{Binding IsFittingValue}" IsChecked="{Binding IgnorClosedQuality,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" BorderBrush="{DynamicResource Window.Forground}" Background="Transparent" Foreground="{DynamicResource Window.Forground}"  Content="{local:ResMarker IgnorClosedQuality}" Grid.Column="3" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.ColumnSpan="2" Visibility="{Binding IsFittingValue,Converter={StaticResource btv}}">
                 <TextBlock Text="{local:ResMarker SampleDuration,:}" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" Margin="25,0,0,0" />

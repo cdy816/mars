@@ -1,0 +1,358 @@
+﻿@using System.Text;
+@using Cdy.Tag;
+@using DBWebStudio.Data;
+@inject NavigationManager Navigation
+@inject MarsProxy mProxy;
+@inject NotifyManager notifier;
+@inject IJSRuntime JS;
+
+<div class="navbar navbar-dark navbar-expand-lg bg-body-tertiary" style="background-image:linear-gradient(to bottom, rgba(112.520718,44.062154,249.437846, 0.5), rgba(112.520718,44.062154,249.437846, 0.6))">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src="./css/Image/mrdb.png" alt="logo" height="32" class="d-inline-block" style="font-size:larger" />
+            Mars 数据库开发平台 @mProxy.CurrentDatabase
+        </a>
+        @if (EnableEdit)
+        {
+            <div class="collapse navbar-collapse justify-content-center" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-1">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/newdatabase">
+                            <img src="./css/Image/database-add.png" alt="add logo" height="16" class="d-inline-block" style="font-size:medium;" />
+                            数据库添加
+                        </a>
+                    </li>
+                    <li class="nav-item  ms-1">
+                        <a class="nav-link" href="/databaseselect">
+                            <img src="./css/Image/Switch.png" alt="add logo" height="22" class="d-inline-block" style="font-size:medium;" />
+                            数据库切换
+                        </a>
+                    </li>
+                    <li class="nav-item  ms-1">
+                        <div class="vr" style="color:gray;height:36px;"></div>
+                    </li>
+                    
+                    <li class="nav-item  ms-1">
+                        <div class="nav-link" style="cursor:pointer" onclick="@(()=>SaveProcess())">
+                            <img src="./css/Image/save.png" alt="add logo" height="14" class="d-inline-block" style="font-size:medium;"/>
+                            保存
+                        </div>
+                    </li>
+                    <li class="nav-item  ms-1" style="cursor:pointer" onclick="@(()=>Cancel())">
+                        <div class="nav-link">
+                            <img src="./css/Image/cancelSave.png" alt="cancel logo" height="14" class="d-inline-block" style="font-size:medium;"  />
+                            撤销
+                        </div>
+                    </li>
+                    @if (!IsStarted())
+                    {
+                        <li class="nav-item  ms-1" style="cursor:pointer" onclick="@(()=>Start())">
+                            <div class="nav-link">
+                                <img src="./css/Image/start.png" alt="start logo" height="20" class="d-inline-block" style="font-size:medium;" />
+                                启动
+                            </div>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item  ms-1" style="cursor:pointer" onclick="@(()=>Stop())">
+                            <div class="nav-link">
+                                <img src="./css/Image/stop.png" alt="stop logo" height="16" class="d-inline-block" style="font-size:medium;" />
+                                停止
+                            </div>
+                        </li>
+                        <li class="nav-item  ms-1" onclick="@(()=>ReRun())">
+                            <div class="nav-link">
+                                <img src="./css/Image/rerun.png" alt="rerun logo" height="18" class="d-inline-block" style="font-size:medium;"  />
+                                热启动
+                            </div>
+                        </li>
+                    }
+                    
+                    <li class="nav-item  ms-1 align-content-center justify-content-center">
+                        <div class="vr" style="color:gray;height:36px;"></div>
+                    </li>
+                    <li class="nav-item  ms-1" style="cursor:pointer" data-bs-toggle="modal" data-bs-target="#importModel">
+                        <div class="nav-link">
+                            <img src="./css/Image/import.png" alt="import logo" height="24" class="d-inline-block" style="font-size:medium;" />
+                            导入
+                        </div>
+                    </li>
+                    <li class="nav-item  ms-1" style="cursor:pointer" onclick="@(()=>ExportToFile())">
+                        <div class="nav-link">
+                            <img src="./css/Image/export.png" alt="export logo" height="16" class="d-inline-block" style="font-size:medium;" />
+                            导出
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <span class="navbar-text">
+                @mProxy.CurrentUser
+        </span>
+        }
+    </div>
+</div>
+<div class="progress" role="progressbar" aria-label="Basic example" aria-valuenow="@(mProgressValue)" aria-valuemin="0" aria-valuemax="100" style="height:1px;margin-top:-1px">
+    <div class="progress-bar" style="width: @(mProgressValue)%"></div>
+</div>
+
+@*//导入弹出界面*@
+<div class="modal modal-static" id="importModel" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="importModelLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="importModelLabel">变量导入</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="d-flex mb-2 p-0 hstack">
+                    <span id="basic-addon1">导入方式</span>
+                    <div class="btn-group mx-3" role="group" aria-label="import mode">
+                        <input type="radio" class="btn-check p-0" name="btnradio" id="btnradio1" autocomplete="off" checked onclick="@(()=>SetImportModel(0))">
+                        <label class="btn btn-outline-primary" for="btnradio1">替换重复变量</label>
+
+                        <input type="radio" class="btn-check  p-0" name="btnradio" id="btnradio2" autocomplete="off" onclick="@(()=>SetImportModel(1))">
+                        <label class="btn btn-outline-primary" for="btnradio2">整体删除后重新添加</label>
+
+                        <input type="radio" class="btn-check  p-0" name="btnradio" id="btnradio3" autocomplete="off" onclick="@(()=>SetImportModel(2))">
+                        <label class="btn btn-outline-primary" for="btnradio3">重复变量忽略</label>
+                    </div>
+                </div>
+
+                <InputFile OnChange="@ImportFromFiles" />
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="@(()=>ProcessImportFrom())">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public bool EnableEdit { get; set; } = false;
+
+    private int mProgressValue = 0;
+
+    private void SaveProcess()
+    {
+        if (mProxy.Save())
+        {
+            Alert("保存成功!");
+        }
+    }
+
+    private void Cancel()
+    {
+        if (mProxy.Cancel())
+        {
+            Alert("撤销成功!");
+        }
+    }
+
+    private void ReRun()
+    {
+        if (mProxy.ReRun())
+        {
+            Alert("热重启成功!");
+        }
+    }
+
+    private void Start()
+    {
+        if (mProxy.Start())
+        {
+            Alert("启动成功!");
+        }
+    }
+
+    private void Stop()
+    {
+        if (mProxy.Stop())
+        {
+            Alert("停止成功!");
+        }
+    }
+
+    private string GetLinkWebMonitorUrl()
+    {
+        string url = Navigation.BaseUri;
+        if (url.EndsWith("14600"))
+        {
+            url = url.Replace("14600", "14602");
+        }
+        else if (url.EndsWith("14601"))
+        {
+            url = url.Replace("14601", "14603");
+        }
+        return url;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns></returns>
+    public bool IsStarted()
+    {
+        return mProxy.IsStarted();
+    }
+
+    InnerJsHelper helper;
+    private async void Alert(string msg)
+    {
+        if (helper == null)
+        {
+            helper = new InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+        helper.Alert(msg);
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        notifier.Finished = new Action(() =>
+        {
+            mProgressValue = 0;
+            InvokeAsync(StateHasChanged);        });
+        notifier.ValueChanged = ((val) =>
+       {
+           mProgressValue = (int)(val*100);
+           InvokeAsync(StateHasChanged);
+       });
+    }
+
+    #region Import
+
+    private bool mIsImportShow = false;
+    private int mImportModel = 0;
+
+    private void SetImportModel(int val)
+    {
+        mImportModel = val;
+    }
+
+
+    private async void ProcessImportFrom()
+    {
+        List<TagViewModel> ltmp = new List<TagViewModel>();
+        System.IO.MemoryStream ms = new MemoryStream();
+        var stream = mImportFile.OpenReadStream(long.MaxValue);
+        await stream.CopyToAsync(ms);
+        stream.Close();
+        notifier.Notify(0.2);
+        ms.Position = 0;
+
+        var msstream = new StreamReader(ms);
+
+        while (!msstream.EndOfStream)
+        {
+            string sval = msstream.ReadLine();
+            if (!string.IsNullOrEmpty(sval))
+            {
+                TagViewModel tm = TagViewModel.LoadFromCSVString(sval);
+                tm.Database = mProxy.CurrentDatabase;
+                ltmp.Add(tm);
+            }
+        }
+        msstream.Close();
+        ms.Dispose();
+        notifier.Notify(0.5);
+
+        if (mImportModel == 1)
+        {
+            this.mProxy.ClearAllTag();
+        }
+
+        int tcount = ltmp.Count;
+        int icount = 0;
+        bool haserro = false;
+        int id = 0;
+        StringBuilder sb = new StringBuilder();
+        foreach (var vv in ltmp)
+        {
+            //更新数据
+            if (!mProxy.Import(new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(vv.RealTagMode, vv.HisTagMode), mImportModel, out id))
+            {
+                sb.AppendLine($"添加变量{vv.RealTagMode.Name}错误");
+                haserro = true;
+            }
+            else
+            {
+                vv.IsNew = false;
+                vv.IsChanged = false;
+            }
+
+            icount++;
+            notifier.Notify(((icount * 1.0 / tcount) * 0.5));
+        }
+
+
+
+        notifier.Notify(1);
+        notifier.NotifyFinished();
+        mIsImportShow = false;
+
+        StateHasChanged();
+        if (haserro)
+        {
+            Alert($"导入过程有错误，详情参看错误内容文件 erro.txt! ");
+            DownLoadFile("erro.txt", sb.ToString());
+        }
+        else
+        {
+            Alert("导入完成!");
+        }
+    }
+
+    private IBrowserFile mImportFile;
+
+    private void ImportFromFiles(InputFileChangeEventArgs arg)
+    {
+        mImportFile = arg.File;
+    }
+
+    
+    /// <summary>
+    ///
+    /// </summary>
+    private async void ExportToFile()
+    {
+        if (helper == null)
+        {
+            helper = new InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+        StringBuilder sb = new StringBuilder();
+        
+       mProxy.QueryAllTag(new Action<int, int, Dictionary<int, Tuple<Tagbase, HisTag>>>((idx, total, res) =>
+        {
+            foreach (var vv in res.Select(e => new TagViewModel(e.Value.Item1, e.Value.Item2)))
+            {
+                 sb.AppendLine(vv.SaveToCSVString());
+                 notifier.Notify(((idx * 1.0 / total) * 100));
+            }
+        }));
+
+      
+        helper.DownLoadFromStream(mProxy.CurrentDatabase + "_export.csv", new DotNetStreamReference(new MemoryStream(Encoding.UTF8.GetBytes(sb.ToString()))));
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="file"></param>
+    /// <param name="txt"></param>
+    private async void DownLoadFile(string file, string txt)
+    {
+        if (helper == null)
+        {
+            helper = new InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+        helper.DownLoadFromStream(mProxy.CurrentDatabase + "_export.csv", new DotNetStreamReference(new MemoryStream(Encoding.UTF8.GetBytes(txt))));
+    }
+
+    #endregion
+}

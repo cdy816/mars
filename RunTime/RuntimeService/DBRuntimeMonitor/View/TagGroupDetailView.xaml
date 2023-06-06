@@ -260,7 +260,20 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellEditingTemplate>-->
                 </DataGridTemplateColumn>
-
+                
+                <DataGridTemplateColumn Header="{local:ResMarker Unit}" MinWidth="60" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" Text="{Binding Unit}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <!--<DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox  Padding="3,0"   Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding Unit,Mode=TwoWay,UpdateSourceTrigger=LostFocus}"  VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>-->
+                </DataGridTemplateColumn>
+                
                 <DataGridTemplateColumn Header="{local:ResMarker Value}" Width="Auto" MinWidth="80" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -277,6 +290,19 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
+                <DataGridTemplateColumn Header="{local:ResMarker ExtendField1}" Width="*" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Margin="5,0" Foreground="{DynamicResource Window.Forground}"  VerticalAlignment="Center" Text="{Binding ExtendField1}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                    <!--<DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                            <TextBox  Padding="3,0"   Loaded="TextBox_Loaded" CaretBrush="White" Background="#1FFFFFFF" Margin="-1" Foreground="{DynamicResource Window.Forground}" Text="{Binding ExtendField1,Mode=TwoWay,UpdateSourceTrigger=LostFocus}"  VerticalAlignment="Stretch" VerticalContentAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellEditingTemplate>-->
+                </DataGridTemplateColumn>
+                
             </DataGrid.Columns>
             <DataGrid.RowDetailsTemplate>
                 <DataTemplate>

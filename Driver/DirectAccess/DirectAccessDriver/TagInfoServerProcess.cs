@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -34,7 +35,7 @@ namespace DirectAccessDriver
 
         public const byte GetDriverRecordTypeTagIds2 = 51;
 
-        
+        public const byte GetDatabaseName = 4;
 
         public const byte Login = 1;
         /// <summary>
@@ -57,19 +58,24 @@ namespace DirectAccessDriver
         #region ... Properties ...
 
         public override byte FunId => APIConst.TagInfoRequestFun;
-                
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public override bool IsEnableMutiThread => false;
+
         #endregion ...Properties...
 
         #region ... Methods    ...
 
-       
+
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="client"></param>
         /// <param name="data"></param>
-        protected unsafe override void ProcessSingleData(string client, ByteBuffer data)
+        public unsafe override void ProcessSingleData(string client, ByteBuffer data)
         {
             var mm = Cdy.Tag.ServiceLocator.Locator.Resolve<Cdy.Tag.ITagManager>();
             byte sfun = data.ReadByte();
@@ -77,12 +83,12 @@ namespace DirectAccessDriver
             {
                 case GetTagIdByNameFun:
                     long loginId = data.ReadLong();
-                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId)||loginId<1)
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId) || loginId < 1)
                     {
                         int count = data.ReadInt();
                         if (count > 0)
                         {
-                            var re = Parent.Allocate(APIConst.TagInfoRequestFun, (count+1) * 4+1);
+                            var re = Parent.Allocate(APIConst.TagInfoRequestFun, (count + 1) * 4 + 1);
                             re.Write(GetTagIdByNameFun);
                             re.Write(count);
 
@@ -91,9 +97,9 @@ namespace DirectAccessDriver
                             int[] sp;
                             lock (mClients)
                             {
-                                
+
                                 sp = new int[count];
-                                if(mClients.ContainsKey(client))
+                                if (mClients.ContainsKey(client))
                                 {
                                     mClients[client] = sp;
                                 }
@@ -105,7 +111,7 @@ namespace DirectAccessDriver
 
                             for (int i = 0; i < count; i++)
                             {
-                               // string stag = data.ReadString();
+                                // string stag = data.ReadString();
                                 var ival = mm.GetTagIdByName(data.ReadString());
                                 if (ival.HasValue)
                                 {
@@ -118,7 +124,7 @@ namespace DirectAccessDriver
                                     sp[i] = -1;
                                 }
                             }
-                            
+
                             Parent.AsyncCallback(client, re);
                         }
                     }
@@ -128,12 +134,12 @@ namespace DirectAccessDriver
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
                         int psize = 500000;
-                        var vtags = mm.ListAllTags().Where(e=>e.LinkAddress.StartsWith("DirectAccess"));
+                        var vtags = mm.ListAllTags().Where(e => e.LinkAddress.StartsWith("DirectAccess") || e.Type == TagType.Complex);
                         int tcount = vtags.Count() / psize;
                         tcount += (vtags.Count() % psize > 0 ? 1 : 0);
-                        for(int i=0;i<tcount;i++)
+                        for (int i = 0; i < tcount; i++)
                         {
-                            if((i+1)*psize>vtags.Count())
+                            if ((i + 1) * psize > vtags.Count())
                             {
                                 var vv = vtags.Skip(i * psize).Take(vtags.Count() % psize);
                                 Parent.AsyncCallback(client, GetTagBuffer(vv, (short)i, (short)tcount));
@@ -145,7 +151,7 @@ namespace DirectAccessDriver
                             }
                         }
 
-                        if(tcount==0)
+                        if (tcount == 0)
                         {
                             Parent.AsyncCallback(client, GetTagBuffer(new List<Tagbase>(), (short)0, (short)0));
                         }
@@ -158,7 +164,7 @@ namespace DirectAccessDriver
                     {
                         string filter = data.ReadString();
                         int psize = 500000;
-                        var vtags = mm.ListAllTags().Where(e => e.LinkAddress.StartsWith("DirectAccess")&&e.LinkAddress.Contains(filter));
+                        var vtags = mm.ListAllTags().Where(e => e.LinkAddress.StartsWith("DirectAccess") && e.LinkAddress.Contains(filter));
                         int tcount = vtags.Count() / psize;
                         tcount += (vtags.Count() % psize > 0 ? 1 : 0);
                         for (int i = 0; i < tcount; i++)
@@ -217,7 +223,7 @@ namespace DirectAccessDriver
                     loginId = data.ReadLong();
                     if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
                     {
-                    
+
                         var vserver = ServiceLocator.Locator.Resolve<IHisTagQuery>();
                         int icount = data.ReadInt();
 
@@ -226,7 +232,7 @@ namespace DirectAccessDriver
                         re.Write(icount);
                         for (int i = 0; i < icount; i++)
                         {
-                            if(vserver.GetHisTagById(data.ReadInt())?.Type == RecordType.Driver)
+                            if (vserver.GetHisTagById(data.ReadInt())?.Type == RecordType.Driver)
                             {
                                 re.WriteByte(1);
                             }
@@ -235,6 +241,17 @@ namespace DirectAccessDriver
                                 re.WriteByte(0);
                             }
                         }
+                        Parent.AsyncCallback(client, re);
+                    }
+                    break;
+                case GetDatabaseName:
+                    loginId = data.ReadLong();
+                    if (Cdy.Tag.ServiceLocator.Locator.Resolve<IRuntimeSecurity>().CheckLogin(loginId))
+                    {
+                        string dbname = ServiceLocator.Locator.Resolve<ITagManager>().Name;
+                        var re = Parent.Allocate(APIConst.TagInfoRequestFun, dbname.Length + 4);
+                        re.Write(GetDatabaseName);
+                        re.Write(dbname);
                         Parent.AsyncCallback(client, re);
                     }
                     break;
@@ -259,11 +276,11 @@ namespace DirectAccessDriver
                             LoggerService.Service.Warn("DirectAccessDriver", user + " at client " + client + " login failed.");
                         }
 
-                        Parent.AsyncCallback(client, ToByteBuffer(APIConst.TagInfoRequestFun,Login, result));
+                        Parent.AsyncCallback(client, ToByteBuffer(APIConst.TagInfoRequestFun, Login, result));
                     }
-                    catch(Exception eex)
+                    catch (Exception eex)
                     {
-                        LoggerService.Service.Erro("DirectAccessDriver", $"{eex.Message}:{eex.StackTrace}" );
+                        LoggerService.Service.Erro("DirectAccessDriver", $"{eex.Message}:{eex.StackTrace}");
                     }
                     break;
                 case Login2:

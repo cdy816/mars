@@ -24,7 +24,7 @@ namespace DBHighApi
 
         public const byte GetTagByGroup = 4;
 
-        public const byte Hart = 5;
+        public const byte Heart = 5;
 
         public const byte GetTagIdByNameFun = 0;
 
@@ -33,7 +33,7 @@ namespace DBHighApi
         public const byte RegistorValueCallback = 2;
 
 
-        public const byte GetRunnerDatabase = 3;
+        public const byte GetRunnerDatabase = 33;
 
         /// <summary>
         /// 
@@ -107,6 +107,11 @@ namespace DBHighApi
         /// 清空值改变通知
         /// </summary>
         public const byte ResetValueChangeNotify = 3;
+
+        /// <summary>
+        /// 按变量ID清空值改变通知2
+        /// </summary>
+        public const byte ResetValueChangeNotify2 = 23;
 
 
         /// <summary>
@@ -194,6 +199,45 @@ namespace DBHighApi
         public const byte SetTagValueCallBack = 30;
 
         public const byte RequestComplexTagRealValue = 14;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestHisDatasByTimePointIgnorSystemExit = 20;
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public const byte RequestHisDataByTimeSpanIgnorSystemExit = 22;
+
+
+        /// <summary>
+        /// 请求变量状态数据
+        /// </summary>
+        public const byte RequestStateData = 26;
+
+        /// <summary>
+        /// 请求变量扩展字段
+        /// </summary>
+        public const byte RequestExtendField2 = 27;
+
+        /// <summary>
+        /// 设置状态数据
+        /// </summary>
+        public const byte SetStateData = 28;
+
+        /// <summary>
+        /// 设置扩展数据
+        /// </summary>
+        public const byte SetExtendField2Data = 29;
+
+        /// <summary>
+        /// 通过SQL查询历史
+        /// </summary>
+        public const byte ReadHisValueBySQL = 140;
+
+        public const byte TagStatisticsInfos = 7;
     }
 
     public class ApiClient:SocketClient2
@@ -221,7 +265,7 @@ namespace DBHighApi
         /// </summary>
         private Dictionary<byte, ByteBuffer> mReceivedDatas = new Dictionary<byte, ByteBuffer>();
 
-        public delegate void TagValueChangedCallBackDelegate(Dictionary<int, Tuple<object, byte>> datas);
+        public delegate void TagValueChangedCallBackDelegate(Dictionary<int, Tuple<object, byte,DateTime>> datas);
 
         private object mlockRealObj = new object();
 
@@ -353,11 +397,14 @@ namespace DBHighApi
                 {
                     mUser = username;
                     mPass = password;
-                    int size = username.Length + password.Length + 9;
+                    var apphash = Cdy.Tag.Common.Common.Md5Helper.CalSha1();
+                    int size = username.Length + password.Length + apphash.Length + 9;
                     var mb = GetBuffer(ApiFunConst.TagInfoRequest, size);
                     mb.Write(ApiFunConst.Login);
                     mb.Write(username);
                     mb.Write(password);
+                    mb.Write(apphash);
+
                     infoRequreEvent.Reset();
                     SendData(mb);
                     if (infoRequreEvent.WaitOne(timeount))
@@ -390,23 +437,23 @@ namespace DBHighApi
         /// 登录
         /// </summary>
         /// <returns></returns>
-        public bool Login()
+        public bool Login(int timeout)
         {
-            return Login(mUser, mPass);
+            return Login(mUser, mPass,timeout);
         }
 
 
         /// <summary>
         /// 心跳
         /// </summary>
-        public void Hart()
+        public void Heart()
         {
             lock (mTagInfoObj)
             {
                 try
                 {
                     var mb = GetBuffer(ApiFunConst.TagInfoRequest, 1 + 9);
-                    mb.Write(ApiFunConst.ListAllTagFun);
+                    mb.Write(ApiFunConst.Heart);
                     mb.Write(LoginId);
                     SendData(mb);
                 }
@@ -531,7 +578,7 @@ namespace DBHighApi
         }
 
         /// <summary>
-        /// 枚举所有变量
+        /// 查询指定条件的变量
         /// </summary>
         /// <param name="timeout">超时</param>
         /// <returns></returns>
@@ -800,6 +847,60 @@ namespace DBHighApi
            
         }
 
+        /// <summary>
+        /// 获取变量统计信息
+        /// </summary>
+        /// <param name="timeout">超时</param>
+        /// <returns></returns>
+        public Dictionary<string, int> GetTagStatisticsInfos(int timeout = 30000)
+        {
+            Dictionary<string, int> re = new Dictionary<string, int>();
+
+            lock (mTagInfoObj)
+            {
+                try
+                {
+                    var mb = GetBuffer(ApiFunConst.TagInfoRequest, 1 + 9);
+                    mb.Write(ApiFunConst.TagStatisticsInfos);
+                    mb.Write(LoginId);
+                    infoRequreEvent.Reset();
+                    SendData(mb);
+
+                    if (infoRequreEvent.WaitOne(timeout))
+                    {
+                        try
+                        {
+                            if (mInfoRequreData != null && (mInfoRequreData.WriteIndex - mInfoRequreData.ReadIndex) > 4)
+                            {
+                                byte cmd = mInfoRequreData.ReadByte();
+                                if(cmd != ApiFunConst.TagStatisticsInfos) return null;
+
+                                int count = mInfoRequreData.ReadInt();
+                                if (count > 0)
+                                {
+                                    for(int i=0;i < count;i++)
+                                    {
+                                        re.Add(mInfoRequreData.ReadString(),mInfoRequreData.ReadInt());
+                                    }
+                                }
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+                        mInfoRequreData?.UnlockAndReturn();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PrintErroMessage(ex);
+                }
+
+                return re;
+            }
+        }
+
         #region RealData
 
         /// <summary>
@@ -904,6 +1005,50 @@ namespace DBHighApi
                     mb.Write(ApiFunConst.ResetValueChangeNotify);
                     mb.Write(this.LoginId);
                     realRequreEvent.Reset();
+                    SendData(mb);
+
+                    if (realRequreEvent.WaitOne(timeout))
+                    {
+                        return mRealRequreData.ReadByte() > 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PrintErroMessage(ex);
+                }
+                finally
+                {
+                    mRealRequreData?.UnlockAndReturn();
+                }
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// 清除变量值改变通知
+        /// </summary>
+        /// <param name="ids">变量ID集合</param>
+        /// <param name="timeout">超时</param>
+        /// <returns></returns>
+        public bool ClearRegistorTagValueCallBack(List<int> ids, int timeout = 5000)
+        {
+            lock (mlockRealObj)
+            {
+                CheckLogin();
+                if (!IsLogin) return false;
+
+                try
+                {
+                    var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 1 + 4 + ids.Count * 4);
+                    mb.Write(ApiFunConst.ResetValueChangeNotify2);
+                    mb.Write(this.LoginId);
+                    mb.Write(ids.Count);
+                    foreach (var vv in ids)
+                    {
+                        mb.Write(vv);
+                    }
+
+                    this.realRequreEvent.Reset();
                     SendData(mb);
 
                     if (realRequreEvent.WaitOne(timeout))
@@ -1180,6 +1325,8 @@ namespace DBHighApi
         }
 
 
+
+
         /// <summary>
         /// 
         /// </summary>
@@ -1423,6 +1570,81 @@ namespace DBHighApi
                         case (byte)TagType.ULongPoint3:
                             value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                             break;
+                        case (byte)TagType.Complex:
+                            ComplexRealValue cv = new ComplexRealValue();
+                            int vcount = block.ReadInt();
+                            for (int j = 0; j < vcount; j++)
+                            {
+                                var cvid = block.ReadInt();
+                                var vtp = block.ReadByte();
+                                object cval = null;
+                                switch (vtp)
+                                {
+                                    case (byte)TagType.Bool:
+                                        cval = ((byte)block.ReadByte());
+                                        break;
+                                    case (byte)TagType.Byte:
+                                        cval = ((byte)block.ReadByte());
+                                        break;
+                                    case (byte)TagType.Short:
+                                        cval = (block.ReadShort());
+                                        break;
+                                    case (byte)TagType.UShort:
+                                        cval = (block.ReadUShort());
+                                        break;
+                                    case (byte)TagType.Int:
+                                        cval = (block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UInt:
+                                        cval = (block.ReadUInt());
+                                        break;
+                                    case (byte)TagType.Long:
+                                    case (byte)TagType.ULong:
+                                        cval = (block.ReadULong());
+                                        break;
+                                    case (byte)TagType.Float:
+                                        cval = (block.ReadFloat());
+                                        break;
+                                    case (byte)TagType.Double:
+                                        cval = (block.ReadDouble());
+                                        break;
+                                    case (byte)TagType.String:
+                                        cval = block.ReadString();
+                                        break;
+                                    case (byte)TagType.DateTime:
+                                        cval = DateTime.FromBinary(block.ReadLong());
+                                        break;
+                                    case (byte)TagType.IntPoint:
+                                        cval = new IntPointData(block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UIntPoint:
+                                        cval = new UIntPointData(block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.IntPoint3:
+                                        cval = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UIntPoint3:
+                                        cval = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.LongPoint:
+                                        cval = new LongPointData(block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.ULongPoint:
+                                        cval = new ULongPointData(block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.LongPoint3:
+                                        cval = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.ULongPoint3:
+                                        cval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                                        break;
+                                }
+                                var ctime = DateTime.FromBinary(block.ReadLong()).ToLocalTime();
+                                var cqua = block.ReadByte();
+                                cv.Add(new ComplexRealValueItem() { Id = cvid, ValueType = vtp, Value = cval, Quality = cqua, Time = ctime });
+                            }
+                            value = cv;
+                            break;
                     }
                     var tk = block.ReadLong();
                     var time = (tk > 0 && tk < DateTime.MaxValue.Ticks) ? new DateTime(tk).ToLocalTime() : DateTime.MinValue;
@@ -1444,14 +1666,14 @@ namespace DBHighApi
         }
 
 
-        private Dictionary<int, Tuple<object, byte>> ProcessPushSingleBufferData(ByteBuffer block)
+        private Dictionary<int, Tuple<object, byte,DateTime>> ProcessPushSingleBufferData(ByteBuffer block)
         {
             if (block == null || block.Length < 1)
             {
                 RelaseBlock(block);
                 return null;
             }
-            Dictionary<int, Tuple<object, byte>> re = new Dictionary<int, Tuple<object, byte>>();
+            Dictionary<int, Tuple<object, byte, DateTime>> re = new Dictionary<int, Tuple<object, byte, DateTime>>();
             try
             {
                 var count = block.ReadInt();
@@ -1527,9 +1749,85 @@ namespace DBHighApi
                         case (byte)TagType.ULongPoint3:
                             value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                             break;
+                        case (byte)TagType.Complex:
+                            ComplexRealValue cv = new ComplexRealValue();
+                            int vcount = block.ReadInt();
+                            for (int j = 0; j < vcount; j++)
+                            {
+                                var cvid = block.ReadInt();
+                                var vtp = block.ReadByte();
+                                object cval = null;
+                                switch (vtp)
+                                {
+                                    case (byte)TagType.Bool:
+                                        cval = ((byte)block.ReadByte());
+                                        break;
+                                    case (byte)TagType.Byte:
+                                        cval = ((byte)block.ReadByte());
+                                        break;
+                                    case (byte)TagType.Short:
+                                        cval = (block.ReadShort());
+                                        break;
+                                    case (byte)TagType.UShort:
+                                        cval = (block.ReadUShort());
+                                        break;
+                                    case (byte)TagType.Int:
+                                        cval = (block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UInt:
+                                        cval = (block.ReadUInt());
+                                        break;
+                                    case (byte)TagType.Long:
+                                    case (byte)TagType.ULong:
+                                        cval = (block.ReadULong());
+                                        break;
+                                    case (byte)TagType.Float:
+                                        cval = (block.ReadFloat());
+                                        break;
+                                    case (byte)TagType.Double:
+                                        cval = (block.ReadDouble());
+                                        break;
+                                    case (byte)TagType.String:
+                                        cval = block.ReadString();
+                                        break;
+                                    case (byte)TagType.DateTime:
+                                        cval = DateTime.FromBinary(block.ReadLong());
+                                        break;
+                                    case (byte)TagType.IntPoint:
+                                        cval = new IntPointData(block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UIntPoint:
+                                        cval = new UIntPointData(block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.IntPoint3:
+                                        cval = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UIntPoint3:
+                                        cval = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.LongPoint:
+                                        cval = new LongPointData(block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.ULongPoint:
+                                        cval = new ULongPointData(block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.LongPoint3:
+                                        cval = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.ULongPoint3:
+                                        cval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                                        break;
+                                }
+                                var ctime = DateTime.FromBinary(block.ReadLong()).ToLocalTime();
+                                var cqua = block.ReadByte();
+                                cv.Add(new ComplexRealValueItem() { Id = cvid, ValueType = vtp, Value = cval, Quality = cqua, Time = ctime });
+                            }
+                            value = cv;
+                            break;
                     }
                     var qua = block.ReadByte();
-                    re.Add(vid, new Tuple<object, byte>(value, qua));
+                    var time = DateTime.FromBinary(block.ReadLong()).ToLocalTime();
+                    re.Add(vid, new Tuple<object, byte,DateTime>(value, qua,time));
                 }
             }
             catch
@@ -1630,6 +1928,81 @@ namespace DBHighApi
                             break;
                         case (byte)TagType.ULongPoint3:
                             value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                            break;
+                        case (byte)TagType.Complex:
+                            ComplexRealValue cv = new ComplexRealValue();
+                            int vcount = block.ReadInt();
+                            for (int j = 0; j < vcount; j++)
+                            {
+                                var cvid = block.ReadInt();
+                                var vtp = block.ReadByte();
+                                object cval = null;
+                                switch (vtp)
+                                {
+                                    case (byte)TagType.Bool:
+                                        cval = ((byte)block.ReadByte());
+                                        break;
+                                    case (byte)TagType.Byte:
+                                        cval = ((byte)block.ReadByte());
+                                        break;
+                                    case (byte)TagType.Short:
+                                        cval = (block.ReadShort());
+                                        break;
+                                    case (byte)TagType.UShort:
+                                        cval = (block.ReadUShort());
+                                        break;
+                                    case (byte)TagType.Int:
+                                        cval = (block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UInt:
+                                        cval = (block.ReadUInt());
+                                        break;
+                                    case (byte)TagType.Long:
+                                    case (byte)TagType.ULong:
+                                        cval = (block.ReadULong());
+                                        break;
+                                    case (byte)TagType.Float:
+                                        cval = (block.ReadFloat());
+                                        break;
+                                    case (byte)TagType.Double:
+                                        cval = (block.ReadDouble());
+                                        break;
+                                    case (byte)TagType.String:
+                                        cval = block.ReadString();
+                                        break;
+                                    case (byte)TagType.DateTime:
+                                        cval = DateTime.FromBinary(block.ReadLong());
+                                        break;
+                                    case (byte)TagType.IntPoint:
+                                        cval = new IntPointData(block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UIntPoint:
+                                        cval = new UIntPointData(block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.IntPoint3:
+                                        cval = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UIntPoint3:
+                                        cval = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.LongPoint:
+                                        cval = new LongPointData(block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.ULongPoint:
+                                        cval = new ULongPointData(block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.LongPoint3:
+                                        cval = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.ULongPoint3:
+                                        cval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                                        break;
+                                }
+                                var ctime = DateTime.FromBinary(block.ReadLong()).ToLocalTime();
+                                var cqua = block.ReadByte();
+                                cv.Add(new ComplexRealValueItem() { Id = cvid, ValueType = vtp, Value = cval, Quality = cqua, Time = ctime });
+                            }
+                            value = cv;
                             break;
                     }
                     var qua = block.ReadByte();
@@ -1754,6 +2127,81 @@ namespace DBHighApi
                         case (byte)TagType.ULongPoint3:
                             value = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
                             break;
+                        case (byte)TagType.Complex:
+                            ComplexRealValue cv = new ComplexRealValue();
+                            int vcount = block.ReadInt();
+                            for (int j = 0; j < vcount; j++) 
+                            {
+                                var cvid = block.ReadInt();
+                                var vtp = block.ReadByte();
+                                object cval = null;
+                                switch (vtp)
+                                {
+                                    case (byte)TagType.Bool:
+                                        cval = ((byte)block.ReadByte());
+                                        break;
+                                    case (byte)TagType.Byte:
+                                        cval = ((byte)block.ReadByte());
+                                        break;
+                                    case (byte)TagType.Short:
+                                        cval = (block.ReadShort());
+                                        break;
+                                    case (byte)TagType.UShort:
+                                        cval = (block.ReadUShort());
+                                        break;
+                                    case (byte)TagType.Int:
+                                        cval = (block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UInt:
+                                        cval = (block.ReadUInt());
+                                        break;
+                                    case (byte)TagType.Long:
+                                    case (byte)TagType.ULong:
+                                        cval = (block.ReadULong());
+                                        break;
+                                    case (byte)TagType.Float:
+                                        cval = (block.ReadFloat());
+                                        break;
+                                    case (byte)TagType.Double:
+                                        cval = (block.ReadDouble());
+                                        break;
+                                    case (byte)TagType.String:
+                                        cval = block.ReadString();
+                                        break;
+                                    case (byte)TagType.DateTime:
+                                        cval = DateTime.FromBinary(block.ReadLong());
+                                        break;
+                                    case (byte)TagType.IntPoint:
+                                        cval = new IntPointData(block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UIntPoint:
+                                        cval = new UIntPointData(block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.IntPoint3:
+                                        cval = new IntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.UIntPoint3:
+                                        cval = new UIntPoint3Data(block.ReadInt(), block.ReadInt(), block.ReadInt());
+                                        break;
+                                    case (byte)TagType.LongPoint:
+                                        cval = new LongPointData(block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.ULongPoint:
+                                        cval = new ULongPointData(block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.LongPoint3:
+                                        cval = new LongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                                        break;
+                                    case (byte)TagType.ULongPoint3:
+                                        cval = new ULongPoint3Data(block.ReadLong(), block.ReadLong(), block.ReadLong());
+                                        break;
+                                }
+                                var ctime = DateTime.FromBinary(block.ReadLong()).ToLocalTime();
+                                var cqua = block.ReadByte();
+                                cv.Add(new ComplexRealValueItem() { Id = cvid, ValueType = vtp, Value = cval, Quality = cqua, Time = ctime });
+                            }
+                            value = cv;
+                            break;
                     }
                     re.Add(vid, value);
                 }
@@ -1768,6 +2216,133 @@ namespace DBHighApi
             }
             
             return re;
+        }
+
+        /// <summary>
+        /// 获取变量的状态值
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="ide"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Dictionary<int, short> GetTagState(List<int> ids, int timeout = 5000)
+        {
+            CheckLogin();
+            if (!IsLogin) return null;
+            lock (mlockRealObj)
+            {
+                try
+                {
+                    if (mRealRequreData != null)
+                    {
+                        RelaseBlock(mRealRequreData);
+                        mRealRequreData = null;
+                    }
+
+                    var mb = GetBuffer(ApiFunConst.RealDataRequestFun, ids.Count*4 + 8 +4+ 2);
+                    mb.Write(ApiFunConst.RequestStateData);
+                    mb.Write(this.LoginId);
+                    mb.Write(ids.Count);
+                    foreach(var vv in ids)
+                    {
+                        mb.Write(vv);
+                    }
+                    realRequreEvent.Reset();
+                    SendData(mb);
+
+                    if (realRequreEvent.WaitOne(timeout))
+                    {
+                        if( mRealRequreData.Length > 0 )
+                        {
+                            byte fun  = mRealRequreData.ReadByte();
+                            if(fun == ApiFunConst.RequestStateData)
+                            {
+                                Dictionary<int,short> re = new Dictionary<int, short>();
+                                int count = mRealRequreData.ReadInt();
+                                for(int i=0;i<count;i++)
+                                {
+                                    re.Add(mRealRequreData.ReadInt(),mRealRequreData.ReadShort());
+                                }
+                                return re;
+                            }
+                        }
+                       
+
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PrintErroMessage(ex);
+                }
+                finally
+                {
+
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 获取变量的扩展属性2
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="ide"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        public Dictionary<int, long> GetTagExtendField2(List<int> ids, int timeout = 5000)
+        {
+            CheckLogin();
+            if (!IsLogin) return null;
+            lock (mlockRealObj)
+            {
+                try
+                {
+                    if (mRealRequreData != null)
+                    {
+                        RelaseBlock(mRealRequreData);
+                        mRealRequreData = null;
+                    }
+
+                    var mb = GetBuffer(ApiFunConst.RealDataRequestFun, ids.Count * 4 + 8 + 4 + 2);
+                    mb.Write(ApiFunConst.RequestExtendField2);
+                    mb.Write(this.LoginId);
+                    mb.Write(ids.Count);
+                    foreach (var vv in ids)
+                    {
+                        mb.Write(vv);
+                    }
+                    realRequreEvent.Reset();
+                    SendData(mb);
+
+                    if (realRequreEvent.WaitOne(timeout))
+                    {
+                        if (mRealRequreData.Length > 0)
+                        {
+                            byte fun = mRealRequreData.ReadByte();
+                            if (fun == ApiFunConst.RequestExtendField2)
+                            {
+                                Dictionary<int, long> re = new Dictionary<int, long>();
+                                int count = mRealRequreData.ReadInt();
+                                for (int i = 0; i < count; i++)
+                                {
+                                    re.Add(mRealRequreData.ReadInt(),mRealRequreData.ReadLong());
+                                }
+                                return re;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PrintErroMessage(ex);
+                }
+                finally
+                {
+
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -1997,6 +2572,7 @@ namespace DBHighApi
             }
         }
 
+
         /// <summary>
         /// 设置一组变量的值
         /// </summary>
@@ -2118,7 +2694,95 @@ namespace DBHighApi
             }
         }
 
+        /// <summary>
+        /// 设置变量的状态
+        /// </summary>
+        /// <param name="value">值</param>
+        /// <param name="timeout">超时 缺省:5000 ms</param>
+        public bool SetTagState(Dictionary<int,short> value, int timeout = 5000)
+        {
+            lock (mlockRealSetObj)
+            {
+                CheckLogin();
+                if (!IsLogin) return false;
 
+                try
+                {
+                    var mb = GetBuffer(ApiFunConst.RealDataRequestFun, value.Count*6 + 8 + 6);
+                    mb.Write(ApiFunConst.SetStateData);
+                    mb.Write(this.LoginId);
+                    mb.Write(value.Count);
+                   
+                    foreach(var item in value)
+                    {
+                        mb.Write(item.Key);
+                        mb.Write(item.Value);
+                    }
+                    realSetRequreEvent.Reset();
+                    SendData(mb);
+
+                    if (realSetRequreEvent.WaitOne(timeout))
+                    {
+                        return mRealSetRequreData.ReadByte() > 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PrintErroMessage(ex);
+                }
+                finally
+                {
+                    mRealSetRequreData?.UnlockAndReturn();
+                    mRealSetRequreData = null;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 设置变量的扩展属性2
+        /// </summary>
+        /// <param name="value">值</param>
+        /// <param name="timeout">超时 缺省:5000 ms</param>
+        public bool SetTagExtendField2(Dictionary<int, long> value, int timeout = 5000)
+        {
+            lock (mlockRealSetObj)
+            {
+                CheckLogin();
+                if (!IsLogin) return false;
+
+                try
+                {
+                    var mb = GetBuffer(ApiFunConst.RealDataRequestFun, value.Count * 12 + 8 + 6);
+                    mb.Write(ApiFunConst.SetExtendField2Data);
+                    mb.Write(this.LoginId);
+                    mb.Write(value.Count);
+
+                    foreach (var item in value)
+                    {
+                        mb.Write(item.Key);
+                        mb.Write(item.Value);
+                    }
+                    realSetRequreEvent.Reset();
+                    SendData(mb);
+
+                    if (realSetRequreEvent.WaitOne(timeout))
+                    {
+                        return mRealSetRequreData.ReadByte() > 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PrintErroMessage(ex);
+                }
+                finally
+                {
+                    mRealSetRequreData?.UnlockAndReturn();
+                    mRealSetRequreData = null;
+                }
+                return false;
+            }
+        }
         ///// <summary>
         ///// 设置变量的值修改成上一次变更的有效值
         ///// </summary>
@@ -2130,7 +2794,7 @@ namespace DBHighApi
         //    {
         //        CheckLogin();
         //        if (!IsLogin) return false;
-                
+
         //        try
         //        {
         //            var mb = GetBuffer(ApiFunConst.RealDataRequestFun, 8 + 30);
@@ -2167,6 +2831,235 @@ namespace DBHighApi
         }
 
         #region HisData
+
+        /// <summary>
+        /// 根据SQL查询历史数据
+        /// </summary>
+        /// <param name="sql">Sql 语句</param>
+        /// <param name="timeout"></param>
+        /// <returns>HisQueryTableResult 历史数据 或者List<double> 统计值或者Dictionary<int, TagRealValue> 实时值</returns>
+        public object QueryValueBySql(string sql, int timeout = 5000)
+        {
+            lock (mlockHisQueryObj)
+            {
+                var vid = 0;
+                CheckLogin();
+                if (!IsLogin) return null;
+
+                var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + sql.Length + 4);
+                mb.Write(ApiFunConst.ReadHisValueBySQL);
+                mb.Write(this.LoginId);
+                mb.Write(sql);
+                mb.Write(vid);
+                hisRequreEvent.Reset();
+
+                SendData(mb);
+                try
+                {
+                    if (hisRequreEvent.WaitOne(timeout))
+                    {
+                        if (mHisRequreData != null && mHisRequreData.WriteIndex - mHisRequreData.ReadIndex > 1)
+                        {
+                            var vd = mHisRequreData.ReadInt();
+                            var byt = mHisRequreData.ReadByte();
+                            if (ApiFunConst.ReadHisValueBySQL == byt)
+                            {
+                                var typ = mHisRequreData.ReadByte();
+                                if (typ == 0)
+                                {
+                                    //历史值
+                                    Cdy.Tag.HisQueryTableResult rel = new HisQueryTableResult();
+                                    string smeta = mHisRequreData.ReadString();
+                                    rel.FromStringToMeta(smeta);
+                                    int dsize = mHisRequreData.ReadInt();
+                                    rel.Init2(dsize);
+                                    mHisRequreData.CopyTo(rel.Address, mHisRequreData.ReadIndex, 0, dsize);
+                                    return rel;
+                                }
+                                else if (typ == 1)
+                                {
+                                    //统计值
+                                    List<double> ltmp = new List<double>();
+                                    int dsize = mHisRequreData.ReadInt();
+                                    for (int i = 0; i < dsize; i++)
+                                    {
+                                        ltmp.Add(mHisRequreData.ReadDouble());
+                                    }
+                                    return ltmp;
+                                }
+                                else if (typ == 2)
+                                {
+                                    //实时值
+                                    object val = null;
+                                    Dictionary<int, TagRealValue> rre = new Dictionary<int, TagRealValue>();
+                                    var valuecount = mHisRequreData.ReadInt();
+                                    for (int i = 0; i < valuecount; i++)
+                                    {
+                                        var vvid = mHisRequreData.ReadInt();
+                                        var type = mHisRequreData.ReadByte();
+
+                                        switch (type)
+                                        {
+                                            case (byte)TagType.Bool:
+                                                val = ((byte)mHisRequreData.ReadByte());
+                                                break;
+                                            case (byte)TagType.Byte:
+                                                val = ((byte)mHisRequreData.ReadByte());
+                                                break;
+                                            case (byte)TagType.Short:
+                                                val = (mHisRequreData.ReadShort());
+                                                break;
+                                            case (byte)TagType.UShort:
+                                                val = (mHisRequreData.ReadUShort());
+                                                break;
+                                            case (byte)TagType.Int:
+                                                val = (mHisRequreData.ReadInt());
+                                                break;
+                                            case (byte)TagType.UInt:
+                                                val = (mHisRequreData.ReadUInt());
+                                                break;
+                                            case (byte)TagType.Long:
+                                            case (byte)TagType.ULong:
+                                                val = (mHisRequreData.ReadULong());
+                                                break;
+                                            case (byte)TagType.Float:
+                                                val = (mHisRequreData.ReadFloat());
+                                                break;
+                                            case (byte)TagType.Double:
+                                                val = (mHisRequreData.ReadDouble());
+                                                break;
+                                            case (byte)TagType.String:
+                                                val = mHisRequreData.ReadString();
+                                                break;
+                                            case (byte)TagType.DateTime:
+                                                val = DateTime.FromBinary(mHisRequreData.ReadLong());
+                                                break;
+                                            case (byte)TagType.IntPoint:
+                                                val = new IntPointData(mHisRequreData.ReadInt(), mHisRequreData.ReadInt());
+                                                break;
+                                            case (byte)TagType.UIntPoint:
+                                                val = new UIntPointData(mHisRequreData.ReadInt(), mHisRequreData.ReadInt());
+                                                break;
+                                            case (byte)TagType.IntPoint3:
+                                                val = new IntPoint3Data(mHisRequreData.ReadInt(), mHisRequreData.ReadInt(), mHisRequreData.ReadInt());
+                                                break;
+                                            case (byte)TagType.UIntPoint3:
+                                                val = new UIntPoint3Data(mHisRequreData.ReadInt(), mHisRequreData.ReadInt(), mHisRequreData.ReadInt());
+                                                break;
+                                            case (byte)TagType.LongPoint:
+                                                val = new LongPointData(mHisRequreData.ReadLong(), mHisRequreData.ReadLong());
+                                                break;
+                                            case (byte)TagType.ULongPoint:
+                                                val = new ULongPointData(mHisRequreData.ReadLong(), mHisRequreData.ReadLong());
+                                                break;
+                                            case (byte)TagType.LongPoint3:
+                                                val = new LongPoint3Data(mHisRequreData.ReadLong(), mHisRequreData.ReadLong(), mHisRequreData.ReadLong());
+                                                break;
+                                            case (byte)TagType.ULongPoint3:
+                                                val = new ULongPoint3Data(mHisRequreData.ReadLong(), mHisRequreData.ReadLong(), mHisRequreData.ReadLong());
+                                                break;
+                                            case (byte)TagType.Complex:
+                                                ComplexRealValue cv = new ComplexRealValue();
+                                                int count = mHisRequreData.ReadInt();
+                                                for (int j = 0; j < count; j++)
+                                                {
+                                                    var cvid = mHisRequreData.ReadInt();
+                                                    var vtp = mHisRequreData.ReadByte();
+                                                    object cval = null;
+                                                    switch (vtp)
+                                                    {
+                                                        case (byte)TagType.Bool:
+                                                            cval = ((byte)mHisRequreData.ReadByte());
+                                                            break;
+                                                        case (byte)TagType.Byte:
+                                                            cval = ((byte)mHisRequreData.ReadByte());
+                                                            break;
+                                                        case (byte)TagType.Short:
+                                                            cval = (mHisRequreData.ReadShort());
+                                                            break;
+                                                        case (byte)TagType.UShort:
+                                                            cval = (mHisRequreData.ReadUShort());
+                                                            break;
+                                                        case (byte)TagType.Int:
+                                                            cval = (mHisRequreData.ReadInt());
+                                                            break;
+                                                        case (byte)TagType.UInt:
+                                                            cval = (mHisRequreData.ReadUInt());
+                                                            break;
+                                                        case (byte)TagType.Long:
+                                                        case (byte)TagType.ULong:
+                                                            cval = (mHisRequreData.ReadULong());
+                                                            break;
+                                                        case (byte)TagType.Float:
+                                                            cval = (mHisRequreData.ReadFloat());
+                                                            break;
+                                                        case (byte)TagType.Double:
+                                                            cval = (mHisRequreData.ReadDouble());
+                                                            break;
+                                                        case (byte)TagType.String:
+                                                            cval = mHisRequreData.ReadString();
+                                                            break;
+                                                        case (byte)TagType.DateTime:
+                                                            cval = DateTime.FromBinary(mHisRequreData.ReadLong());
+                                                            break;
+                                                        case (byte)TagType.IntPoint:
+                                                            cval = new IntPointData(mHisRequreData.ReadInt(), mHisRequreData.ReadInt());
+                                                            break;
+                                                        case (byte)TagType.UIntPoint:
+                                                            cval = new UIntPointData(mHisRequreData.ReadInt(), mHisRequreData.ReadInt());
+                                                            break;
+                                                        case (byte)TagType.IntPoint3:
+                                                            cval = new IntPoint3Data(mHisRequreData.ReadInt(), mHisRequreData.ReadInt(), mHisRequreData.ReadInt());
+                                                            break;
+                                                        case (byte)TagType.UIntPoint3:
+                                                            cval = new UIntPoint3Data(mHisRequreData.ReadInt(), mHisRequreData.ReadInt(), mHisRequreData.ReadInt());
+                                                            break;
+                                                        case (byte)TagType.LongPoint:
+                                                            cval = new LongPointData(mHisRequreData.ReadLong(), mHisRequreData.ReadLong());
+                                                            break;
+                                                        case (byte)TagType.ULongPoint:
+                                                            cval = new ULongPointData(mHisRequreData.ReadLong(), mHisRequreData.ReadLong());
+                                                            break;
+                                                        case (byte)TagType.LongPoint3:
+                                                            cval = new LongPoint3Data(mHisRequreData.ReadLong(), mHisRequreData.ReadLong(), mHisRequreData.ReadLong());
+                                                            break;
+                                                        case (byte)TagType.ULongPoint3:
+                                                            cval = new ULongPoint3Data(mHisRequreData.ReadLong(), mHisRequreData.ReadLong(), mHisRequreData.ReadLong());
+                                                            break;
+                                                    }
+                                                    var ctime = DateTime.FromBinary(mHisRequreData.ReadLong()).ToLocalTime();
+                                                    var cqua = mHisRequreData.ReadByte();
+                                                    cv.Add(new ComplexRealValueItem() { Id = cvid, ValueType = vtp, Value = cval, Quality = cqua, Time = ctime });
+                                                }
+                                                val = cv;
+                                                break;
+                                        }
+                                        var vtime = DateTime.FromBinary(mHisRequreData.ReadLong()).ToLocalTime();
+                                        var qua = mHisRequreData.ReadByte();
+
+                                        if (!rre.ContainsKey(vvid))
+                                            rre.Add(vvid, new TagRealValue() { Value = val, Quality = qua, Time = vtime });
+                                    }
+                                    return rre;
+                                }
+                            }
+                        }
+                        return null;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    PrintErroMessage(ex);
+                }
+                finally
+                {
+                    mHisRequreData?.UnlockAndReturn();
+                    mHisRequreData=null;
+                }
+            }
+            return null;
+        }
 
         /// <summary>
         /// 查询某个变量的某个时间段内的记录的所有值
@@ -2263,6 +3156,56 @@ namespace DBHighApi
         }
 
         /// <summary>
+        /// 查询某个变量在一系列时间点上的值，忽略系统退出对数据拟合的影响
+        /// </summary>
+        /// <param name="id">变量Id</param>
+        /// <param name="times">时间点集合</param>
+        /// <param name="matchType">值拟合类型<see cref="Cdy.Tag.QueryValueMatchType"/></param>
+        /// <param name="timeout">超时 缺省:5000 ms</param>
+        /// <returns></returns>
+        public HisQueryResult<T> QueryHisValueAtTimesByIgnorSystemExit<T>(int id, List<DateTime> times, Cdy.Tag.QueryValueMatchType matchType, int timeout = 5000)
+        {
+            lock (mlockHisQueryObj)
+            {
+                CheckLogin();
+                if (!IsLogin) return null;
+
+                try
+                {
+                    var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + times.Count * 8 + 5);
+                    mb.Write(ApiFunConst.RequestHisDatasByTimePointIgnorSystemExit);
+                    mb.Write(this.LoginId);
+                    mb.Write(id);
+                    mb.Write((byte)matchType);
+                    mb.Write(times.Count);
+                    for (int i = 0; i < times.Count; i++)
+                    {
+                        mb.Write(times[i].Ticks);
+                    }
+
+                    this.hisRequreEvent.Reset();
+                    SendData(mb);
+
+                    if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableCount > 1)
+                    {
+                        return mHisRequreData.Convert<T>();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PrintErroMessage(ex);
+                }
+                finally
+                {
+                    //mHisRequreData?.UnlockAndReturn();
+                    mHisRequreData = null;
+                }
+                return null;
+            }
+        }
+
+
+        /// <summary>
         /// 查询某个变量在一系列时间点上得值,通过指定时间间隔确定时间点
         /// </summary>
         /// <param name="id">变量Id</param>
@@ -2283,6 +3226,55 @@ namespace DBHighApi
                 {
                     var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 24 + 5);
                     mb.Write(ApiFunConst.RequestHisDataByTimeSpan);
+                    mb.Write(this.LoginId);
+                    mb.Write(id);
+                    mb.Write((byte)matchType);
+                    mb.Write(startTime.Ticks);
+                    mb.Write(endTime.Ticks);
+                    mb.Write(span.Ticks);
+                    this.hisRequreEvent.Reset();
+                    SendData(mb);
+
+                    if (hisRequreEvent.WaitOne(timeout) && mHisRequreData.ReadableCount > 1)
+                    {
+                        return mHisRequreData.Convert<T>();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    PrintErroMessage(ex);
+                }
+                finally
+                {
+                    //mHisRequreData?.UnlockAndReturn();
+                    mHisRequreData = null;
+                }
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// 查询某个变量在一系列时间点上得值,通过指定时间间隔确定时间点，忽略系统退出对数据拟合的影响
+        /// </summary>
+        /// <param name="id">变量Id</param>
+        /// <param name="startTime">开始时间</param>
+        /// <param name="endTime">结束时间</param>
+        /// <param name="span">时间间隔<see cref="System.TimeSpan"/></param>
+        /// <param name="matchType">值拟合类型<see cref="Cdy.Tag.QueryValueMatchType"/></param>
+        /// <param name="timeout">超时 缺省:5000ms</param>
+        /// <returns></returns>
+        public HisQueryResult<T> QueryHisValueForTimeSpanByIgnorSystemExit<T>(int id, DateTime startTime, DateTime endTime, TimeSpan span, QueryValueMatchType matchType, int timeout = 5000)
+        {
+            lock (mlockHisQueryObj)
+            {
+                CheckLogin();
+                if (!IsLogin) return null;
+
+                try
+                {
+                    var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 24 + 5);
+                    mb.Write(ApiFunConst.RequestHisDataByTimeSpanIgnorSystemExit);
                     mb.Write(this.LoginId);
                     mb.Write(id);
                     mb.Write((byte)matchType);
@@ -2432,9 +3424,10 @@ namespace DBHighApi
         /// <param name="endTime">结束时间</param>
         /// <param name="type">值比较类型 <see cref="Cdy.Tag.NumberStatisticsType"/></param>
         /// <param name="value">值</param>
+        /// <param name="inteval">偏差</param>
         /// <param name="timeout">超时 缺省:30000</param>
-        /// <returns></returns>
-        public Tuple<DateTime, object> FindTagValue(int id, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, int timeout = 30000)
+        /// <returns>时间、值</returns>
+        public Tuple<DateTime, object> FindTagValue(int id, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value,double inteval, int timeout = 30000)
         {
             lock (mlockHisQueryObj)
             {
@@ -2443,12 +3436,15 @@ namespace DBHighApi
                 
                 try
                 {
-                    var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20);
+                    var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 256);
                     mb.Write(ApiFunConst.RequestFindTagValue);
                     mb.Write(this.LoginId);
                     mb.Write(id);
                     mb.Write(startTime.Ticks);
                     mb.Write(endTime.Ticks);
+                    mb.Write((byte)type);
+                    mb.Write(value.ToString());
+                    mb.Write(inteval.ToString());
 
                     this.hisRequreEvent.Reset();
                     SendData(mb);
@@ -2512,9 +3508,10 @@ namespace DBHighApi
         /// <param name="endTime">结束时间</param>
         /// <param name="type">值比较类型 <see cref="Cdy.Tag.NumberStatisticsType"/></param>
         /// <param name="value">值</param>
+        /// <param name="inteval">偏差</param>
         /// <param name="timeout">超时 缺省:30000</param>
-        /// <returns></returns>
-        public double? CalTagValueKeepTime(int tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value,int timeout=30000)
+        /// <returns>累计时间(单位：秒)</returns>
+        public double? CalTagValueKeepTime(int tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, double inteval, int timeout=30000)
         {
             lock (mlockHisQueryObj)
             {
@@ -2524,12 +3521,16 @@ namespace DBHighApi
                 try
                 {
                     if (!IsLogin) return null;
-                    var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20);
+                    var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20+256);
                     mb.Write(ApiFunConst.RequestCalTagValueKeepTime);
                     mb.Write(this.LoginId);
                     mb.Write(tag);
                     mb.Write(startTime.Ticks);
                     mb.Write(endTime.Ticks);
+                    mb.Write((byte)type);
+                    mb.Write(value.ToString());
+                    mb.Write(inteval.ToString());
+
 
                     this.hisRequreEvent.Reset();
                     SendData(mb);
@@ -2569,9 +3570,11 @@ namespace DBHighApi
         /// <param name="startTime">开始时间</param>
         /// <param name="endTime">结束时间</param>
         /// <param name="type">值比较类型 <see cref="Cdy.Tag.NumberStatisticsType"/></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public Dictionary<DateTime, object> FindTagValues(int tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, object interval, int timeout)
+        /// <param name="value">值</param>
+        /// <param name="interval">偏差范围</param>
+        /// <param name="timeout">超时 缺省:30000</param>
+        /// <returns>时间、值对</returns>
+        public Dictionary<DateTime, object> FindTagValues(int tag, DateTime startTime, DateTime endTime, NumberStatisticsType type, object value, double interval, int timeout=30000)
         {
             lock (mlockHisQueryObj)
             {
@@ -2581,12 +3584,15 @@ namespace DBHighApi
                 
                 try
                 {
-                    var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20);
+                    var mb = GetBuffer(ApiFunConst.HisDataRequestFun, 8 + 20 + 256);
                     mb.Write(ApiFunConst.RequestFindTagValues);
                     mb.Write(this.LoginId);
                     mb.Write(tag);
                     mb.Write(startTime.Ticks);
                     mb.Write(endTime.Ticks);
+                    mb.Write((byte)type);
+                    mb.Write(value.ToString());
+                    mb.Write(interval.ToString());
 
                     this.hisRequreEvent.Reset();
                     SendData(mb);
@@ -2658,8 +3664,8 @@ namespace DBHighApi
         /// <param name="tag">变量的Id</param>
         /// <param name="startTime">开始时间</param>
         /// <param name="endTime">结束时间</param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
+        /// <param name="timeout">超时 缺省:30000</param>
+        /// <returns>最大值和时间列表</returns>
         public Tuple<double, List<DateTime>> FindNumberTagMaxValue(int tag, DateTime startTime, DateTime endTime, int timeout = 30000)
         {
             lock (mlockHisQueryObj)
@@ -2720,8 +3726,8 @@ namespace DBHighApi
         /// <param name="tag">变量的Id</param>
         /// <param name="startTime">开始时间</param>
         /// <param name="endTime">结束时间</param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
+        /// <param name="timeout">超时 缺省:30000</param>
+        /// <returns>最小值和时间列表</returns>
         public Tuple<double, List<DateTime>> FindNumberTagMinValue(int tag, DateTime startTime, DateTime endTime,int timeout=30000)
         {
             lock (mlockHisQueryObj)
@@ -2782,8 +3788,8 @@ namespace DBHighApi
         /// <param name="tag">变量的Id</param>
         /// <param name="startTime">开始时间</param>
         /// <param name="endTime">结束时间</param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
+        /// <param name="timeout">超时 缺省:30000</param>
+        /// <returns>平局值</returns>
         public double? FindNumberTagAvgValue(int tag, DateTime startTime, DateTime endTime,int timeout=30000)
         {
             lock (mlockHisQueryObj)
@@ -2840,7 +3846,7 @@ namespace DBHighApi
         /// <param name="user">操作用户</param>
         /// <param name="msg">操作备注</param>
         /// <param name="values">值的集合</param>
-        /// <param name="timeout">超时</param>
+        /// <param name="timeout">超时 缺省:30000</param>
         /// <returns></returns>
         public bool ModifyHisData(int id,TagType type,string user,string msg,IEnumerable<TagHisValue<object>> values, int timeout = 30000)
         {
@@ -3039,6 +4045,43 @@ namespace DBHighApi
         #region ... Interfaces ...
 
         #endregion ...Interfaces...
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class ComplexRealValue : List<ComplexRealValueItem>
+    {
+    }
+
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public struct ComplexRealValueItem
+    {
+        public int Id { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public byte ValueType { get; set; }
+
+        /// <summary>
+        /// 值
+        /// </summary>
+        public object Value { get; set; }
+
+        /// <summary>
+        /// 质量戳
+        /// </summary>
+        public byte Quality { get; set; }
+
+        /// <summary>
+        /// 时间
+        /// </summary>
+        public DateTime Time { get; set; }
+
     }
 
     /// <summary>

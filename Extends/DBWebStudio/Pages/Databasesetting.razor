@@ -1,0 +1,389 @@
+﻿@page "/databasesetting"
+@using System.Text;
+@inject MarsProxy mProxy;
+@inject NavigationManager Navigation;
+@inject NotifyManager mNotifier;
+@inject IJSRuntime JS;
+<title>服务器参数设置</title>
+<div class="d-flex flex-column" style="height:760px">
+    <div class="card  text-light" style="background-color:rgba(100,100,100,0.2)">
+        <div class="card-header" >
+           服务参数设置
+        </div>
+        <div class="card-body">
+                <div class="col-3 input-group  my-3 p-1"  style="width:300px">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon1">服务端口</span>
+                <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-0" placeholder="服务端口" aria-label="服务端口" @bind=@ServerPort>
+                </div>
+                <div class="col-3 input-group  my-3 px-1"  style="width:100%">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon2">历史数据存放路径</span>
+                    <div class="hstack p-0" style="width:auto;">
+                        <div class="btn-group mx-2 px-1 py-0" role="group" aria-label="hispath" style="width:200px;">
+                        <input type="radio" class="btn-check p-1" style="width:120px" name="grp"  id="btn1" autocomplete="off" checked="@IsDefault" onclick="@(()=>{IsDefault=true;})"> 
+                          <label class="btn btn-outline-primary" for="btn1">默认</label>
+
+                        <input type="radio" class="btn-check p-1" style="width:120px" name="grp" id="btn2" autocomplete="off" checked="@IsCustom" onclick="@(()=>{IsCustom=true;})">
+                          <label class="btn btn-outline-primary" for="btn2">自定义</label>
+                        </div>
+                        <input type="text" class="form-control  bg-white bg-opacity-25  text-light mx-1  py-1" style="width:500px" disabled="@(IsDefault)" placeholder="自定义路径" aria-label="自定义路径" @bind=@DataPath>
+                    </div>
+                    
+                </div>
+                 <div class="col-3 input-group  my-3 p-1"  style="width:300px">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon3">历史数据保留时间</span>
+                     <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-1" placeholder="单位天" @bind=@KeepTime>
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1">天</span>
+                </div>
+                <div class="col-3 input-group  my-3 p-0"  style="width:600px">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon4">历史数据备份路径</span>
+                    <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-1" placeholder="备份路径" @bind=@DataBackPath  >
+                </div>
+                <div class="form-check  my-3">
+                <input class="form-check-input" type="checkbox" value="" id="enablezip" @bind=@EnableZip>
+                  <label class="form-check-label" for="enablezip">
+                    二次压缩
+                  </label>
+                </div>
+                <div class="btn-group  my-3" role="group" aria-label="Api">
+                <input type="checkbox" class="btn-check" id="btncheck1" autocomplete="off" @bind=@EnableWebApi>
+                  <label class="btn btn-outline-primary" for="btncheck1">Web Api</label>
+
+                <input type="checkbox" class="btn-check" id="btncheck2" autocomplete="off" @bind=@EnableGrpcApi>
+                  <label class="btn btn-outline-primary" for="btncheck2">Grpc Api</label>
+
+                <input type="checkbox" class="btn-check" id="btncheck3" autocomplete="off" @bind=@EnableHighApi>
+                  <label class="btn btn-outline-primary" for="btncheck3">私有 Api</label>
+
+                <input type="checkbox" class="btn-check" id="btncheck4" autocomplete="off" @bind=@EnableOpcServer>
+                  <label class="btn btn-outline-primary" for="btncheck4">Opc Server</label>
+                </div>
+        </div>
+    </div>
+    <div class="card text-light flex-fill mt-1" style="background-color:rgba(100,100,100,0.2);height:60px">
+       <div class="card-header" >
+           Spider
+        </div>
+        <div class="card-body">
+                <div class="col-3 input-group mb-3 p-0"  style="width:300px">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon5">开始服务端口</span>
+                    <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-1" placeholder="开始服务端口" @bind=@SpiderStartPort  />
+                </div>
+                 <div class="col-3 input-group mt-3 p-0"  style="width:300px">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon6">结束服务端口</span>
+                    <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-1" placeholder="结束服务端口" @bind=@SpiderEndPort />
+                </div>
+        </div>
+    </div>
+
+     <div class="card text-light flex-fill mt-1" style="background-color:rgba(100,100,100,0.2);height:60px">
+       <div class="card-header" >
+           DirectAccess
+        </div>
+        <div class="card-body">
+                <div class="col-3 input-group mb-3 p-0"  style="width:300px">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon1">开始服务端口</span>
+                <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-1" placeholder="开始服务端口" @bind=@DirectAccessStartPort />
+                </div>
+                 <div class="col-3 input-group mt-3 p-0"  style="width:300px">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-1" id="basic-addon1">结束服务端口</span>
+                    <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-1" placeholder="结束服务端口" @bind=@DirectAccessEndPort />
+                </div>
+        </div>
+    </div>
+    
+
+   
+</div>
+@code {
+    private bool mEnableWebApi;
+    private bool mEnableGrpcApi;
+    private bool mEnableHighApi;
+    private bool mEnableOpcServer;
+    private string mDataPath;
+    private string mDataBackPath;
+    private int mKeepTime;
+    private double mKeepNoZipTime;
+
+    private int mSpiderStartPort;
+    private int mSpiderEndPort;
+
+    private int mDirectAccessStartPort;
+    private int mDirectAccessEndPort;
+
+    public bool EnableWebApi
+    {
+        get
+        {
+            return mEnableWebApi;
+        }
+        set
+        {
+            mEnableWebApi = value;
+            UpdateApiSetting();
+        }
+    }
+
+    public bool EnableGrpcApi
+    {
+        get
+        {
+            return mEnableGrpcApi;
+        }
+        set
+        {
+            mEnableGrpcApi = value;
+            UpdateApiSetting();
+        }
+    }
+
+    public bool EnableHighApi
+    {
+        get
+        {
+            return mEnableHighApi;
+        }
+        set
+        {
+            mEnableHighApi = value;
+            UpdateApiSetting();
+        }
+    }
+
+    public bool EnableOpcServer
+    {
+        get
+        {
+            return mEnableOpcServer;
+        }
+        set
+        {
+            mEnableOpcServer = value;
+            UpdateApiSetting();
+        }
+    }
+
+    private void UpdateApiSetting()
+    {
+        mProxy.UpdateApiSetting(mEnableWebApi, mEnableGrpcApi, mEnableHighApi, mEnableOpcServer);
+    }
+
+
+    public string DataPath
+    {
+        get
+        {
+            return mDataPath;
+        }
+        set
+        {
+            mDataPath = value; 
+            UpdateHisSetting();
+        }
+    }
+
+    public string DataBackPath
+    {
+        get
+        {
+            return mDataBackPath;
+        }
+        set
+        {
+            mDataBackPath = value;
+            UpdateHisSetting();
+        }
+    }
+
+    private bool mIsDefault=true;
+    private bool mIsCustom;
+
+    public bool IsDefault
+    {
+        get
+        {
+            return mIsDefault;
+        }
+        set
+        {
+            mIsDefault = value;
+            mIsCustom = !value;
+            UpdateHisSetting();
+            StateHasChanged();
+        }
+    }
+
+    public bool IsCustom
+    {
+        get
+        {
+            return mIsCustom;
+        }
+        set
+        {
+            mIsCustom = value;
+            mIsDefault = !value;
+            UpdateHisSetting();
+            StateHasChanged();
+        }
+    }
+
+    private int mServerPort;
+    public int ServerPort
+    {
+        get
+        {
+            return mServerPort;
+        }
+        set
+        {
+            mServerPort = value;
+            mProxy.SetRealServerPort(value);
+        }
+    }
+
+    private int KeepTime
+    {
+        get
+        {
+            return mKeepTime;
+        }
+        set
+        {
+            mKeepTime = value;
+            UpdateHisSetting();
+        }
+    }
+
+    private bool mEnableZip = false;
+    public bool EnableZip
+    {
+        get
+        {
+            return mEnableZip;
+        }
+        set
+        {
+            mEnableZip = value;
+            if(mEnableZip)
+            {
+                mKeepNoZipTime = 7;
+            }
+            else
+            {
+                mKeepNoZipTime = -1;
+            }
+            UpdateHisSetting();
+        }
+    }
+
+    private void UpdateHisSetting()
+    {
+        mProxy.UpdateHisSetting(DataPath, DataBackPath, KeepTime, mKeepNoZipTime);
+    }
+
+    public int SpiderStartPort
+    {
+        get
+        {
+            return mSpiderStartPort;
+        }
+        set
+        {
+            mSpiderStartPort = value;
+            UpdateSpiderSetting();
+        }
+    }
+
+    public int SpiderEndPort
+    {
+        get
+        {
+            return mSpiderEndPort;
+        }
+        set
+        {
+            mSpiderEndPort = value;
+            UpdateSpiderSetting();
+        }
+    }
+
+    private void UpdateSpiderSetting()
+    {
+        Dictionary<string, string> vals = new Dictionary<string, string>();
+        vals.Add("StartPort", SpiderStartPort.ToString());
+        vals.Add("EndPort", SpiderEndPort.ToString());
+        mProxy.UpdateDriverSetting("Spider", vals);
+    }
+
+    public int DirectAccessStartPort
+    {
+        get
+        {
+            return mDirectAccessStartPort;
+        }
+        set
+        {
+            mDirectAccessStartPort = value;
+            UpdateDirectAccessSetting();
+        }
+    }
+
+    public int DirectAccessEndPort
+    {
+        get
+        {
+            return mDirectAccessEndPort;
+        }
+        set
+        {
+            mDirectAccessEndPort = value;
+            UpdateDirectAccessSetting();
+        }
+    }
+    private void UpdateDirectAccessSetting()
+    {
+        Dictionary<string, string> vals = new Dictionary<string, string>();
+        vals.Add("StartPort", DirectAccessStartPort.ToString());
+        vals.Add("EndPort", DirectAccessEndPort.ToString());
+        mProxy.UpdateDriverSetting("DirectAccess", vals);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        Init();
+    }
+
+    private void Init()
+    {
+        mServerPort = mProxy.GetRealServerPort();
+
+        var setting = mProxy.GetHisSetting();
+        mDataPath = setting.Item1;
+        mDataBackPath = setting.Item2;
+        mIsDefault = string.IsNullOrEmpty(mDataPath);
+        mIsCustom = !mIsDefault;
+
+        mKeepTime = setting.Item3;
+        mKeepNoZipTime = setting.Item4;
+
+        mEnableZip = mKeepNoZipTime > 0;
+
+        var apisetting = mProxy.GetApiSetting();
+        mEnableWebApi = apisetting.Item1;
+        mEnableGrpcApi = apisetting.Item2;
+        mEnableHighApi = apisetting.Item3;
+        mEnableOpcServer = apisetting.Item4;
+
+        var spiders = mProxy.GetDriverSetting("Spider");
+        mSpiderStartPort = int.Parse(spiders["StartPort"]);
+        mSpiderEndPort = int.Parse(spiders["EndPort"]);
+
+        var directacc = mProxy.GetDriverSetting("DirectAccess");
+        mDirectAccessStartPort = int.Parse(directacc["StartPort"]);
+        mDirectAccessEndPort = int.Parse(directacc["EndPort"]);
+    }
+
+}

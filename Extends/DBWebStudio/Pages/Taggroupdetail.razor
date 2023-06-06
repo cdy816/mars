@@ -1,0 +1,1014 @@
+﻿@page "/taggroupdetail"
+@page "/taggroupdetail/{taggroup}"
+@using DBWebStudio.Data;
+@using System.Text;
+@inject MarsProxy mProxy;
+@inject NavigationManager Navigation;
+@inject NotifyManager mNotifier;
+@inject IJSRuntime JS;
+
+<div class="d-flex h-100 flex-column">
+    <div class="card  text-light" style="background-color:rgba(100,100,100,0.2)">
+        <div class="card-header" >
+           过滤条件
+        </div>
+        <div class="card-body">
+            <div class="row gap-2" >
+                <div class="col-3 input-group mb-0 p-0"  style="width:auto">
+                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0" id="basic-addon1">关键字</span>
+                    <input type="text" class="form-control  bg-white bg-opacity-25  text-light  py-0" placeholder="关键字" aria-label="KeyFilter" aria-describedby="basic-addon1" @bind=mKeyFilter @onkeyup="@OnEnterKeyUp">
+                </div>
+
+                <div class="col-3 input-group mb-0 p-0" style="width:auto">
+                    <div class="input-group-text   bg-white bg-opacity-25  text-light">
+                    <span class="me-4">类型</span>
+                    <input class="form-check-input mt-0 " type="checkbox" @bind=mTypeFilterEnable aria-label="mTypeFilter">
+                  </div>
+                    <select style="width:120px" class="form-select  text-light  bg-white bg-opacity-25" aria-label="type filter" @bind=mTypeFilter disabled="@(!mTypeFilterEnable)">
+                        @foreach (var vv in mTypes)
+                        {
+                            <option value="@vv" class="text-dark">@vv</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-3 input-group mb-0 p-0"  style="width:auto">
+                    <div class="input-group-text bg-white bg-opacity-25  text-light">
+                        <span class="me-4">读写模式</span>
+                        <input class="form-check-input mt-0" type="checkbox" @bind=mReadModeEnable aria-label="mReadModeFilter">
+                    </div>
+                    <select style="width:100px" class="form-select  bg-white bg-opacity-25  text-light" aria-label="type filter" @bind=mReadModeFilter disabled="@(!mReadModeEnable)">
+                        <option value="0" class="text-dark">读写</option>
+                        <option value="1" class="text-dark">写</option>
+                        <option value="2" class="text-dark">读</option>
+                    </select>
+                </div>
+
+                @*            <div class="col-3 input-group mb-0 p-0" style="width:auto">
+                    <div class="input-group-text bg-white bg-opacity-25">
+                        <span class="me-4  text-light">寄存器</span>
+                        <input class="form-check-input mt-0" type="checkbox" @bind=mRegisterEnable aria-label="mRegisterFilter">
+                    </div>
+                    <select style="width:120px" contenteditable="false" class="form-select  bg-white bg-opacity-25" aria-label="register filter" @bind=mRegisterText disabled="@(!mRegisterEnable)">
+
+                    </select>
+                </div>*@
+
+                <div class="col-3 input-group mb-0 p-0" style="width:auto">
+                    <div class="input-group-text bg-white bg-opacity-25">
+                        <span class="me-4  text-light">压缩类型</span>
+                        <input class="form-check-input mt-0" type="checkbox" @bind=mCompressEnable aria-label="mCompressFilter">
+                    </div>
+                    <select style="width:120px" contenteditable="false" class="form-select text-light  bg-white bg-opacity-25" aria-label="compress filter" @bind=mCompressText disabled="@(!mCompressEnable)">
+                        <option value="0" class="text-dark">无损压缩</option>
+                        <option value="1" class="text-dark">死区压缩</option>
+                        <option value="2" class="text-dark">斜率压缩</option>
+                    </select>
+                </div>
+
+                <div class="col-3 input-group mb-0 p-0" style="width:auto">
+                    <div class="input-group-text bg-white bg-opacity-25">
+                        <span class="me-4  text-light">驱动</span>
+                        <input class="form-check-input mt-0" type="checkbox" @bind=mDriverEnable aria-label="mDriverFilter">
+                    </div>
+                    <select style="width:150px" contenteditable="false" class="form-select text-light  bg-white bg-opacity-25" aria-label="driver filter" @bind=mDriverText disabled="@(!mDriverEnable)">
+                        <option value="0" class="text-dark">Sim</option>
+                        <option value="1" class="text-dark">Spider</option>
+                        <option value="2" class="text-dark">DirectAccess</option>
+                        <option value="3" class="text-dark">Calculate</option>
+                    </select>
+                </div>
+
+                <div class="col-3 input-group mb-0 p-0" style="width:auto">
+                    <div class="input-group-text bg-white bg-opacity-25">
+                        <span class="me-4  text-light">区域</span>
+                        <input class="form-check-input mt-0" type="checkbox" @bind=mAreaEnable aria-label="mAeraFilter">
+                    </div>
+                    <input type="text" class="form-control  bg-white bg-opacity-25  text-light" placeholder="区域" aria-label="AreaFilter" aria-describedby="basic-addon1" @bind=mAreaText disabled="@(!mAreaEnable)" @onkeyup="@OnEnterKeyUp">
+                </div>
+
+                <div class="col-3 input-group mb-0 justify-content-center align-items-center" style="width:auto">
+                    <div class="input-group-text border-0 bg-transparent">
+                        <span class="me-4  text-light">记录</span>
+                        <input class="form-check-input mt-0" type="checkbox" @bind=mRecordModeEnable aria-label="mRecordModeEnableFilter">
+                    </div>
+                    <div class="ms-2 ">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" @bind=@mTimerRecordFilterEnable disabled="@(!mRecordModeEnable)">
+                            <label class="form-check-label " for="inlineRadio1">定时</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" @bind=@mValueChangedRecordFilterEnable disabled="@(!mRecordModeEnable)">
+                            <label class="form-check-label" for="inlineRadio2">值改变</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio3" @bind=@mDriverRecordFilterEnable disabled="@(!mRecordModeEnable)">
+                            <label class="form-check-label" for="inlineRadio3">驱动</label>
+                        </div>
+                    </div>
+
+                </div>
+
+                <button type="button" class="col-1 btn btn-success me-2" onclick="@(()=>RefreshTag())">检索</button>
+            </div>
+        </div>
+    </div>
+    <div class="card text-light flex-fill mt-1" style="background-color:rgba(100,100,100,0.2);height:300px">
+        <div style="height:100%;overflow-y:auto">
+            <table class="table text-light">
+                <thead>
+                    <tr>
+                        <th scope="col">序号</th>
+                        <th scope="col">ID</th>
+                        <th scope="col">名称</th>
+                        <th scope="col">类型</th>
+                        <th scope="col">读写模式</th>
+                        <th scope="col">转换</th>
+                        <th scope="col">最大值</th>
+                        <th scope="col">最小值</th>
+                        <th scope="col">精度</th>
+                        <th scope="col">单位</th>
+                        <th scope="col">记录</th>
+                        <th scope="col">驱动</th>
+
+                        <th scope="col">寄存器</th>
+                        <th scope="col">区域</th>
+                        <th scope="col">描述</th>
+                        <th scope="col">扩展属性</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int i = 1;
+                        foreach (var vv in mTags)
+                        {
+                            <tr class="tr" onclick="@(()=>SelectRow(vv))" @key=@vv.UName>
+                                <td scope="row" style="width:48px">
+                                    <StringEditor Value="@((i++).ToString())" Target="@vv">
+                                    </StringEditor>
+                                </td>
+                                <td scope="row" style="width:48px">
+                                    <StringEditor Value="@(vv.Id.ToString())" Target="@vv">
+                                    </StringEditor>
+                                </td>
+                                <td scope="row">
+                                    <StringEditor Value="@vv.Name" Target="@vv">
+                                        <Editor>
+                                            <input type="text" class="form-control bg-white bg-opacity-25  text-light py-0" placeholder="名称" @bind=@vv.Name />
+                                        </Editor>
+                                    </StringEditor>
+                                </td>
+                                <td scope="row">
+                                    <StringEditor Value="@vv.TypeString" Target="@vv">
+                                        <Editor>
+                                            <CustomSelect @bind-IndexValue=@vv.Type Items="@mTypes" />
+                                        </Editor>
+                                    </StringEditor>
+                                </td>
+                                <td scope="row">
+                                     @if (!(vv.RealTagMode is Cdy.Tag.ComplexTag))
+                                     {
+                                        <StringEditor Value="@vv.ReadWriteModeString" Target="@vv">
+                                            <Editor>
+                                                <CustomSelect Items="@(vv.ReadWriteModeList.ToList())" @bind-IndexValue=@vv.ReadWriteMode />
+                                            </Editor>
+                                        </StringEditor>
+                                     }
+                                    else
+                                    {
+                                        <span>--</span>
+                                    }
+                                </td>
+                                <td scope="row" style="min-width:32px">
+                                    @if (!(vv.RealTagMode is Cdy.Tag.ComplexTag))
+                                    {
+                                        <StringEditor Value="@vv.ConvertString" Target="@vv">
+                                            <Editor>
+                                                <div class="hstack">
+                                                    <span>@vv.ConvertString </span>
+                                                    <button type="button" class="btn btn-secondary  py-0" data-bs-toggle="modal" data-bs-target="#convertModel">...</button>
+                                                </div>
+                                            </Editor>
+                                        </StringEditor>
+                                    }
+                                    else
+                                    {
+                                        <span>--</span>
+                                    }
+                                </td>
+                                <td scope="row">
+                                    @if ((vv.RealTagMode is Cdy.Tag.NumberTagBase))
+                                    {
+                                        <StringEditor Value="@(IsMaxValue(vv.RealTagMode,vv.MaxValue)?"最大值":vv.MaxValue.ToString())" Target="@vv">
+                                            <Editor>
+                                                <input type="number" style="width:64px" class="form-control px-0 bg-white bg-opacity-25  text-light  py-0" @bind=@vv.MaxValue />
+                                            </Editor>
+                                        </StringEditor>
+                                    }
+                                    else
+                                    {
+                                        <span>--</span>
+                                    }
+                                </td>
+                                <td scope="row">
+                                    @if ((vv.RealTagMode is Cdy.Tag.NumberTagBase))
+                                    {
+                                        <StringEditor Value="@(IsMinValue(vv.RealTagMode,vv.MinValue)?"最小值":vv.MinValue.ToString())" Target="@vv">
+                                            <Editor>
+                                                <input type="number" style="width:64px" class="form-control  px-0 bg-white bg-opacity-25  text-light  py-0" @bind=@vv.MinValue />
+                                            </Editor>
+                                        </StringEditor>
+                                    }
+                                    else
+                                    {
+                                        <span>--</span>
+                                    }
+                                </td>
+                                <td scope="row">
+                                    @if ((vv.RealTagMode is Cdy.Tag.NumberTagBase))
+                                    {
+                                    <StringEditor Value="@(vv.Precision.ToString())" Target="@vv">
+                                        <Editor>
+                                            <input type="number" style="width:56px" class="form-control px-0 bg-white bg-opacity-25  text-light  py-0" @bind=@vv.Precision />
+                                        </Editor>
+                                        </StringEditor>
+                                    }
+                                    else
+                                    {
+                                        <span>--</span>
+                                    }
+                                </td>
+                                <td scope="row">
+                                    <StringEditor Value="@(vv.Unit)" Target="@vv">
+                                        <Editor>
+                                            <input type="text" style="width:128px" class="form-control px-0 bg-white bg-opacity-25  text-light  py-0" placeholder="单位" @bind=@vv.Unit />
+                                        </Editor>
+                                    </StringEditor>
+
+                                </td>
+                                <td scope="row">
+                                    @if (!(vv.RealTagMode is Cdy.Tag.ComplexTag))
+                                    {
+                                        <input class="form-check-input" type="checkbox" @bind=@vv.HasHisTag />
+                                    }
+                                    else
+                                    {
+                                        <span>--</span>
+                                    }
+                                </td>
+                                <td scope="row">
+                                  @if (!(vv.RealTagMode is Cdy.Tag.ComplexTag))
+                                  {
+                                    <StringEditor Value="@vv.DriverName" Target="@vv">
+                                        <Editor>
+                                            <CustomSelect Items="@(vv.DriverList.ToList())" @bind-Value="@(vv.DriverName)" />
+                                        </Editor>
+                                        </StringEditor>
+                                    }
+                                    else
+                                    {
+                                        <span>--</span>
+                                    }
+                                </td>
+                                <td scope="row">
+                                    @if (vv.DriverName == "Sim")
+                                    {
+                                        <StringEditor Value="@vv.RegistorName" Target="@vv">
+                                            <Editor>
+                                                <CustomSelect Items="@(vv.RegistorList.ToList())" @bind-Value="@(vv.RegistorName)" />
+                                            </Editor>
+                                        </StringEditor>
+                                    }
+                                    else if(vv.DriverName=="Calculate")
+                                    {
+                                        <StringEditor Value="@vv.RegistorName" Target="@vv">
+                                            <Editor>
+                                                <div class="hstack">
+                                                    <span style="max-width:100px">@vv.RegistorName </span>
+                                                    <button type="button" class="btn btn-secondary  py-0" data-bs-toggle="modal" data-bs-target="#CalRegistorEditer">...</button>
+                                                </div>
+                                            </Editor>
+                                        </StringEditor>
+                                    }
+                                    else
+                                    {
+                                        <span>--</span>
+                                    }
+                                </td>
+                                <td scope="row">
+                                    <StringEditor Value="@vv.Area" Target="@vv">
+                                        <Editor>
+                                            <input type="text" style="width:128px" class="form-control px-0  bg-white bg-opacity-25  text-light  py-0" @bind=@vv.Area />
+                                        </Editor>
+                                    </StringEditor>
+
+                                </td>
+                                <td scope="row">
+                                    <StringEditor Value="@vv.Desc" Target="@vv">
+                                        <Editor>
+                                            <input type="text" class="form-control  px-0  bg-white bg-opacity-25  text-light  py-0" @bind=@vv.Desc />
+                                        </Editor>
+                                    </StringEditor>
+
+                                </td>
+                                <td scope="row">
+                                    <StringEditor Value="@vv.ExtendField1" Target="@vv">
+                                        <Editor>
+                                            <input type="text" class="form-control  px-0  bg-white bg-opacity-25  text-light  py-0" @bind=@vv.ExtendField1 />
+                                        </Editor>
+                                    </StringEditor>
+
+                                </td>
+                            </tr>
+                            if (vv == mLastSelect && vv.HasHisTag)
+                            {
+                                <tr>
+                                    <td colspan="2"></td>
+                                    <td colspan="14">
+                                        <div class="hstack">
+                                            <div class="col-3 input-group ms-0 me-2 p-0" style="width:auto">
+                                                <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0" id="basic-addon1">记录类型</span>
+                                                <CustomSelect @key=@(vv.Name+"record") Items="@(vv.RecordTypeList.ToList())" @bind-IndexValue="@vv.RecordType" />
+                                            </div>
+                                            @if (vv.RecordType == 0)
+                                            {
+                                                <div class="col-3 input-group mx-2 p-0" style="width:auto">
+                                                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0">周期</span>
+                                                    <input type="text" class="form-control   bg-white bg-opacity-25  text-light  py-0" placeholder="周期" @bind=vv.CompressCircle>
+                                                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0">ms</span>
+                                                </div>
+                                            }
+                                            else if (vv.RecordType == 1)
+                                            {
+
+                                            }
+                                            else
+                                            {
+                                                <div class="col-3 input-group mx-2 p-0" style="width:auto">
+                                                    <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0" id="basic-addon1">每秒记录变量个数:</span>
+                                                    <input type="text" style="width:48px" class="form-control   bg-white bg-opacity-25  text-light  py-0" placeholder="个数" @bind=vv.MaxValueCountPerSecond>
+                                                </div>
+                                            }
+                                            <div class="col-3 input-group mx-2 p-0" style="width:auto">
+                                                <span class="input-group-text  bg-white bg-opacity-25  text-light  py-0" id="basic-addon1">压缩类型</span>
+                                                <CustomSelect IndexValue="@(vv.CompressType)" Items="@(vv.CompressTypeList.ToList())" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            if(vv==mLastSelect && vv.RealTagMode is Cdy.Tag.ComplexTag)
+                            {
+                                <ComplexSubRow Model="@vv" IndexStart="@(i-1)" />
+                            }
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="d-flex mt-2 justify-content-between">
+        <div class="hstack">
+            <button type="button" class="btn btn-success me-2" onclick="@(()=>AddTag())">添加</button>
+            <button type="button" class="btn btn-secondary me-2" disabled="@(mLastSelect==null)" onclick="@(()=>RemoveTag())">删除</button>
+            <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#importModel" onclick="@(()=>{mIsImportShow=true;})">导入</button>
+            <button type="button" class="btn btn-warning me-2" onclick="@(()=>ExportToFile())">导出</button>
+        </div>
+        <span class="text-light mt-1" >总共 @(mTotalTagCount) 条记录</span>
+        <PageNotifier @bind-CurrentPage=CurrentPage @bind-CurrentPage:event="CurrentPageChanged" TotalPage=@mTotalPage />
+    </div>
+
+    @{
+        //导入弹出界面
+        <div class="modal modal-static" id="importModel" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="importModelLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="importModelLabel">变量导入</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        
+                        <div class="d-flex mb-2 p-0 hstack">
+                            <span id="basic-addon1">导入方式</span>
+                            <div class="btn-group mx-3" role="group" aria-label="import mode">
+                                <input type="radio" class="btn-check p-0" name="btnradio" id="btnradio1" autocomplete="off" checked onclick="@(()=>SetImportModel(0))">
+                                <label class="btn btn-outline-primary" for="btnradio1">替换重复变量</label>
+
+                                <input type="radio" class="btn-check  p-0" name="btnradio" id="btnradio2" autocomplete="off" onclick="@(()=>SetImportModel(1))">
+                                <label class="btn btn-outline-primary" for="btnradio2">整体删除后重新添加</label>
+
+                                <input type="radio" class="btn-check  p-0" name="btnradio" id="btnradio3" autocomplete="off" onclick="@(()=>SetImportModel(2))">
+                                <label class="btn btn-outline-primary" for="btnradio3">重复变量忽略</label>
+                            </div>
+                        </div>
+
+                        <InputFile OnChange="@ImportFromFiles"  />
+                       
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="@(()=>ProcessImportFrom())">确定</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    @{
+        <div class="modal modal-static" id="convertModel" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="importModelLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="importModelLabel">转换编辑</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ConvertControl Target="@mLastSelect" @ref=mConvertEdit />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="@(()=>ProcessConvertEdit())">确定</button>
+                    </div>
+               </div>
+            </div>
+        </div>
+
+    }
+
+    @{
+        <div class="modal modal-static" id="CalRegistorEditer" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="importModelLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="importModelLabel">计算表达式</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <span>多个变量间进行四则运算，示例:(Tag.tag1+Tag.tag2)/Tag.tag3;整形变量取某一位:Tag.tag1[1]。</span>
+                        <textarea class="form-control" rows="5" value="@(mLastSelect?.RegistorName)" @ref=mExpEdit />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="@(()=>ProcessCalRegistorEdit())">确定</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    }
+</div>
+@code {
+    private string mKeyFilter = "";
+
+    private bool mTypeFilterEnable = false;
+
+    private string mTypeFilter = "";
+
+    private List<string> mTypes;
+
+    private bool mReadModeEnable = false;
+    private int mReadModeFilter = 0;
+
+    private bool mRecordModeEnable = false;
+
+    private bool mAreaEnable = false;
+    private string mAreaText = "";
+
+    private bool mDriverEnable = false;
+    private string mDriverText = "";
+
+    private bool mRegisterEnable = false;
+    private string mRegisterText = "";
+
+    private bool mCompressEnable = false;
+    private int mCompressText = 0;
+
+
+    private bool mDriverRecordFilterEnable = false;
+    private bool mTimerRecordFilterEnable = false;
+    private bool mValueChangedRecordFilterEnable = false;
+
+    private int mCurrentPage = 0;
+    private int mTotalPage = 1;
+    private int mTotalTagCount = 0;
+
+    public int CurrentPage
+    {
+        get
+        {
+            return mCurrentPage;
+        }
+        set
+        {
+            mCurrentPage = value;
+            RefreshTag();
+        }
+    }
+
+    private List<RowTagViewModel> mTags = new List<RowTagViewModel>();
+
+    [Parameter]
+    public string taggroup { get; set; } = "";
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        mTypes = TagViewModel.mTagTypeList.ToList();
+        Navigation.LocationChanged += locationChanged;
+    }
+
+    private void  locationChanged(object sender, LocationChangedEventArgs e)
+    {
+        if (!e.Location.Contains("taggroupdetail"))
+        {
+            if (mLastSelect != null)
+            {
+                mLastSelect.Proxy = mProxy;
+                mLastSelect.IsSelected = false;
+            }
+            Navigation.LocationChanged -= locationChanged;
+            DisposeTags();
+        }
+    }
+
+    private RowTagViewModel mLastSelect;
+
+
+    private void SelectRow(RowTagViewModel model)
+    {
+        if (mLastSelect != model)
+        {
+            if (mLastSelect != null)
+            {
+                //mLastSelect.Proxy = mProxy;
+                mLastSelect.IsSelected = false;
+            }
+            mLastSelect = model;
+            if (mLastSelect != null)
+            {
+                mLastSelect.Proxy = mProxy;
+                mLastSelect.IsSelected = true;
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void RefreshStatue()
+    {
+        if (mLastSelect != null)
+        {
+            mLastSelect.IsSelected = false;
+            Task.Run(() =>
+            {
+                InvokeAsync(() =>
+                {
+                    mLastSelect.IsSelected = true;
+                });
+            });
+        }
+        //StateHasChanged();
+    }
+
+    private ConvertControl mConvertEdit;
+
+    private void ProcessConvertEdit()
+    {
+        mLastSelect.Convert = mConvertEdit.GetConvert();
+    }
+
+    private ElementReference mExpEdit;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    private async void ProcessCalRegistorEdit()
+    {
+        if (helper == null)
+        {
+            helper = new InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+        mLastSelect.RegistorName = await helper.GetTextBoxValue(mExpEdit);
+        StateHasChanged();
+    }
+
+    private void OnEnterKeyUp(KeyboardEventArgs arg)
+    {
+        if(arg.Code=="Enter" || arg.Code=="NumpadEnter")
+        {
+            RefreshTag();
+        }
+    }
+
+    private bool IsMaxValue(Cdy.Tag.Tagbase tag,double dval)
+    {
+        if(tag is Cdy.Tag.DoubleTag)
+        {
+            return dval == double.MaxValue;
+        }
+        else if(tag is Cdy.Tag.FloatTag)
+        {
+            return dval == float.MaxValue;
+        }
+        else if(tag is Cdy.Tag.IntTag)
+        {
+            return dval == int.MaxValue;
+        }
+        else if(tag is Cdy.Tag.UIntTag)
+        {
+            return dval == uint.MaxValue;
+        }
+        else if(tag is Cdy.Tag.LongTag)
+        {
+            return dval == long.MaxValue;
+        }
+        else if(tag is Cdy.Tag.ULongTag)
+        {
+            return dval == ulong.MaxValue;
+        }
+        else if(tag is Cdy.Tag.ShortTag)
+        {
+            return dval == short.MaxValue;
+        }
+        else if(tag is Cdy.Tag.UShortTag)
+        {
+            return dval == ushort.MaxValue;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private bool IsMinValue(Cdy.Tag.Tagbase tag,double dval)
+    {
+        if(tag is Cdy.Tag.DoubleTag)
+        {
+            return dval == double.MinValue;
+        }
+        else if(tag is Cdy.Tag.FloatTag)
+        {
+            return dval == float.MinValue;
+        }
+        else if(tag is Cdy.Tag.IntTag)
+        {
+            return dval == int.MinValue;
+        }
+        else if(tag is Cdy.Tag.UIntTag)
+        {
+            return dval == uint.MinValue;
+        }
+        else if(tag is Cdy.Tag.LongTag)
+        {
+            return dval == long.MinValue;
+        }
+        else if(tag is Cdy.Tag.ULongTag)
+        {
+            return dval == ulong.MinValue;
+        }
+        else if(tag is Cdy.Tag.ShortTag)
+        {
+            return dval == short.MinValue;
+        }
+        else if(tag is Cdy.Tag.UShortTag)
+        {
+            return dval == ushort.MinValue;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    #region Query
+
+    private List<string> mRegistors = new List<string>();
+
+    /// <summary>
+    /// 
+    /// </summary>
+    private void RefreshTag()
+    {
+        DisposeTags();
+        BuildFilters();
+        var vv = mProxy.QueryTagByGroup(taggroup, mCurrentPage, out mTotalPage, out mTotalTagCount, mFilters);
+        //var vv = mProxy.QueryTagByGroup(taggroup,  mFilters);
+        int lid = (int)(DateTime.Now.Ticks);
+        foreach (var vvv in vv)
+        {
+            RowTagViewModel model = new RowTagViewModel(vvv.Value.Item1, vvv.Value.Item2) { Database = mProxy.CurrentDatabase, UID =lid};
+            mTags.Add(model);
+        }
+    }
+
+    private Dictionary<string, string> mFilters = new Dictionary<string, string>();
+    private void BuildFilters()
+    {
+        mFilters.Clear();
+        if (!string.IsNullOrEmpty(this.mKeyFilter))
+        {
+            mFilters.Add("keyword", mKeyFilter);
+        }
+        if (this.mTypeFilterEnable)
+        {
+            mFilters.Add("type", mTypes.IndexOf(this.mTypeFilter).ToString());
+        }
+        if (this.mReadModeEnable)
+        {
+            mFilters.Add("readwritetype", mReadModeFilter.ToString());
+        }
+
+        if (this.mAreaEnable)
+        {
+            mFilters.Add("area", mAreaText);
+        }
+
+        if (this.mRecordModeEnable)
+        {
+            if (this.mTimerRecordFilterEnable && this.mValueChangedRecordFilterEnable)
+            {
+                mFilters.Add("recordtype", "3");
+            }
+            else if (this.mTimerRecordFilterEnable)
+            {
+                mFilters.Add("recordtype", "0");
+            }
+            else if (this.mValueChangedRecordFilterEnable)
+            {
+                mFilters.Add("recordtype", "1");
+            }
+            else if(this.mDriverRecordFilterEnable)
+            {
+                mFilters.Add("recordtype", "4");
+            }
+            else
+            {
+                mFilters.Add("recordtype", "3");
+            }
+        }
+
+        if (this.mCompressEnable)
+        {
+            mFilters.Add("compresstype", (mCompressText+1).ToString());
+        }
+
+        string stmp = "";
+        if (this.mDriverEnable)
+        {
+            stmp = this.mDriverText;
+        }
+        if (!string.IsNullOrEmpty(stmp))
+        {
+            mFilters.Add("linkaddress", stmp);
+        }
+
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if(taggroup==null)
+        {
+            taggroup = "";
+        }
+        mRegistors = mProxy.GetRegistorDrivers().Keys.ToList();
+        RefreshTag();
+        mProxy.RefreshAction = RefreshStatue;
+    }
+    #endregion
+
+    #region Add and Remove
+
+    private string GetNewName(string baseName="tag")
+    {
+        return mProxy.GetAvaiableTagName(this.taggroup, baseName);
+    }
+
+    private bool UpdateTag(TagViewModel tagmodel)
+    {
+        if (tagmodel.IsNew)
+        {
+            int id;
+            var re = mProxy.AddTag(new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(tagmodel.RealTagMode, tagmodel.HisTagMode), out id);
+            if (re)
+            {
+                tagmodel.RealTagMode.Id = id;
+                if (tagmodel.HisTagMode != null) tagmodel.HisTagMode.Id = id;
+                tagmodel.IsChanged = false;
+                tagmodel.IsNew = false;
+            }
+            return re;
+        }
+        else
+        {
+            if (tagmodel.IsChanged)
+            {
+                var re = mProxy.UpdateTag(new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(tagmodel.RealTagMode, tagmodel.HisTagMode));
+                if (re)
+                {
+                    tagmodel.IsChanged = false;
+                }
+                return re;
+            }
+        }
+        return false;
+    }
+
+    private void AddTag()
+    {
+        if (mLastSelect != null)
+        {
+            var vtag = mLastSelect.Clone();
+            vtag.RealTagMode.Id = -1;
+            if (vtag.HisTagMode != null)
+                vtag.HisTagMode.Id = vtag.RealTagMode.Id;
+            vtag.SetTagNane(GetNewName());
+
+            vtag.IsNew = true;
+            if (UpdateTag(vtag))
+            {
+                this.mTags.Add(vtag);
+                SelectRow(vtag);
+            }
+        }
+        else
+        {
+            var tag = new Cdy.Tag.DoubleTag() { Name = GetNewName() };
+            tag.Group = this.taggroup;
+            var vtag = new RowTagViewModel(tag, null) { IsNew = true, Database = mProxy.CurrentDatabase };
+            if (UpdateTag(vtag))
+            {
+                this.mTags.Add(vtag);
+                SelectRow(vtag);
+            }
+        }
+    }
+
+    private void RemoveTag()
+    {
+        if(mLastSelect!=null)
+        {
+            if(mProxy.Remove(mLastSelect.RealTagMode.Id))
+            {
+                mTags.Remove(mLastSelect);
+            }
+        }
+    }
+
+    #endregion
+
+    #region Import
+
+    private bool mIsImportShow = false;
+    private int mImportModel = 0;
+
+    private void SetImportModel(int val)
+    {
+        mImportModel = val;
+    }
+
+
+    private async void ProcessImportFrom()
+    {
+        List<TagViewModel> ltmp = new List<TagViewModel>();
+        System.IO.MemoryStream ms = new MemoryStream();
+        var stream = mImportFile.OpenReadStream(long.MaxValue);
+        await stream.CopyToAsync(ms);
+        stream.Close();
+        mNotifier.Notify(0.2);
+        ms.Position = 0;
+
+        var msstream = new StreamReader(ms);
+
+        while (!msstream.EndOfStream)
+        {
+            string sval = msstream.ReadLine();
+            if (!string.IsNullOrEmpty(sval))
+            {
+                TagViewModel tm = TagViewModel.LoadFromCSVString(sval);
+                tm.Database = mProxy.CurrentDatabase;
+                ltmp.Add(tm);
+            }
+        }
+        msstream.Close();
+        ms.Dispose();
+        mNotifier.Notify(0.5);
+
+        if (mImportModel == 1)
+        {
+            this.mProxy.ClearTagByGroup(taggroup);
+        }
+
+        //var tags = mSelectGroupTags.ToDictionary(e => e.RealTagMode.Name);
+        int tcount = ltmp.Count;
+        int icount = 0;
+        bool haserro = false;
+        int id = 0;
+        StringBuilder sb = new StringBuilder();
+        foreach (var vv in ltmp)
+        {
+            vv.RealTagMode.Group = taggroup;
+
+            //更新数据
+            if (!mProxy.Import(new Tuple<Cdy.Tag.Tagbase, Cdy.Tag.HisTag>(vv.RealTagMode, vv.HisTagMode), mImportModel, out id))
+            {
+                sb.AppendLine($"添加变量{vv.RealTagMode.Name}错误");
+                haserro = true;
+            }
+            else
+            {
+                vv.IsNew = false;
+                vv.IsChanged = false;
+            }
+
+            icount++;
+            mNotifier.Notify(((icount * 1.0 / tcount) * 0.5));
+        }
+
+
+
+        mNotifier.Notify(1);
+        mNotifier.NotifyFinished();
+        mIsImportShow = false;
+
+        RefreshTag();
+        StateHasChanged();
+        if (haserro)
+        {
+            Alert($"导入过程有错误，详情参看错误内容文件 erro.txt! ");
+            DownLoadFile("erro.txt", sb.ToString());
+        }
+        else
+        {
+            Alert("导入完成!");
+        }
+
+    }
+
+    private IBrowserFile mImportFile;
+
+    private void ImportFromFiles(InputFileChangeEventArgs arg)
+    {
+        mImportFile = arg.File;
+    }
+
+    private async void Alert(string msg)
+    {
+        if(helper==null)
+        {
+            helper = new InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+        helper.Alert(msg);
+    }
+
+    InnerJsHelper helper;
+    /// <summary>
+    /// 
+    /// </summary>
+    private async void ExportToFile()
+    {
+        if (helper == null)
+        {
+            helper = new InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+
+        StringBuilder sb = new StringBuilder();
+        foreach(var vv in mTags)
+        {
+            sb.AppendLine(vv.SaveToCSVString());
+        }
+        helper.DownLoadFromStream(mProxy.CurrentDatabase + "_export.csv", new DotNetStreamReference(new MemoryStream(Encoding.UTF8.GetBytes(sb.ToString()))));
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="file"></param>
+    /// <param name="txt"></param>
+    private async void DownLoadFile(string file,string txt)
+    {
+        if (helper == null)
+        {
+            helper = new InnerJsHelper(JS);
+            await helper.ImportAsync();
+        }
+        helper.DownLoadFromStream(mProxy.CurrentDatabase + "_export.csv", new DotNetStreamReference(new MemoryStream(Encoding.UTF8.GetBytes(txt))));
+    }
+
+    #endregion
+
+    private void DisposeTags()
+    {
+        foreach (var vv in mTags)
+        {
+            vv.Dispose();
+        }
+        mTags.Clear();
+    }
+}

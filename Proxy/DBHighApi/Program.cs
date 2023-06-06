@@ -3,6 +3,7 @@ using DBHighApi.Api;
 using DBRuntime.Proxy;
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 
 namespace DBHighApi
@@ -20,8 +21,14 @@ namespace DBHighApi
                 if (System.IO.File.Exists(spath))
                 {
                     XElement xx = XElement.Load(spath);
+                    if (xx.Element("Allow") != null)
+                        Cdy.Tag.Common.ClientAuthorization.Instance.LoadAllowFromXML(xx.Element("Allow"));
+
+                    if (xx.Element("Forbidden") != null)
+                        Cdy.Tag.Common.ClientAuthorization.Instance.LoadForbiddenFromXML(xx.Element("Forbidden"));
                     return int.Parse(xx.Attribute("ServerPort")?.Value);
                 }
+               
             }
             catch
             {
@@ -32,20 +39,30 @@ namespace DBHighApi
 
         static void Main(string[] args)
         {
-            Console.CancelKeyPress += Console_CancelKeyPress;
-            AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-            WindowConsolHelper.DisbleQuickEditMode();
-
-            Console.Title = "DBHighApi";
-            if (args.Contains("/m"))
+            //if (!Console.IsInputRedirected)
             {
-                WindowConsolHelper.MinWindow("DBHighApi");
+                Console.CancelKeyPress += Console_CancelKeyPress;
+                AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
             }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                WindowConsolHelper.DisbleQuickEditMode();
+                if (!Console.IsInputRedirected)
+                    Console.Title = "DBHighApi";
+
+                if (args.Contains("/m"))
+                {
+                    WindowConsolHelper.MinWindow("DBHighApi");
+                }
+            }
+
+            Cdy.Tag.Common.ProcessMemoryInfo.Instances.StartMonitor("DBHighApi");
 
             Start();
             while (!mIsClosed)
             {
-                string smd = Console.ReadLine();
+                string smd = Console.In.ReadLine();
                 if (mIsClosed)
                 {
                     break;
@@ -53,6 +70,7 @@ namespace DBHighApi
                 switch (smd)
                 {
                     case "exit":
+                        Console.WriteLine("DBHighApi","Ready to Exit....");
                         Stop();
                         mIsClosed = true;
                         break;

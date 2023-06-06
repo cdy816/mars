@@ -68,7 +68,7 @@ namespace DBDevelopService.Controllers
         public string UserName { get; set; }
         public bool IsAdmin { get; set; }
         public bool NewDatabase { get; set; }
-        public List<string> Databases { get; set; }
+        public List<string> Databases { get; set; } = new List<string>();
     }
 
     /// <summary>

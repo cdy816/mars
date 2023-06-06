@@ -86,6 +86,18 @@ namespace Cdy.Tag
                         LoggerService.Service.Erro("DriverManager", ex.StackTrace);
                     }
                 }
+
+                foreach(var vv in mDrivers)
+                {
+                    try
+                    {
+                        vv.Value.Init();
+                    }
+                    catch
+                    {
+
+                    }
+                }
             }
         }
 

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net;
 using System.Text;
+using System.Threading;
 
 namespace DBDevelopClientWebApi
 {
@@ -17,11 +18,15 @@ namespace DBDevelopClientWebApi
 
         #region ... Variables  ...
 
-        WebClient mClient;
+        MarsDevelopWebClient mClient;
 
         private string mLoginId;
 
         public const int PageCount = 500;
+
+        private object mLock = new object();
+
+        private int mTimeout = 1000 * 10;
 
         #endregion ...Variables...
 
@@ -47,6 +52,26 @@ namespace DBDevelopClientWebApi
         /// </summary>
         public string LastErroMessage { get; set; }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Timeout
+        {
+            get
+            {
+                return mTimeout;
+            }
+            set
+            {
+                if (mTimeout != value)
+                {
+                    mTimeout = value;
+                    mClient.Timeout = value;
+                }
+            }
+        }
+
         #endregion ...Properties...
 
         #region ... Methods    ...
@@ -60,11 +85,14 @@ namespace DBDevelopClientWebApi
         /// <returns></returns>
         private string Post(string fun, string sval)
         {
-            if (mClient == null)
-                mClient = new WebClient();
-            mClient.Headers[HttpRequestHeader.ContentType] = "application/json";
-            mClient.Encoding = Encoding.UTF8;
-            return mClient.UploadString(Server + "/DevelopServer/" + fun, sval);
+            lock (mLock)
+            {
+                if (mClient == null)
+                    mClient = new MarsDevelopWebClient();
+                mClient.Headers[HttpRequestHeader.ContentType] = "application/json";
+                mClient.Encoding = Encoding.UTF8;
+                return mClient.UploadString(Server + "/DevelopServer/" + fun, sval);
+            }
         }
 
         /// <summary>
@@ -547,19 +575,18 @@ namespace DBDevelopClientWebApi
         /// <param name="pageIndex"></param>
         /// <param name="mFilter"></param>
         /// <returns></returns>
-        public List<Tuple<Tagbase, HisTag>> GetAllTagByGroup(string database, string group, int pageIndex, out int pageCount, Dictionary<string, string> mFilter = null)
+        public List<Tuple<Tagbase, HisTag>> GetAllTagByGroup(string database, string group, Dictionary<string, string> mFilter = null)
         {
             if (!string.IsNullOrEmpty(mLoginId))
             {
                 try
                 {
-                    WebApiGetTagByGroupRequest wr = new WebApiGetTagByGroupRequest() { Database = database, Id = mLoginId, GroupName = group, Index = pageIndex, Filters = mFilter };
+                    WebApiGetTagByGroupRequest wr = new WebApiGetTagByGroupRequest() { Database = database, Id = mLoginId, GroupName = group,  Filters = mFilter };
                     var sval = Post("GetAllTagByGroup", JsonConvert.SerializeObject(wr));
                     var result = JsonConvert.DeserializeObject<GetTagsResponse<List<WebApiTag>>>(sval);
                     if (result.HasErro)
                     {
                         LastErroMessage = result.ErroMsg;
-                        pageCount = 0;
                         return null;
                     }
                     else
@@ -569,21 +596,18 @@ namespace DBDevelopClientWebApi
                         {
                             re.Add(new Tuple<Tagbase, HisTag>(vv.RealTag.ConvertToTagbase(), vv.HisTag));
                         }
-                        pageCount = result.TotalPages;
                         return re;
                     }
                 }
                 catch (Exception ex)
                 {
                     LastErroMessage = ex.Message;
-                    pageCount = 0;
                     return null;
                 }
             }
             else
             {
                 LastErroMessage = "未登录";
-                pageCount = 0;
                 return null;
             }
         }
@@ -1063,6 +1087,153 @@ namespace DBDevelopClientWebApi
                 return false;
             }
         }
+
+        /// <summary>
+        /// 获取驱动配置
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public Dictionary<string,Dictionary<string,string>> GetDriverSetting(string database)
+        {
+            if (string.IsNullOrEmpty(mLoginId))
+            {
+                LastErroMessage = "未登录";
+                return null;
+            }
+            try
+            {
+                WebApiDatabaseRequest request = new WebApiDatabaseRequest() { Database = database, Id = mLoginId };
+                var sval = Post("GetDriverSetting", JsonConvert.SerializeObject(request));
+                var result = JsonConvert.DeserializeObject<WebApiGetDriverSettingResponse>(sval);
+                if (result.HasErro)
+                {
+                    LastErroMessage = result.ErroMsg;
+                    return null;
+                }
+                else
+                {
+                    Dictionary<string, Dictionary<string, string>> re = new Dictionary<string, Dictionary<string, string>>();
+                    foreach (var vv in result.Settings)
+                    {
+                        Dictionary<string, string> dtmp = new Dictionary<string, string>();
+                        string[] ss = vv.Value.Split(new char[] { ',' });
+                        foreach (string vvv in ss)
+                        {
+                            string[] svv = vvv.Split(new char[] { ':' });
+                            if (!dtmp.ContainsKey(svv[0]))
+                            {
+                                dtmp.Add(svv[0], svv[1]);
+                            }
+                        }
+                        re.Add(vv.Key, dtmp);
+                    }
+                    return re;
+                }
+            }
+            catch (Exception ex)
+            {
+                LastErroMessage = ex.Message;
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 更新驱动配置
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="settings"></param>
+        /// <returns></returns>
+        public bool UpdateDriverSetting(string database,Dictionary<string,Dictionary<string,string>> settings)
+        {
+            if (string.IsNullOrEmpty(mLoginId))
+            {
+                LastErroMessage = "未登录";
+                return false;
+            }
+            try
+            {
+                WebApiUpdateDriverSettingRequest request = new WebApiUpdateDriverSettingRequest() { Database = database, Id = mLoginId };
+                Dictionary<string, string> dvals = new Dictionary<string, string>();
+                foreach(var vv in settings)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    foreach (var vvv in vv.Value)
+                    {
+                        sb.Append(vvv.Key + ":" + vvv.Value+",");
+                    }
+                    sb.Length = sb.Length > 0 ? sb.Length - 1 : sb.Length;
+                    dvals.Add(vv.Key,sb.ToString());
+                }
+                request.Settings = dvals;
+                var sval = Post("UpdateDatabaseDriverSetting", JsonConvert.SerializeObject(request));
+                var result = JsonConvert.DeserializeObject<ResultResponse<bool>>(sval);
+                LastErroMessage = result.ErroMsg;
+                return result.Result;
+            }
+            catch (Exception ex)
+            {
+                LastErroMessage = ex.Message;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取代理接口使能配置
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public ProxyApiResponse GetDatabaseProxySetting(string database)
+        {
+            if (string.IsNullOrEmpty(mLoginId))
+            {
+                LastErroMessage = "未登录";
+                return null;
+            }
+            try
+            {
+                WebApiDatabaseRequest request = new WebApiDatabaseRequest() { Database = database, Id = mLoginId };
+                var sval = Post("GetDatabaseProxyApiSetting", JsonConvert.SerializeObject(request));
+                var result = JsonConvert.DeserializeObject<ProxyApiResponse>(sval);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LastErroMessage = ex.Message;
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 更新代理接口使能配置
+        /// </summary>
+        /// <param name="database"></param>
+        /// <param name="enablewebapi"></param>
+        /// <param name="enableproxy"></param>
+        /// <param name="enablehighapi"></param>
+        /// <param name="enablegrpc"></param>
+        /// <returns></returns>
+        public bool UpdateDatabaseProxySetting(string database,bool enablewebapi,bool enableopcua,bool enablehighapi,bool enablegrpc)
+        {
+            if (string.IsNullOrEmpty(mLoginId))
+            {
+                LastErroMessage = "未登录";
+                return false;
+            }
+            try
+            {
+                WebApiProxyApiUpdateRequest request = new WebApiProxyApiUpdateRequest() { Database = database, Id = mLoginId,EnableGrpcApi=enablegrpc,EnableHighApi=enablehighapi,EnableOpcServer= enableopcua, EnableWebApi=enablewebapi };
+                var sval = Post("UpdateDatabaseProxyApiSetting", JsonConvert.SerializeObject(request));
+                var result = JsonConvert.DeserializeObject<ResultResponse<bool>>(sval);
+                LastErroMessage = result.ErroMsg;
+                return result.Result;
+            }
+            catch (Exception ex)
+            {
+                LastErroMessage = ex.Message;
+                return false;
+            }
+        }
+
         #endregion
 
         #region Database User
@@ -1286,7 +1457,7 @@ namespace DBDevelopClientWebApi
         }
 
         /// <summary>
-        /// 
+        /// 新建数据库用户
         /// </summary>
         /// <param name="userName"></param>
         /// <param name="password"></param>
@@ -1325,7 +1496,7 @@ namespace DBDevelopClientWebApi
         }
 
         /// <summary>
-        /// 
+        /// 更新数据用户配置
         /// </summary>
         /// <param name="userName"></param>
         /// <param name="password"></param>
@@ -1364,7 +1535,7 @@ namespace DBDevelopClientWebApi
         }
 
         /// <summary>
-        /// 
+        /// 修改数据库用户的密码
         /// </summary>
         /// <param name="userName"></param>
         /// <param name="password"></param>
@@ -1401,7 +1572,7 @@ namespace DBDevelopClientWebApi
         }
 
         /// <summary>
-        /// 
+        /// 删除数据库用户
         /// </summary>
         /// <param name="userName"></param>
         /// <param name="database"></param>
@@ -1437,7 +1608,7 @@ namespace DBDevelopClientWebApi
         }
 
         /// <summary>
-        /// 
+        /// 新建数据库权限
         /// </summary>
         /// <param name="name"></param>
         /// <param name="desc"></param>
@@ -1473,6 +1644,42 @@ namespace DBDevelopClientWebApi
             {
                 LastErroMessage = ex.Message;
                 return false;
+            }
+        }
+
+
+        /// <summary>
+        /// 获取数据库的权限
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public List<UserPermission> GetDatabasePermission(string database)
+        {
+            if (string.IsNullOrEmpty(mLoginId))
+            {
+                LastErroMessage = "未登录";
+                return null;
+            }
+            try
+            {
+                WebApiDatabaseRequest login = new WebApiDatabaseRequest() { Database = database, Id = mLoginId };
+                string sval = Post("GetAllDatabasePermission", JsonConvert.SerializeObject(login));
+
+                var result = JsonConvert.DeserializeObject<ResultResponse<List<UserPermission>>>(sval);
+                if (result.HasErro)
+                {
+                    LastErroMessage = result.ErroMsg;
+                    return null;
+                }
+                else
+                {
+                    return result.Result;
+                }
+            }
+            catch (Exception ex)
+            {
+                LastErroMessage = ex.Message;
+                return null;
             }
         }
 
@@ -1684,7 +1891,7 @@ namespace DBDevelopClientWebApi
             try
             {
                 WebApiUpdateSystemUserRequest login = new WebApiUpdateSystemUserRequest() { UserName = userName, IsAdmin = isAdmin, NewDatabasePermission = newDatabasePerssion, Databases = database, Id = mLoginId };
-                string sval = Post("ModifyPassword", JsonConvert.SerializeObject(login));
+                string sval = Post("UpdateUser", JsonConvert.SerializeObject(login));
 
                 var result = JsonConvert.DeserializeObject<ResultResponse<bool>>(sval);
                 if (result.HasErro)
@@ -1774,6 +1981,41 @@ namespace DBDevelopClientWebApi
             }
         }
 
+
+        /// <summary>
+        /// 获取当前登录客户的配置信息
+        /// </summary>
+        /// <returns></returns>
+        public WebApiSystemUserItem GetCurrentUserConfig()
+        {
+            if (string.IsNullOrEmpty(mLoginId))
+            {
+                LastErroMessage = "未登录";
+                return null;
+            }
+            try
+            {
+                RequestBase login = new RequestBase() { Id = mLoginId };
+                string sval = Post("GetCurrentUserConfig", JsonConvert.SerializeObject(login));
+
+                var result = JsonConvert.DeserializeObject<ResultResponse<WebApiSystemUserItem>>(sval);
+                if (result.HasErro)
+                {
+                    LastErroMessage = result.ErroMsg;
+                    return null;
+                }
+                else
+                {
+                    return result.Result;
+                }
+            }
+            catch (Exception ex)
+            {
+                LastErroMessage = ex.Message;
+                return null;
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1846,6 +2088,65 @@ namespace DBDevelopClientWebApi
 
         #endregion
 
+        #endregion ...Methods...
+
+        #region ... Interfaces ...
+
+        #endregion ...Interfaces...
+    }
+
+    public class MarsDevelopWebClient : WebClient
+    {
+
+        #region ... Variables  ...
+
+        private int mTimeout = 1000 * 10;
+
+        #endregion ...Variables...
+
+        #region ... Events     ...
+
+        #endregion ...Events...
+
+        #region ... Constructor...
+
+        #endregion ...Constructor...
+
+        #region ... Properties ...
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Timeout
+        {
+            get
+            {
+                return mTimeout;
+            }
+            set
+            {
+                if (mTimeout != value)
+                {
+                    mTimeout = value;
+                }
+            }
+        }
+
+        #endregion ...Properties...
+
+        #region ... Methods    ...
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        protected override WebRequest GetWebRequest(Uri address)
+        {
+            var result = base.GetWebRequest(address);
+            result.Timeout = this.mTimeout;
+            return result;
+        }
         #endregion ...Methods...
 
         #region ... Interfaces ...

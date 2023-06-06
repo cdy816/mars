@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -93,6 +94,39 @@ namespace Cdy.Tag.Common.Common
             {
                 return x.Message;
             }
+        }
+
+        /// <summary>
+        /// 计算Sha1的值
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string CalSha1(byte[] value)
+        {
+            var sha1 = System.Security.Cryptography.SHA1.Create();
+            var data = sha1.ComputeHash(value);
+            StringBuilder sha1Num = new StringBuilder();
+            foreach (var t in data)
+            {
+                sha1Num.Append(t.ToString("X2"));
+            }
+            return sha1Num.ToString();
+        }
+
+        /// <summary>
+        /// 计算入口程序Sha1值
+        /// </summary>
+        /// <returns></returns>
+        public static string CalSha1()
+        {
+            string sile = Process.GetCurrentProcess().MainModule.FileName;
+           
+            var sf = sile.Replace(".exe", ".dll");
+            if (System.IO.File.Exists(sf))
+            {
+                sile = sf;
+            }
+            return CalSha1(System.IO.File.ReadAllBytes(sile));
         }
     }
 }

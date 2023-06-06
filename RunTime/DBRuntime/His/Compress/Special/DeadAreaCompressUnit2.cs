@@ -122,6 +122,66 @@ namespace Cdy.Tag
             byte tlen = (timerVals as HisDataMemoryBlock).TimeLen;
 
             int rcount = 0;
+            int lastdec = 0;
+
+            for (int i = 0; i < count; i++)
+            {
+                if (i != ig)
+                {
+                    //id = timerVals.ReadUShort((int)startaddr + i * 2);
+
+                    id = tlen == 2 ? timerVals.ReadUShort((int)startaddr + i * 2) : timerVals.ReadInt((int)startaddr + i * 4);
+
+                    if (isFirst)
+                    {
+                        mVarintMemory2.WriteSInt32(id);
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        var vld = id - preids;
+                        mVarintMemory2.WriteSInt32(vld - lastdec);
+                        lastdec = vld;
+                        //mVarintMemory2.WriteInt32(id - preids);
+                    }
+                    rcount++;
+                    //dtims.Add(i, id);
+                    preids = id;
+                }
+                else
+                {
+                    ig = emptyIds.ReadIndex <= emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
+                    //    emptyIds.TryDequeue(out ig);
+                }
+            }
+
+            LoggerService.Service.Debug("DeadAreaCompress", "记录时间个数:" + rcount + " 空时间个数:" + (emptyIds.WriteIndex + 1));
+
+            return mVarintMemory2.DataBuffer.AsMemory(0, (int)mVarintMemory2.WritePosition);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timerVals"></param>
+        /// <param name="startaddr"></param>
+        /// <param name="count"></param>
+        /// <param name="emptyIds"></param>
+        /// <returns></returns>
+        protected virtual Memory<byte> CompressTimers2Old(IMemoryFixedBlock timerVals, long startaddr, int count, CustomQueue<int> emptyIds)
+        {
+            int preids = 0;
+            mVarintMemory2.Reset();
+            //dtims.Clear();
+            bool isFirst = true;
+            int id = 0;
+
+            int ig = -1;
+            ig = emptyIds.ReadIndex <= emptyIds.WriteIndex ? emptyIds.IncRead() : -1;
+
+            byte tlen = (timerVals as HisDataMemoryBlock).TimeLen;
+
+            int rcount = 0;
 
             for (int i = 0; i < count; i++)
             {
@@ -159,6 +219,23 @@ namespace Cdy.Tag
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="source"></param>
+        /// <param name="sourceAddr"></param>
+        /// <param name="target"></param>
+        /// <param name="targetAddr"></param>
+        /// <param name="size"></param>
+        /// <param name="statisticTarget"></param>
+        /// <param name="statisticAddr"></param>
+        /// <param name="timeAddr"></param>
+        /// <returns></returns>
+        public override long CompressByArea(IMemoryFixedBlock source, long sourceAddr, IMemoryBlock target, long targetAddr, long size, IMemoryBlock statisticTarget, long statisticAddr, ref long timeAddr)
+        {
+            return Compress(source, sourceAddr, target, targetAddr, size, statisticTarget, statisticAddr);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="source"></param>
         /// <param name="sourceAddr"></param>
@@ -178,14 +255,28 @@ namespace Cdy.Tag
             {
                 mMarshalMemory = new MemoryBlock(count * 10);
             }
+            else
+            {
+                mMarshalMemory.CheckAndResize(count * 10);
+            }
 
             if (mVarintMemory == null)
             {
                 mVarintMemory = new ProtoMemory(count * 10);
             }
+            else if (mVarintMemory.DataBuffer.Length < count * 10)
+            {
+                mVarintMemory.Dispose();
+                mVarintMemory = new ProtoMemory(count * 10);
+            }
 
             if (mVarintMemory2 == null)
             {
+                mVarintMemory2 = new ProtoMemory(count * 10);
+            }
+            else if (mVarintMemory2.DataBuffer.Length < count * 10)
+            {
+                mVarintMemory2.Dispose();
                 mVarintMemory2 = new ProtoMemory(count * 10);
             }
 
@@ -258,6 +349,18 @@ namespace Cdy.Tag
                     break;
                 case TagType.UShort:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
+                    if (mUInt16Compress == null)
+                    {
+                        mUInt16Compress = new UInt16CompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        if (mUInt16Compress.VarintMemory == null || mUInt16Compress.VarintMemory.DataBuffer == null)
+                        {
+                            mUInt16Compress.VarintMemory = mVarintMemory;
+                        }
+                        mUInt16Compress.CheckAndResizeTo(count);
+                    }
                     var ures = CompressValues<ushort>(source, count * tlen + sourceAddr, count, emptys, TagType);
 
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
@@ -284,6 +387,19 @@ namespace Cdy.Tag
                     break;
                 case TagType.Short:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
+
+                    if (mInt16Compress == null)
+                    {
+                        mInt16Compress = new Int16CompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        if (mInt16Compress.VarintMemory == null || mInt16Compress.VarintMemory.DataBuffer == null)
+                        {
+                            mInt16Compress.VarintMemory = mVarintMemory;
+                        }
+                        mInt16Compress.CheckAndResizeTo(count);
+                    }
                     var res = CompressValues<short>(source, count * tlen + sourceAddr, count, emptys, TagType);
 
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
@@ -310,6 +426,18 @@ namespace Cdy.Tag
                     break;
                 case TagType.UInt:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
+                    if (mUIntCompress == null)
+                    {
+                        mUIntCompress = new UIntCompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        if (mUIntCompress.VarintMemory == null || mUIntCompress.VarintMemory.DataBuffer == null)
+                        {
+                            mUIntCompress.VarintMemory = mVarintMemory;
+                        }
+                        mUIntCompress.CheckAndResizeTo(count);
+                    }
                     var uires = CompressValues<uint>(source, count * tlen + sourceAddr, count, emptys, TagType);
 
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
@@ -336,6 +464,20 @@ namespace Cdy.Tag
                     break;
                 case TagType.Int:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
+
+                    if (mIntCompress == null)
+                    {
+                        mIntCompress = new IntCompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        if (mIntCompress.VarintMemory == null || mIntCompress.VarintMemory.DataBuffer == null)
+                        {
+                            mIntCompress.VarintMemory = mVarintMemory;
+                        }
+                        mIntCompress.CheckAndResizeTo(count);
+                    }
+
                     var ires = CompressValues<int>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
@@ -361,6 +503,18 @@ namespace Cdy.Tag
                     break;
                 case TagType.ULong:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
+                    if (mUInt64Compress == null)
+                    {
+                        mUInt64Compress = new UInt64CompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        if (mUInt64Compress.VarintMemory == null || mUInt64Compress.VarintMemory.DataBuffer == null)
+                        {
+                            mUInt64Compress.VarintMemory = mVarintMemory;
+                        }
+                        mUInt64Compress.CheckAndResizeTo(count);
+                    }
                     var ulres = CompressValues<ulong>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
@@ -386,6 +540,18 @@ namespace Cdy.Tag
                     break;
                 case TagType.Long:
                     FindEmpityIds(source, sourceAddr, (int)count, emptys);
+                    if (mInt64Compress == null)
+                    {
+                        mInt64Compress = new Int64CompressBuffer(count) { MemoryBlock = mMarshalMemory, VarintMemory = mVarintMemory };
+                    }
+                    else
+                    {
+                        if (mInt64Compress.VarintMemory == null || mInt64Compress.VarintMemory.DataBuffer == null)
+                        {
+                            mInt64Compress.VarintMemory = mVarintMemory;
+                        }
+                        mInt64Compress.CheckAndResizeTo(count);
+                    }
                     var lres = CompressValues<long>(source, count * tlen + sourceAddr, count, emptys, TagType);
                     datas = CompressTimers2(source, sourceAddr, (int)count, emptys2);
                     rcount = count - emptys2.WriteIndex - 1;
@@ -826,6 +992,7 @@ namespace Cdy.Tag
                     return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
                 case TagType.Short:
                     short ssval = 0;
+                    mInt16Compress.Reset();
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -839,7 +1006,8 @@ namespace Cdy.Tag
                                 var qus = source.ReadByte(offset + count*2 + i);
                                 if (qus >= 100)
                                 {
-                                    mVarintMemory.WriteSInt32(id);
+                                    mInt16Compress.Append(id);
+                                    // mVarintMemory.WriteSInt32(id);
                                     ssval = id;
                                     continue;
                                 }
@@ -847,7 +1015,8 @@ namespace Cdy.Tag
 
                             if (isFirst)
                             {
-                                mVarintMemory.WriteSInt32(id- ssval);
+                                mInt16Compress.Append(id);
+                                // mVarintMemory.WriteSInt32(id- ssval);
                                 isFirst = false;
                                 ssval = id;
                             }
@@ -855,7 +1024,8 @@ namespace Cdy.Tag
                             {
                                 if (CheckIsNeedRecord(ssval, id, deadArea, deadType))
                                 {
-                                    mVarintMemory.WriteSInt32(id - ssval);
+                                    mInt16Compress.Append(id);
+                                    //mVarintMemory.WriteSInt32(id - ssval);
                                     ssval = id;
                                 }
                                 else
@@ -871,9 +1041,11 @@ namespace Cdy.Tag
                             emptys2.Insert(i);
                         }
                     }
-                    break;
+                    mInt16Compress.Compress();
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
                 case TagType.UShort:
                     ushort ussval = 0;
+                    mUInt16Compress.Reset();
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -887,7 +1059,8 @@ namespace Cdy.Tag
                                 var qus = source.ReadByte(offset + count * 2 + i);
                                 if (qus >= 100)
                                 {
-                                    mVarintMemory.WriteSInt32(id);
+                                    mUInt16Compress.Append(id);
+                                    //mVarintMemory.WriteSInt32(id);
                                     ussval = id;
                                     continue;
                                 }
@@ -895,7 +1068,8 @@ namespace Cdy.Tag
 
                             if (isFirst)
                             {
-                                mVarintMemory.WriteSInt32(id - ussval);
+                                mUInt16Compress.Append(id);
+                                //mVarintMemory.WriteSInt32(id - ussval);
                                 isFirst = false;
                                 ussval = id;
                             }
@@ -903,7 +1077,8 @@ namespace Cdy.Tag
                             {
                                 if (CheckIsNeedRecord(ussval, id, deadArea, deadType))
                                 {
-                                    mVarintMemory.WriteSInt32(id - ussval);
+                                    mUInt16Compress.Append(id);
+                                    // mVarintMemory.WriteSInt32(id - ussval);
                                     ussval = id;
                                 }
                                 else
@@ -920,10 +1095,12 @@ namespace Cdy.Tag
                             emptys2.Insert(i);
                         }
                     }
-                    break;
+                    mUInt16Compress.Compress();
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
                 case TagType.Int:
                     int isval = 0;
-                    bool hasdata = false;
+                    mIntCompress.Reset();
+                    //bool hasdata = false;
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -937,21 +1114,23 @@ namespace Cdy.Tag
                                 var qus = source.ReadByte(offset + count * 4 + i);
                                 if (qus >= 100)
                                 {
-                                    mVarintMemory.WriteInt32(id);
+                                    mIntCompress.Append(id);
+                                    //mVarintMemory.WriteInt32(id);
                                     isval = id;
-                                    hasdata = true;
+                                    //hasdata = true;
                                     continue;
                                 }
                             }
 
                             if (isFirst)
                             {
-                                if(hasdata)
-                                mVarintMemory.WriteSInt32(id - isval);
-                                else
-                                {
-                                    mVarintMemory.WriteInt32(id);
-                                }
+                                //if(hasdata)
+                                //mVarintMemory.WriteSInt32(id - isval);
+                                //else
+                                //{
+                                //    mVarintMemory.WriteInt32(id);
+                                //}
+                                mIntCompress.Append(id);
                                 isFirst = false;
                                 isval = id;
                             }
@@ -959,7 +1138,8 @@ namespace Cdy.Tag
                             {
                                 if (CheckIsNeedRecord(isval, id, deadArea, deadType))
                                 {
-                                    mVarintMemory.WriteSInt32(id - isval);
+                                    mIntCompress.Append(id);
+                                    // mVarintMemory.WriteSInt32(id - isval);
                                     isval = id;
                                 }
                                 else
@@ -974,10 +1154,12 @@ namespace Cdy.Tag
                             emptys2.Insert(i);
                         }
                     }
-                    break;
+                    mIntCompress.Compress();
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
                 case TagType.UInt:
                     uint usval = 0;
-                    hasdata = false;
+                    mUIntCompress.Reset();
+                    //hasdata = false;
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -991,23 +1173,25 @@ namespace Cdy.Tag
                                 var qus = source.ReadByte(offset + count * 4 + i);
                                 if (qus >= 100)
                                 {
-                                    mVarintMemory.WriteInt32(id);
+                                    mUIntCompress.Append(id);
+                                    //mVarintMemory.WriteInt32(id);
                                     usval = id;
-                                    hasdata = true;
+                                    //hasdata = true;
                                     continue;
                                 }
                             }
 
                             if (isFirst)
                             {
-                                if (hasdata)
-                                {
-                                    mVarintMemory.WriteSInt32((int)(id - usval));
-                                }
-                                else
-                                {
-                                    mVarintMemory.WriteInt32(id);
-                                }
+                                mUIntCompress.Append(id);
+                                //if (hasdata)
+                                //{
+                                //    mVarintMemory.WriteSInt32((int)(id - usval));
+                                //}
+                                //else
+                                //{
+                                //    mVarintMemory.WriteInt32(id);
+                                //}
                                 isFirst = false;
                                 usval = id;
                             }
@@ -1015,7 +1199,8 @@ namespace Cdy.Tag
                             {
                                 if (CheckIsNeedRecord(usval, id, deadArea, deadType))
                                 {
-                                    mVarintMemory.WriteSInt32((int)(id - usval));
+                                    mUIntCompress.Append(id);
+                                    //mVarintMemory.WriteSInt32((int)(id - usval));
                                     usval = id;
                                 }
                                 else
@@ -1030,10 +1215,12 @@ namespace Cdy.Tag
                             emptys2.Insert(i);
                         }
                     }
-                    break;
+                    mUIntCompress.Compress();
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
                 case TagType.Long:
                     long lsval = 0;
-                    hasdata = false;
+                    mInt64Compress.Reset();
+                    //hasdata = false;
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -1046,8 +1233,9 @@ namespace Cdy.Tag
                                 var qus = source.ReadByte(offset + count * 8 + i);
                                 if (qus >= 100)
                                 {
-                                    mVarintMemory.WriteInt64(id);
-                                    hasdata = true;
+                                    mInt64Compress.Append(id);
+                                    // mVarintMemory.WriteInt64(id);
+                                    //hasdata = true;
                                     lsval = id;
                                     continue;
                                 }
@@ -1055,14 +1243,15 @@ namespace Cdy.Tag
 
                             if (isFirst)
                             {
-                                if (hasdata)
-                                {
-                                    mVarintMemory.WriteSInt64((id - lsval));
-                                }
-                                else
-                                {
-                                    mVarintMemory.WriteInt64(id);
-                                }
+                                mInt64Compress.Append(id);
+                                //if (hasdata)
+                                //{
+                                //    mVarintMemory.WriteSInt64((id - lsval));
+                                //}
+                                //else
+                                //{
+                                //    mVarintMemory.WriteInt64(id);
+                                //}
                                 isFirst = false;
                                 lsval = id;
                             }
@@ -1070,7 +1259,8 @@ namespace Cdy.Tag
                             {
                                 if (CheckIsNeedRecord(lsval, id, deadArea, deadType))
                                 {
-                                    mVarintMemory.WriteSInt64((id - lsval));
+                                    mInt64Compress.Append(id);
+                                    // mVarintMemory.WriteSInt64((id - lsval));
                                     lsval = id;
                                 }
                                 else
@@ -1085,10 +1275,12 @@ namespace Cdy.Tag
                             emptys2.Insert(i);
                         }
                     }
-                    break;
+                    mInt64Compress.Compress();
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
                 case TagType.ULong:
                     ulong ulsval = 0;
-                    hasdata = false;
+                    mUInt64Compress.Reset();
+                    //hasdata = false;
                     for (int i = 0; i < count; i++)
                     {
                         if (i != ig)
@@ -1102,8 +1294,9 @@ namespace Cdy.Tag
                                 var qus = source.ReadByte(offset + count * 8 + i);
                                 if (qus >= 100)
                                 {
-                                    mVarintMemory.WriteInt64(id);
-                                    hasdata = true;
+                                    mUInt64Compress.Append(id);
+                                    // mVarintMemory.WriteInt64(id);
+                                    //hasdata = true;
                                     ulsval = id;
                                     continue;
                                 }
@@ -1111,14 +1304,15 @@ namespace Cdy.Tag
 
                             if (isFirst)
                             {
-                                if (hasdata)
-                                {
-                                    mVarintMemory.WriteSInt64((long)(id - ulsval));
-                                }
-                                else
-                                {
-                                    mVarintMemory.WriteInt64(id);
-                                }
+                                mUInt64Compress.Append(id);
+                                //if (hasdata)
+                                //{
+                                //    mVarintMemory.WriteSInt64((long)(id - ulsval));
+                                //}
+                                //else
+                                //{
+                                //    mVarintMemory.WriteInt64(id);
+                                //}
                                 isFirst = false;
                                 ulsval = id;
                             }
@@ -1126,7 +1320,8 @@ namespace Cdy.Tag
                             {
                                 if (CheckIsNeedRecord(ulsval, id, deadArea, deadType))
                                 {
-                                    mVarintMemory.WriteSInt64((long)(id - ulsval));
+                                    mUInt64Compress.Append(id);
+                                    // mVarintMemory.WriteSInt64((long)(id - ulsval));
                                     ulsval = id;
                                 }
                                 else
@@ -1141,7 +1336,8 @@ namespace Cdy.Tag
                             emptys2.Insert(i);
                         }
                     }
-                    break;
+                    mUInt64Compress.Compress();
+                    return mMarshalMemory.StartMemory.AsMemory<byte>(0, (int)mMarshalMemory.Position);
                 case TagType.Double:
                     double dsval = 0;
                     mDCompress.Reset();
@@ -1245,7 +1441,7 @@ namespace Cdy.Tag
                 default:
                    return base.CompressValues<T>(source, offset, count, emptys, type);
             }
-            return mVarintMemory.DataBuffer.AsMemory<byte>(0, (int)mVarintMemory.WritePosition);
+            //return mVarintMemory.DataBuffer.AsMemory<byte>(0, (int)mVarintMemory.WritePosition);
         }
     }
 }

@@ -81,6 +81,10 @@
         <view:DatabaseSettingView />
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type viewmodel:InvertConvertViewModel}">
+        <view:InvertConvertView />
+    </DataTemplate>
+
 
     <DataTemplate DataType="{x:Type viewmodel:IdResetViewModel}">
         <view:IdResetView />

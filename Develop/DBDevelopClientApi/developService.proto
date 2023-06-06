@@ -48,6 +48,9 @@ service DevelopServer {
   //新建数据库
   rpc NewDatabase(NewDatabaseRequest) returns (BoolResultReplay);
 
+    //删除数据库
+  rpc RemoveDatabase(NewDatabaseRequest) returns (BoolResultReplay);
+
   //数据库权限操作
   //新建数据库用户
   rpc NewDatabaseUser(NewDatabaseUserRequest) returns (BoolResultReplay);
@@ -73,6 +76,9 @@ service DevelopServer {
   //改名用户组
   rpc RenameDatabaseUserGroup(RenameGroupRequest) returns (BoolResultReplay);
 
+  //修改用户名
+  rpc RenameDatabaseUser(RenameGroupRequest) returns (BoolResultReplay);
+
   //移动组
   rpc MoveDatabaseUserGroup(MoveGroupRequest) returns (BoolResultReplay);
 
@@ -90,6 +96,9 @@ service DevelopServer {
 
   //删除数据库权限
   rpc RemoveDatabasePermission(RemoveDatabasePermissionRequest) returns (BoolResultReplay);
+
+  //修改数据库权限名称
+  rpc ReNameDatabasePermission(ReNameDatabasePermissionRequest) returns (BoolResultReplay);
   
   //变量操作
   //添加
@@ -269,14 +278,26 @@ service DevelopServer {
    //重置变量ID
    rpc ResetTagId(ResetTagIdRequest) returns (ResetTagIdReplay);
 
+   //设置变量ID
+   rpc SetTagId(SetTagIdRequest) returns (BoolResultReplay);
+
    //更新相关Proxy API配置
    rpc UpdateProxyApiSetting(UpdateProxyApiSettingRequest) returns (BoolResultReplay);
 
    //获取Proxy API配置
    rpc GetProxyApiSetting(DatabasesRequest) returns (GetProxyApiSettingReply);
 
+    //是否支持扩展功能
+  rpc ExtendFunction(GetRequest) returns (ExtendFunctionReplay);
+
 }
 
+message ExtendFunctionReplay
+{
+      bool Result =1;
+      bool Spider=2;
+      bool Ant=3;
+}
 
 //重置变量ID
 message ResetTagIdRequest
@@ -285,6 +306,15 @@ message ResetTagIdRequest
     string Database=2;
     int32 StartId=3;
     repeated int32 TagIds=4;
+}
+
+//设置变量ID
+message SetTagIdRequest
+{
+    string LoginId=1;
+    string Database=2;
+    int32 TagID=3;
+    int32 Value=4;
 }
 
 //重置变量返回
@@ -362,6 +392,14 @@ message RemoveDatabasePermissionRequest
     string LoginId=1;
     string Database=2;
     string Permission=3;
+}
+
+message ReNameDatabasePermissionRequest
+{
+    string LoginId=1;
+    string Database=2;
+    string NewName=3;
+    string OldName=4;
 }
 
 //
@@ -933,6 +971,9 @@ message RealTagMessage
   int32 Precision=11;
   string LinkComplexClass=12;
   string Parent=13;
+  string Unit=14;
+  string ExtendField1=15;
+   string Area = 16;
 }
 
 //历史变量定义
@@ -944,7 +985,8 @@ message HisTagMessage
  uint32 CompressType=4;
  uint32 Circle=5;
  uint32 MaxValueCountPerSecond=6;
- repeated hisTagParameterItem Parameter=7;
+
+ repeated hisTagParameterItem Parameter=8;
 }
 
 message hisTagParameterItem

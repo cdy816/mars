@@ -147,6 +147,12 @@
   <data name="EndTime" xml:space="preserve">
     <value>EndTime</value>
   </data>
+  <data name="Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="ExportQuality" xml:space="preserve">
+    <value>ExportQuality</value>
+  </data>
   <data name="good" xml:space="preserve">
     <value>Good</value>
   </data>
@@ -158,6 +164,9 @@
   </data>
   <data name="Id" xml:space="preserve">
     <value>Id</value>
+  </data>
+  <data name="IgnorClosedQuality" xml:space="preserve">
+    <value>Ignore system exit</value>
   </data>
   <data name="Init" xml:space="preserve">
     <value>Init</value>

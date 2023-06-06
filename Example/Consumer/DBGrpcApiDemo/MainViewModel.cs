@@ -6,12 +6,15 @@
 //  Version 1.0
 //  种道洋
 //==============================================================
+using Cdy.Tag;
+using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,25 +26,27 @@ namespace DBGrpcApiDemo
     /// <summary>
     /// 
     /// </summary>
-    public class MainViewModel:ModelBase
+    public class MainViewModel : ModelBase
     {
 
         #region ... Variables  ...
-        private string mIp="127.0.0.1";
+        private string mIp = "127.0.0.1";
         private ICommand mLoginCommand;
         private ICommand mStopCommand;
-        private Dictionary<string,TagItemInfo> mTags = new Dictionary<string, TagItemInfo>();
+        private Dictionary<string, TagItemInfo> mTags = new Dictionary<string, TagItemInfo>();
         DBGrpcApi.Client clinet;
         private Thread mScanThread;
         private bool mExited = false;
 
-        private string mUserName="Admin";
-        public string mPassword="Admin";
+        private string mUserName = "Admin";
+        public string mPassword = "Admin";
         private int mPort = 14333;
 
         private ICommand mSetTagValueCommand;
 
         private ICommand mQueryHisDataCommand;
+
+        private ICommand mQueryHisData2Command;
 
         private ICommand mQueryRealCommand;
 
@@ -50,6 +55,10 @@ namespace DBGrpcApiDemo
         private DateTime mEndTime;
 
         private bool mIsReadStatistics = false;
+
+        public string mSqlExp = "select tag1 from a where time>='2023-04-29 0:0:0' and time < '2023-04-29 23:59:59'";
+        
+        private ICommand mSqlQueryCommand;
 
         #endregion ...Variables...
 
@@ -73,12 +82,45 @@ namespace DBGrpcApiDemo
         /// <summary>
         /// 
         /// </summary>
+        public string SqlExp
+        {
+            get
+            {
+                return mSqlExp;
+            }
+            set
+            {
+                if (mSqlExp != value)
+                {
+                    mSqlExp = value;
+                    OnPropertyChanged("SqlExp");
+                }
+            }
+        }
+
+        public ICommand SqlQueryCommand
+        {
+            get
+            {
+                if (mSqlQueryCommand == null)
+                {
+                    mSqlQueryCommand = new RelayCommand(() => {
+                        ExecuteSql(mSqlExp);
+                    });
+                }
+                return mSqlQueryCommand;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public ICommand QueryRealCommand
         {
 
             get
             {
-                if(mQueryRealCommand== null)
+                if (mQueryRealCommand == null)
                 {
                     mQueryRealCommand = new RelayCommand(() => {
                         QueryRealValue();
@@ -101,8 +143,8 @@ namespace DBGrpcApiDemo
 
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
         public string Ip
         {
             get
@@ -120,8 +162,8 @@ namespace DBGrpcApiDemo
         }
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
         public bool IsReadStatistics
         {
             get
@@ -160,8 +202,8 @@ namespace DBGrpcApiDemo
 
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
         public string Password
         {
             get
@@ -180,8 +222,8 @@ namespace DBGrpcApiDemo
 
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
         public int Port
         {
             get
@@ -206,7 +248,7 @@ namespace DBGrpcApiDemo
         {
             get
             {
-                if(mLoginCommand==null)
+                if (mLoginCommand == null)
                 {
                     mLoginCommand = new RelayCommand(() => {
                         Start();
@@ -221,13 +263,13 @@ namespace DBGrpcApiDemo
         {
             get
             {
-                if(mStopCommand==null)
+                if (mStopCommand == null)
                 {
                     mStopCommand = new RelayCommand(() => {
                         mExited = true;
                         clinet.Logout();
-                       // clinet.Close();
-                        
+                        // clinet.Close();
+
                     });
                 }
                 return mStopCommand;
@@ -257,7 +299,7 @@ namespace DBGrpcApiDemo
 
                         Dictionary<string, string> values = new Dictionary<string, string>();
                         string[] ss = Id.Split(",");
-                        foreach(var vv in ss)
+                        foreach (var vv in ss)
                         {
                             values.Add(vv, Value.ToString());
                         }
@@ -269,8 +311,8 @@ namespace DBGrpcApiDemo
         }
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
         public DateTime StartTime
         {
             get
@@ -288,8 +330,8 @@ namespace DBGrpcApiDemo
         }
 
         /// <summary>
-            /// 
-            /// </summary>
+        /// 
+        /// </summary>
         public DateTime EndTime
         {
             get
@@ -318,7 +360,7 @@ namespace DBGrpcApiDemo
                         if (mIsReadStatistics)
                         {
                             var vals = clinet.ReadStatisticsValue(new List<string> { mTags.First().Key }, StartTime, EndTime);
-                            if(vals!=null && vals.Count>0)
+                            if (vals != null && vals.Count > 0)
                             {
                                 int count = 0;
                                 string sfile = System.IO.Path.GetTempFileName();
@@ -338,8 +380,7 @@ namespace DBGrpcApiDemo
                                     }
                                 }
                                 System.IO.File.Move(sfile, sfile.Replace(".tmp", ".txt"));
-
-                                MessageBox.Show("读取历史数据个数:" + count + " 详情查看历史文件:" + sfile.Replace(".tmp", ".txt"));
+                                Process.Start("explorer.exe", sfile.Replace(".tmp", ".txt"));
                             }
                         }
                         else
@@ -366,8 +407,7 @@ namespace DBGrpcApiDemo
                                     }
                                 }
                                 System.IO.File.Move(sfile, sfile.Replace(".tmp", ".txt"));
-
-                                MessageBox.Show("读取历史数据个数:" + count + " 详情查看历史文件:" + sfile.Replace(".tmp", ".txt"));
+                                Process.Start("explorer.exe", sfile.Replace(".tmp", ".txt"));
                             }
                         }
                     });
@@ -376,7 +416,217 @@ namespace DBGrpcApiDemo
             }
         }
 
+        public ICommand QueryHisData2Command
+        {
+            get
+            {
+                if (mQueryHisData2Command == null)
+                {
+                    mQueryHisData2Command = new RelayCommand(() =>
+                    {
+                        var vals = clinet.ReadHisValueByIgnorSystemExit(new List<string> { mTags.First().Key }, StartTime, EndTime,new TimeSpan(0,0,10),Cdy.Tag.QueryValueMatchType.Previous);
+                        if (vals != null && vals.Count > 0)
+                        {
 
+                            int count = 0;
+                            string sfile = System.IO.Path.GetTempFileName();
+                            using (var stream = System.IO.File.Open(sfile, System.IO.FileMode.OpenOrCreate))
+                            {
+                                using (var vss = new System.IO.StreamWriter(stream))
+                                {
+                                    foreach (var vv in vals)
+                                    {
+                                        vss.WriteLine(vv.Key);
+                                        foreach (var vvv in vv.Value)
+                                        {
+                                            vss.WriteLine(vvv.Time + "," + vvv.Value);
+                                            count++;
+                                        }
+                                    }
+                                }
+                            }
+                            System.IO.File.Move(sfile, sfile.Replace(".tmp", ".txt"));
+                            Process.Start("explorer.exe", sfile.Replace(".tmp", ".txt"));
+                        }
+                    });
+                }
+                return mQueryHisData2Command;
+            }
+        }
+    
+
+        private ICommand mSetTagStateCommand;
+        public ICommand SetTagStateCommand
+        {
+            get
+            {
+                if (mSetTagStateCommand == null)
+                {
+                    mSetTagStateCommand = new RelayCommand(() => {
+                        var vals = new Dictionary<string,short>();
+                        string[] ss = Id.Split(",");
+                        foreach (var vv in ss)
+                        {
+                            vals.Add(vv, (short)DateTime.Now.Second);
+                        }
+                      
+                        clinet.SetTagState(vals);
+                    });
+                }
+                return mSetTagStateCommand;
+            }
+        }
+
+        private ICommand mSetTagExtendField2Command;
+        public ICommand SetTagExtendField2Command
+        {
+            get
+            {
+                if (mSetTagExtendField2Command == null)
+                {
+                    mSetTagExtendField2Command = new RelayCommand(() => {
+                        var vals = new Dictionary<string, long>();
+                        string[] ss = Id.Split(",");
+                        foreach (var vv in ss)
+                        {
+                            vals.Add(vv, (short)DateTime.Now.Second);
+                        }
+                        clinet.SetTagExtendField2(vals);
+                    });
+                }
+                return mSetTagExtendField2Command;
+            }
+        }
+
+        private ICommand mGetTagStateCommand;
+        public ICommand GetTagStateCommand
+        {
+            get
+            {
+                if (mGetTagStateCommand == null)
+                {
+                    mGetTagStateCommand = new RelayCommand(() => {
+                        var vlist = new List<string>();
+                        vlist.AddRange(Id.Split(","));
+
+                        var vals = clinet.ReadTagState(vlist);
+                        if (vals != null && vals.Count > 0)
+                        {
+                            MessageBox.Show(vals.First().Value.ToString());
+                        }
+                    });
+                }
+                return mGetTagStateCommand;
+            }
+        }
+
+        private ICommand mGetTagExtendField2Command;
+        public ICommand GetTagExtendField2Command
+        {
+            get
+            {
+                if (mGetTagExtendField2Command == null)
+                {
+                    mGetTagExtendField2Command = new RelayCommand(() => {
+                        var vlist = new List<string>();
+                        vlist.AddRange(Id.Split(","));
+
+                        var vals = clinet.ReadTagExtendField2(vlist);
+                        if (vals != null && vals.Count > 0)
+                        {
+                            MessageBox.Show(vals.First().Value.ToString());
+                        }
+                    });
+                }
+                return mGetTagExtendField2Command;
+            }
+        }
+
+        private ICommand mQueryMaxValueCommand;
+
+        public ICommand QueryMaxValueCommand
+        {
+            get
+            {
+                if (mQueryMaxValueCommand == null)
+                {
+                    mQueryMaxValueCommand = new RelayCommand(() => {
+                        var vals = clinet.FindNumberTagMaxValue(mTags.First().Key, StartTime, EndTime);
+                        StringBuilder sb = new StringBuilder();
+                        sb.Append(vals.Item1+" > ");
+                        foreach(var vv in vals.Item2)
+                        {
+                            sb.Append(vv + ",");
+                        }
+                        MessageBox.Show(sb.ToString());
+                    });
+                   
+
+                }
+                return mQueryMaxValueCommand;
+            }
+        }
+
+        private ICommand mQueryAvgValueCommand;
+        public ICommand QueryAvgValueCommand
+        {
+            get
+            {
+                if (mQueryAvgValueCommand == null)
+                {
+                    mQueryAvgValueCommand = new RelayCommand(() => {
+                        var vals = clinet.FindNumberTagAvgValue(mTags.First().Key, StartTime, EndTime);
+                        MessageBox.Show(vals.ToString());
+                    });
+                }
+                return mQueryAvgValueCommand;
+            }
+        }
+
+        private ICommand mCalKeepTimeCommand;
+        public ICommand CalKeepTimeCommand
+        {
+            get
+            {
+                if (mCalKeepTimeCommand == null)
+                {
+                    mCalKeepTimeCommand = new RelayCommand(() =>
+                    {
+                        var vals = clinet.CalTagValueKeepTime(mTags.First().Key, StartTime, EndTime, Cdy.Tag.NumberStatisticsType.GreatValue, Value, 0);
+                        MessageBox.Show(vals.ToString());
+                    });
+                }
+                return mCalKeepTimeCommand;
+            }
+        }
+
+        private ICommand mQueryGreatValueCommand;
+        public ICommand QueryGreatValueCommand
+        {
+            get
+            {
+                if(mQueryGreatValueCommand == null)
+                {
+                    mQueryGreatValueCommand = new RelayCommand(() =>
+                    {
+                        var vals = clinet.FindTagValue(mTags.First().Key, StartTime, EndTime, Cdy.Tag.NumberStatisticsType.GreatValue, Value, 0.1);
+                        MessageBox.Show(vals.ToString());
+
+                        var vals2 = clinet.FindTagValues(mTags.First().Key, StartTime, EndTime, Cdy.Tag.NumberStatisticsType.GreatValue, Value, 0.1);
+                        if (vals2 != null)
+                        {
+                            StringBuilder sb = new StringBuilder();
+                            foreach (var v in vals2)
+                            {
+                                sb.AppendLine(v.Key + "," + v.Value);
+                            }
+                            MessageBox.Show(sb.ToString());
+                        }
+                    });
+                }
+                return mQueryGreatValueCommand;
+            }
+        }
 
         #endregion ...Properties...
 
@@ -389,7 +639,7 @@ namespace DBGrpcApiDemo
         {
             for(int i=1;i<1000;i++)
             {
-                mTags.Add("Double.Double" + i,new TagItemInfo() { Id = i, Name= "Double.Double" + i,Value = "0" });
+                mTags.Add("tag" + i,new TagItemInfo() { Id = i, Name= "tag" + i,Value = "0" });
             }
         }
 
@@ -436,6 +686,39 @@ namespace DBGrpcApiDemo
                 foreach(var vv in vals)
                 {
                     mTags[vv.Key].Value = vv.Value.ToString();
+                }
+            }
+        }
+
+        private void ExecuteSql(string sql)
+        {
+            var vals = clinet.ReadValueBySql(sql);
+            if (vals is List<List<string>>)
+            {
+                foreach (var vv in (vals as List<List<string>>))
+                {
+                    StringBuilder sb = new StringBuilder();
+                    foreach (var vv2 in vv)
+                    {
+                        sb.Append($",{vv2}");
+                    }
+                    Debug.WriteLine(sb.ToString());
+                }
+            }
+            else if (vals is string[])
+            {
+                foreach (var vv in vals as string[])
+                {
+                    Debug.Write(vv + ",");
+                }
+                Debug.WriteLine("");
+
+            }
+            else if (vals is List<RealTagValueWithTimer2>)
+            {
+                foreach (var vv in vals as List<RealTagValueWithTimer2>)
+                {
+                    Debug.WriteLine(vv.Value + ",");
                 }
             }
         }

@@ -1,0 +1,10 @@
+
+.tr {
+    cursor: pointer;
+    background-color: rgb(0, 148, 255,0.1);
+}
+
+.tr:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+}
